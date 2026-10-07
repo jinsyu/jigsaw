@@ -731,6 +731,30 @@ test('the demo can use any built-in picture (&picture=giraffe, a portrait one)',
   expect(errors).toEqual([]);
 });
 
+for (const [key, shape] of [
+  ['ssireum', 'portrait'],
+  ['pluto', 'square'],
+  ['chaekgado', 'wide'],
+]) {
+  test(`the demo opens an outside built-in picture (${key}, ${shape})`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'phone-390' && testInfo.project.name !== 'desktop-1440', 'two sizes are enough');
+    const errors = await openDemo(page, { picture: key });
+    const { picture, layout } = await state(page);
+    expect(picture.src).toBe(`/images/builtin/${key}.webp`);
+    expect(layout.aspect).toBeCloseTo(picture.width / picture.height, 9);
+    if (shape === 'portrait') expect(layout.rows).toBeGreaterThan(layout.cols);
+    else expect(layout.cols).toBeGreaterThanOrEqual(layout.rows);
+    const px = await framePixels(page);
+    expect(px.fill.max - px.seam.min).toBeGreaterThanOrEqual(25);
+    await page.locator('.pz-tile').first().click();
+    await expect(page.locator('.pz-tile')).toHaveCount(23);
+    await expectNoHorizontalOverflow(page);
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: testInfo.outputPath(`play-${key}.png`) });
+    expect(errors).toEqual([]);
+  });
+}
+
 test('reduced motion: pieces and the view jump instead of sliding', async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const errors = await openDemo(page);

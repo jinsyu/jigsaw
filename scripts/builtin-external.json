@@ -1,0 +1,694 @@
+[
+ {
+  "key": "starry-night",
+  "title": "별이 빛나는 밤",
+  "category": "명화",
+  "author": "빈센트 반 고흐",
+  "year": "1889",
+  "holder": "뉴욕 현대미술관",
+  "source": {
+   "name": "Wikimedia Commons (Google Art Project)",
+   "author": "빈센트 반 고흐",
+   "url": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/3840px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
+  ],
+  "credit": "별이 빛나는 밤, 빈센트 반 고흐, 1889 — 뉴욕 현대미술관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인"
+ },
+ {
+  "key": "cafe-terrace",
+  "title": "밤의 카페 테라스",
+  "category": "명화",
+  "author": "빈센트 반 고흐",
+  "year": "1888",
+  "holder": "크뢸러뮐러 미술관",
+  "source": {
+   "name": "Wikimedia Commons",
+   "author": "빈센트 반 고흐",
+   "url": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Terrasse_des_Caf%C3%A9s_an_der_Place_du_Forum_in_Arles_am_Abend1.jpeg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Van_Gogh_-_Terrasse_des_Caf%C3%A9s_an_der_Place_du_Forum_in_Arles_am_Abend1.jpeg/3840px-Van_Gogh_-_Terrasse_des_Caf%C3%A9s_an_der_Place_du_Forum_in_Arles_am_Abend1.jpeg"
+  ],
+  "credit": "밤의 카페 테라스, 빈센트 반 고흐, 1888 — 크뢸러뮐러 미술관 / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+ },
+ {
+  "key": "bedroom",
+  "title": "침실",
+  "category": "명화",
+  "author": "빈센트 반 고흐",
+  "year": "1889",
+  "holder": "시카고 미술관",
+  "source": {
+   "name": "Wikimedia Commons (Google Art Project)",
+   "author": "빈센트 반 고흐",
+   "url": "https://commons.wikimedia.org/wiki/File:Vincent_van_Gogh_-_The_Bedroom_-_Google_Art_Project.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/Vincent_van_Gogh_-_The_Bedroom_-_Google_Art_Project.jpg/3840px-Vincent_van_Gogh_-_The_Bedroom_-_Google_Art_Project.jpg"
+  ],
+  "credit": "침실, 빈센트 반 고흐, 1889 — 시카고 미술관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인"
+ },
+ {
+  "key": "wheat-cypresses",
+  "title": "사이프러스가 있는 밀밭",
+  "category": "명화",
+  "author": "빈센트 반 고흐",
+  "year": "1889",
+  "holder": "메트로폴리탄 미술관",
+  "source": {
+   "name": "Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스)",
+   "author": "빈센트 반 고흐",
+   "url": "https://commons.wikimedia.org/wiki/File:Wheat-Field-with-Cypresses-(1889)-Vincent-van-Gogh-Met.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://upload.wikimedia.org/wikipedia/commons/c/ce/Wheat-Field-with-Cypresses-%281889%29-Vincent-van-Gogh-Met.jpg"
+  ],
+  "credit": "사이프러스가 있는 밀밭, 빈센트 반 고흐, 1889 — 메트로폴리탄 미술관 / 이미지: Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스), 퍼블릭 도메인"
+ },
+ {
+  "key": "water-lily-bridge",
+  "title": "수련 연못 위의 다리",
+  "category": "명화",
+  "author": "클로드 모네",
+  "year": "1899",
+  "holder": "메트로폴리탄 미술관",
+  "source": {
+   "name": "Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스)",
+   "author": "클로드 모네",
+   "url": "https://commons.wikimedia.org/wiki/File:Bridge_over_a_Pond_of_Water_Lilies_MET_DT1854.jpg"
+  },
+  "license": {
+   "name": "CC0 1.0",
+   "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+  },
+  "images": [
+   "https://upload.wikimedia.org/wikipedia/commons/5/53/Bridge_over_a_Pond_of_Water_Lilies_MET_DT1854.jpg"
+  ],
+  "credit": "수련 연못 위의 다리, 클로드 모네, 1899 — 메트로폴리탄 미술관 / 이미지: Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스), CC0 1.0",
+  "crop": [
+   0.015,
+   0.015,
+   0.985,
+   0.985
+  ],
+  "note": "스캔 테두리를 잘라 냄"
+ },
+ {
+  "key": "poppy-field",
+  "title": "아르장퇴유 근처 양귀비 들판",
+  "category": "명화",
+  "author": "클로드 모네",
+  "year": "1875",
+  "holder": "메트로폴리탄 미술관",
+  "source": {
+   "name": "Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스)",
+   "author": "클로드 모네",
+   "url": "https://commons.wikimedia.org/wiki/File:Poppy_Fields_near_Argenteuil_MET_DT1034.jpg"
+  },
+  "license": {
+   "name": "CC0 1.0",
+   "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+  },
+  "images": [
+   "https://upload.wikimedia.org/wikipedia/commons/e/e3/Poppy_Fields_near_Argenteuil_MET_DT1034.jpg"
+  ],
+  "credit": "아르장퇴유 근처 양귀비 들판, 클로드 모네, 1875 — 메트로폴리탄 미술관 / 이미지: Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스), CC0 1.0",
+  "crop": [
+   0.015,
+   0.015,
+   0.985,
+   0.985
+  ],
+  "note": "스캔 테두리를 잘라 냄"
+ },
+ {
+  "key": "moulin-galette",
+  "title": "물랭 드 라 갈레트의 무도회",
+  "category": "명화",
+  "author": "피에르오귀스트 르누아르",
+  "year": "1876",
+  "holder": "오르세 미술관",
+  "source": {
+   "name": "Wikimedia Commons (Google Art Project)",
+   "author": "피에르오귀스트 르누아르",
+   "url": "https://commons.wikimedia.org/wiki/File:Auguste_Renoir_-_Dance_at_Le_Moulin_de_la_Galette_-_Google_Art_Project.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Auguste_Renoir_-_Dance_at_Le_Moulin_de_la_Galette_-_Google_Art_Project.jpg/3840px-Auguste_Renoir_-_Dance_at_Le_Moulin_de_la_Galette_-_Google_Art_Project.jpg"
+  ],
+  "credit": "물랭 드 라 갈레트의 무도회, 피에르오귀스트 르누아르, 1876 — 오르세 미술관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인"
+ },
+ {
+  "key": "grande-jatte",
+  "title": "그랑드 자트 섬의 일요일 오후",
+  "category": "명화",
+  "author": "조르주 쇠라",
+  "year": "1884–1886",
+  "holder": "시카고 미술관",
+  "source": {
+   "name": "Wikimedia Commons (Google Art Project)",
+   "author": "조르주 쇠라",
+   "url": "https://commons.wikimedia.org/wiki/File:Georges_Seurat_-_A_Sunday_on_La_Grande_Jatte_--_1884_-_Google_Art_Project.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Georges_Seurat_-_A_Sunday_on_La_Grande_Jatte_--_1884_-_Google_Art_Project.jpg/3840px-Georges_Seurat_-_A_Sunday_on_La_Grande_Jatte_--_1884_-_Google_Art_Project.jpg"
+  ],
+  "credit": "그랑드 자트 섬의 일요일 오후, 조르주 쇠라, 1884–1886 — 시카고 미술관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인"
+ },
+ {
+  "key": "childrens-games",
+  "title": "아이들의 놀이",
+  "category": "명화",
+  "author": "피터르 브뤼헐",
+  "year": "1560",
+  "holder": "빈 미술사 박물관",
+  "source": {
+   "name": "Wikimedia Commons (Google Art Project)",
+   "author": "피터르 브뤼헐",
+   "url": "https://commons.wikimedia.org/wiki/File:Pieter_Bruegel_the_Elder_-_Children%E2%80%99s_Games_-_Google_Art_Project.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1e/Pieter_Bruegel_the_Elder_-_Children%E2%80%99s_Games_-_Google_Art_Project.jpg/3840px-Pieter_Bruegel_the_Elder_-_Children%E2%80%99s_Games_-_Google_Art_Project.jpg"
+  ],
+  "credit": "아이들의 놀이, 피터르 브뤼헐, 1560 — 빈 미술사 박물관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인"
+ },
+ {
+  "key": "hunters-snow",
+  "title": "눈 속의 사냥꾼",
+  "category": "명화",
+  "author": "피터르 브뤼헐",
+  "year": "1565",
+  "holder": "빈 미술사 박물관",
+  "source": {
+   "name": "Wikimedia Commons (Google Art Project)",
+   "author": "피터르 브뤼헐",
+   "url": "https://commons.wikimedia.org/wiki/File:Pieter_Bruegel_the_Elder_-_Hunters_in_the_Snow_(Winter)_-_Google_Art_Project.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Pieter_Bruegel_the_Elder_-_Hunters_in_the_Snow_%28Winter%29_-_Google_Art_Project.jpg/3840px-Pieter_Bruegel_the_Elder_-_Hunters_in_the_Snow_%28Winter%29_-_Google_Art_Project.jpg"
+  ],
+  "credit": "눈 속의 사냥꾼, 피터르 브뤼헐, 1565 — 빈 미술사 박물관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인"
+ },
+ {
+  "key": "great-wave",
+  "title": "가나가와 해변의 큰 파도",
+  "category": "명화",
+  "author": "가쓰시카 호쿠사이",
+  "year": "1830년대 초(원판)",
+  "holder": "미국 의회도서관",
+  "source": {
+   "name": "Wikimedia Commons",
+   "author": "가쓰시카 호쿠사이",
+   "url": "https://commons.wikimedia.org/wiki/File:Great_Wave_off_Kanagawa2.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/Great_Wave_off_Kanagawa2.jpg/3840px-Great_Wave_off_Kanagawa2.jpg"
+  ],
+  "credit": "가나가와 해변의 큰 파도, 가쓰시카 호쿠사이, 1830년대 초(원판) — 미국 의회도서관 소장 아다치 재판본 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+  "note": "쇼와 시대(1926~1989) 아다치 판 재판본을 복원한 이미지"
+ },
+ {
+  "key": "sunflowers",
+  "title": "해바라기",
+  "category": "명화",
+  "author": "빈센트 반 고흐",
+  "year": "1889",
+  "holder": "반 고흐 미술관",
+  "source": {
+   "name": "Wikimedia Commons (Google Art Project)",
+   "author": "빈센트 반 고흐",
+   "url": "https://commons.wikimedia.org/wiki/File:Vincent_van_Gogh_-_Zonnebloemen_-_Google_Art_Project.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Vincent_van_Gogh_-_Zonnebloemen_-_Google_Art_Project.jpg/3840px-Vincent_van_Gogh_-_Zonnebloemen_-_Google_Art_Project.jpg"
+  ],
+  "credit": "해바라기, 빈센트 반 고흐, 1889 — 반 고흐 미술관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인"
+ },
+ {
+  "key": "ssireum",
+  "title": "씨름",
+  "category": "우리 그림",
+  "author": "김홍도",
+  "year": "18세기 후반",
+  "holder": "국립중앙박물관",
+  "source": {
+   "name": "국립중앙박물관",
+   "author": "김홍도",
+   "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=551"
+  },
+  "license": {
+   "name": "공공누리 제1유형 (출처표시)",
+   "url": "https://www.kogl.or.kr/info/licenseType1.do"
+  },
+  "images": [
+   "https://www.museum.go.kr/relic_image/PS01001001/bon006/2016/1213161649247/bon006504-22-01.jpg"
+  ],
+  "credit": "씨름, 《단원 풍속도첩》, 김홍도, 18세기 후반 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+  "crop": [
+   0.19,
+   0.04,
+   0.8,
+   0.955
+  ],
+  "note": "색 보정표를 잘라 냄"
+ },
+ {
+  "key": "seodang",
+  "title": "서당",
+  "category": "우리 그림",
+  "author": "김홍도",
+  "year": "18세기 후반",
+  "holder": "국립중앙박물관",
+  "source": {
+   "name": "국립중앙박물관",
+   "author": "김홍도",
+   "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=552"
+  },
+  "license": {
+   "name": "공공누리 제1유형 (출처표시)",
+   "url": "https://www.kogl.or.kr/info/licenseType1.do"
+  },
+  "images": [
+   "https://www.museum.go.kr/relic_image/PS01001001/bon006/2016/1213161649247/bon006504-23-01.jpg"
+  ],
+  "credit": "서당, 《단원 풍속도첩》, 김홍도, 18세기 후반 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+  "crop": [
+   0.105,
+   0.03,
+   0.895,
+   0.965
+  ],
+  "note": "색 보정표를 잘라 냄"
+ },
+ {
+  "key": "mudong",
+  "title": "춤추는 아이",
+  "category": "우리 그림",
+  "author": "김홍도",
+  "year": "18세기 후반",
+  "holder": "국립중앙박물관",
+  "source": {
+   "name": "국립중앙박물관",
+   "author": "김홍도",
+   "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=553"
+  },
+  "license": {
+   "name": "공공누리 제1유형 (출처표시)",
+   "url": "https://www.kogl.or.kr/info/licenseType1.do"
+  },
+  "images": [
+   "https://www.museum.go.kr/relic_image/PS01001001/bon006/2016/1213161649247/bon006504-24-01.jpg"
+  ],
+  "credit": "춤추는 아이, 《단원 풍속도첩》, 김홍도, 18세기 후반 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+  "crop": [
+   0.1,
+   0.0,
+   0.915,
+   0.965
+  ],
+  "note": "색 보정표를 잘라 냄"
+ },
+ {
+  "key": "chaekgado",
+  "title": "책가도",
+  "category": "우리 그림",
+  "author": "작가 미상",
+  "year": "조선",
+  "holder": "국립중앙박물관",
+  "source": {
+   "name": "국립중앙박물관",
+   "author": "작가 미상",
+   "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=36559783"
+  },
+  "license": {
+   "name": "공공누리 제1유형 (출처표시)",
+   "url": "https://www.kogl.or.kr/info/licenseType1.do"
+  },
+  "images": [
+   "https://www.museum.go.kr/relic_image/PS01001001/lkh000/2024/0124145534184/lkh004121-000-70000.jpg"
+  ],
+  "credit": "책가도, 작가 미상, 조선 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+  "crop": [
+   0.06,
+   0.215,
+   0.94,
+   0.815
+  ],
+  "note": "액자 테두리를 잘라 냄"
+ },
+ {
+  "key": "magpie-tiger",
+  "title": "까치와 호랑이",
+  "category": "우리 그림",
+  "author": "작가 미상",
+  "year": "조선",
+  "holder": "국립중앙박물관",
+  "source": {
+   "name": "국립중앙박물관",
+   "author": "작가 미상",
+   "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=36552744"
+  },
+  "license": {
+   "name": "공공누리 제1유형 (출처표시)",
+   "url": "https://www.kogl.or.kr/info/licenseType1.do"
+  },
+  "images": [
+   "https://www.museum.go.kr/relic_image/PS01001001/lkh000/2023/0106160655748/lkh004066-000-80000.jpg"
+  ],
+  "credit": "까치와 호랑이, 작가 미상, 조선 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+  "crop": [
+   0.15,
+   0.18,
+   0.86,
+   0.86
+  ],
+  "note": "족자 표장을 잘라 냄"
+ },
+ {
+  "key": "irworobongdo",
+  "title": "일월오봉도",
+  "category": "우리 그림",
+  "author": "작가 미상",
+  "year": "조선",
+  "holder": "국립중앙박물관",
+  "source": {
+   "name": "국립중앙박물관",
+   "author": "작가 미상",
+   "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=225080"
+  },
+  "license": {
+   "name": "공공누리 제1유형 (출처표시)",
+   "url": "https://www.kogl.or.kr/info/licenseType1.do"
+  },
+  "images": [
+   "https://www.museum.go.kr/relic_image/PS01001001/bon000/2024/0131084535490/bon011615-000-80000.jpg"
+  ],
+  "credit": "일월오봉도, 작가 미상, 조선 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+  "crop": [
+   0.025,
+   0.035,
+   0.985,
+   0.8
+  ],
+  "note": "병풍 아래 받침을 잘라 냄"
+ },
+ {
+  "key": "sipjangsaeng",
+  "title": "십장생도",
+  "category": "우리 그림",
+  "author": "작가 미상",
+  "year": "조선",
+  "holder": "국립중앙박물관",
+  "source": {
+   "name": "국립중앙박물관",
+   "author": "작가 미상",
+   "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=72963"
+  },
+  "license": {
+   "name": "공공누리 제1유형 (출처표시)",
+   "url": "https://www.kogl.or.kr/info/licenseType1.do"
+  },
+  "images": [
+   "https://www.museum.go.kr/relic_image/PS01001001/duk000/2019/0926101937293/duk005827-000-90500.jpg",
+   "https://www.museum.go.kr/relic_image/PS01001001/duk000/2019/0926101938802/duk005827-000-90600.jpg",
+   "https://www.museum.go.kr/relic_image/PS01001001/duk000/2019/0926101940396/duk005827-000-90700.jpg",
+   "https://www.museum.go.kr/relic_image/PS01001001/duk000/2019/0926101941964/duk005827-000-90800.jpg"
+  ],
+  "credit": "십장생도, 작가 미상, 조선 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+  "note": "병풍 8폭 가운데 5~8폭을 이어 붙임"
+ },
+ {
+  "key": "taepyeong",
+  "title": "태평성시도",
+  "category": "우리 그림",
+  "author": "작가 미상",
+  "year": "조선",
+  "holder": "국립중앙박물관",
+  "source": {
+   "name": "국립중앙박물관",
+   "author": "작가 미상",
+   "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=1349"
+  },
+  "license": {
+   "name": "공공누리 제1유형 (출처표시)",
+   "url": "https://www.kogl.or.kr/info/licenseType1.do"
+  },
+  "images": [
+   "https://www.museum.go.kr/relic_image/PS01001001/duk004/2017/0511164914685/duk004481-00-02.jpg"
+  ],
+  "credit": "태평성시도, 작가 미상, 조선 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+  "note": "박물관이 제공한 부분 이미지(도시 풍경)"
+ },
+ {
+  "key": "dog-puppies",
+  "title": "어미개와 강아지",
+  "category": "우리 그림",
+  "author": "이암",
+  "year": "16세기",
+  "holder": "국립중앙박물관",
+  "source": {
+   "name": "국립중앙박물관",
+   "author": "이암",
+   "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=331"
+  },
+  "license": {
+   "name": "공공누리 제1유형 (출처표시)",
+   "url": "https://www.kogl.or.kr/info/licenseType1.do"
+  },
+  "images": [
+   "https://www.museum.go.kr/relic_image/PS01001001/bon000/2019/0925124355224/bon000255-000-80000.jpg"
+  ],
+  "credit": "어미개와 강아지, 이암, 16세기 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)"
+ },
+ {
+  "key": "blue-marble",
+  "title": "블루 마블 (지구)",
+  "category": "사진",
+  "author": "NASA",
+  "year": "2002",
+  "holder": "NASA",
+  "source": {
+   "name": "Wikimedia Commons",
+   "author": "NASA",
+   "url": "https://commons.wikimedia.org/wiki/File:Blue_Marble_2002.png"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/23/Blue_Marble_2002.png/3840px-Blue_Marble_2002.png"
+  ],
+  "credit": "블루 마블 (지구) — NASA, 퍼블릭 도메인"
+ },
+ {
+  "key": "pluto",
+  "title": "명왕성",
+  "category": "사진",
+  "author": "NASA 뉴허라이즌스",
+  "year": "2015",
+  "holder": "NASA",
+  "source": {
+   "name": "Wikimedia Commons",
+   "author": "NASA 뉴허라이즌스",
+   "url": "https://commons.wikimedia.org/wiki/File:Pluto_in_True_Color_-_High-Res.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Pluto_in_True_Color_-_High-Res.jpg/3840px-Pluto_in_True_Color_-_High-Res.jpg"
+  ],
+  "credit": "명왕성 — NASA, 퍼블릭 도메인"
+ },
+ {
+  "key": "prismatic-spring",
+  "title": "그랜드 프리즈매틱 온천",
+  "category": "사진",
+  "author": "옐로스톤 국립공원",
+  "year": "",
+  "holder": "미국 국립공원관리청",
+  "source": {
+   "name": "Wikimedia Commons",
+   "author": "옐로스톤 국립공원",
+   "url": "https://commons.wikimedia.org/wiki/File:Grand_Prismatic_Spring_(18650461993).jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://upload.wikimedia.org/wikipedia/commons/7/71/Grand_Prismatic_Spring_%2818650461993%29.jpg"
+  ],
+  "credit": "그랜드 프리즈매틱 온천 — 미국 국립공원관리청, 퍼블릭 도메인"
+ },
+ {
+  "key": "neuschwanstein",
+  "title": "노이슈반슈타인성",
+  "category": "사진",
+  "author": "Wilfredor",
+  "year": "2024",
+  "holder": "Wikimedia Commons",
+  "source": {
+   "name": "Wikimedia Commons",
+   "author": "Wilfredor",
+   "url": "https://commons.wikimedia.org/wiki/File:Neuschwanstein_Castle_2024.jpg"
+  },
+  "license": {
+   "name": "CC0 1.0",
+   "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Neuschwanstein_Castle_2024.jpg/3840px-Neuschwanstein_Castle_2024.jpg"
+  ],
+  "credit": "노이슈반슈타인성 — Wilfredor, Wikimedia Commons, CC0 1.0"
+ },
+ {
+  "key": "monarch-butterfly",
+  "title": "제왕나비와 박주가리 꽃",
+  "category": "사진",
+  "author": "미국 어류야생동물관리국",
+  "year": "",
+  "holder": "U.S. Fish and Wildlife Service",
+  "source": {
+   "name": "Wikimedia Commons",
+   "author": "미국 어류야생동물관리국",
+   "url": "https://commons.wikimedia.org/wiki/File:Monarch_butterfly_on_butterfly_milkweed_(53069280718).jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/Monarch_butterfly_on_butterfly_milkweed_%2853069280718%29.jpg/3840px-Monarch_butterfly_on_butterfly_milkweed_%2853069280718%29.jpg"
+  ],
+  "credit": "제왕나비와 박주가리 꽃 — U.S. Fish and Wildlife Service, 퍼블릭 도메인"
+ },
+ {
+  "key": "hyangwonjeong",
+  "title": "경복궁 향원정",
+  "category": "사진",
+  "author": "Huntsmanleader",
+  "year": "",
+  "holder": "Wikimedia Commons",
+  "source": {
+   "name": "Wikimedia Commons",
+   "author": "Huntsmanleader",
+   "url": "https://commons.wikimedia.org/wiki/File:Gyeongbok_Palace_Lake.jpg"
+  },
+  "license": {
+   "name": "CC0 1.0",
+   "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+  },
+  "images": [
+   "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/23/Gyeongbok_Palace_Lake.jpg/3840px-Gyeongbok_Palace_Lake.jpg"
+  ],
+  "credit": "경복궁 향원정 — Huntsmanleader, Wikimedia Commons, CC0 1.0"
+ },
+ {
+  "key": "nursery-alice",
+  "title": "너서리 앨리스",
+  "category": "삽화",
+  "author": "존 테니얼",
+  "year": "1890",
+  "holder": "영국 도서관",
+  "source": {
+   "name": "Wikimedia Commons",
+   "author": "존 테니얼",
+   "url": "https://commons.wikimedia.org/wiki/File:John_Tenniel_-_Illustration_from_The_Nursery_Alice_(1890)_-_c03757_07.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://upload.wikimedia.org/wikipedia/commons/1/10/John_Tenniel_-_Illustration_from_The_Nursery_Alice_%281890%29_-_c03757_07.jpg"
+  ],
+  "credit": "너서리 앨리스, 존 테니얼, 1890 — 영국 도서관 / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+ },
+ {
+  "key": "wizard-of-oz",
+  "title": "오즈의 마법사 표지",
+  "category": "삽화",
+  "author": "W. W. 덴슬로",
+  "year": "1900",
+  "holder": "미국 의회도서관",
+  "source": {
+   "name": "Wikimedia Commons",
+   "author": "W. W. 덴슬로",
+   "url": "https://commons.wikimedia.org/wiki/File:The_Wonderful_Wizard_of_Oz_-_W.W._Denslow_cover.jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://upload.wikimedia.org/wikipedia/commons/d/d4/The_Wonderful_Wizard_of_Oz_-_W.W._Denslow_cover.jpg"
+  ],
+  "credit": "오즈의 마법사 표지, W. W. 덴슬로, 1900 — 미국 의회도서관 / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+ },
+ {
+  "key": "under-the-window",
+  "title": "창문 아래 (표지)",
+  "category": "삽화",
+  "author": "케이트 그리너웨이",
+  "year": "1879",
+  "holder": "프랑스 국립도서관",
+  "source": {
+   "name": "Wikimedia Commons (프랑스 국립도서관 Gallica)",
+   "author": "케이트 그리너웨이",
+   "url": "https://commons.wikimedia.org/wiki/File:Under_the_Window_-_Pictures_and_Rhymes_for_Children_-_by_Kate_Greenaway_;_Engraved_and_printed_by_Edmund_Evans_-_btv1b105084617_(01_of_74).jpg"
+  },
+  "license": {
+   "name": "퍼블릭 도메인",
+   "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  },
+  "images": [
+   "https://upload.wikimedia.org/wikipedia/commons/7/7d/Under_the_Window_-_Pictures_and_Rhymes_for_Children_-_by_Kate_Greenaway_%3B_Engraved_and_printed_by_Edmund_Evans_-_btv1b105084617_%2801_of_74%29.jpg"
+  ],
+  "credit": "창문 아래 (표지), 케이트 그리너웨이, 1879 — 프랑스 국립도서관 / 이미지: Wikimedia Commons (프랑스 국립도서관 Gallica), 퍼블릭 도메인"
+ }
+]

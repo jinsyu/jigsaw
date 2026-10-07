@@ -4,7 +4,8 @@
     {
       "key": "sea",
       "title": "바다 친구들",
-      "category": "자연",
+      "category": "자체 제작",
+      "topic": "자연",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/sea.webp",
@@ -17,12 +18,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "바다 친구들 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "village",
       "title": "숲속 마을",
-      "category": "자연",
+      "category": "자체 제작",
+      "topic": "자연",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/village.webp",
@@ -35,12 +38,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "숲속 마을 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "space",
       "title": "우주 여행",
-      "category": "과학",
+      "category": "자체 제작",
+      "topic": "과학",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/space.webp",
@@ -53,12 +58,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "우주 여행 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "garden",
       "title": "꽃밭",
-      "category": "자연",
+      "category": "자체 제작",
+      "topic": "자연",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/garden.webp",
@@ -71,12 +78,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "꽃밭 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "classroom",
       "title": "우리 반 교실",
-      "category": "학교",
+      "category": "자체 제작",
+      "topic": "학교",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/classroom.webp",
@@ -89,12 +98,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "우리 반 교실 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "friends",
       "title": "우리 반 친구들",
-      "category": "학교",
+      "category": "자체 제작",
+      "topic": "학교",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/friends.webp",
@@ -107,12 +118,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "우리 반 친구들 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "picnic",
       "title": "봄 소풍",
-      "category": "계절",
+      "category": "자체 제작",
+      "topic": "계절",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/picnic.webp",
@@ -125,12 +138,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "봄 소풍 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "water-play",
       "title": "여름 물놀이",
-      "category": "계절",
+      "category": "자체 제작",
+      "topic": "계절",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/water-play.webp",
@@ -143,12 +158,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "여름 물놀이 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "autumn-field",
       "title": "가을 들판",
-      "category": "계절",
+      "category": "자체 제작",
+      "topic": "계절",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/autumn-field.webp",
@@ -161,12 +178,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "가을 들판 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "snowman",
       "title": "겨울 눈사람",
-      "category": "계절",
+      "category": "자체 제작",
+      "topic": "계절",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/snowman.webp",
@@ -179,12 +198,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "겨울 눈사람 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "sports-day",
       "title": "운동회",
-      "category": "학교",
+      "category": "자체 제작",
+      "topic": "학교",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/sports-day.webp",
@@ -197,12 +218,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "운동회 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "playground",
       "title": "놀이터",
-      "category": "학교",
+      "category": "자체 제작",
+      "topic": "학교",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/playground.webp",
@@ -215,12 +238,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "놀이터 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "farm",
       "title": "농장 동물",
-      "category": "동물",
+      "category": "자체 제작",
+      "topic": "동물",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/farm.webp",
@@ -233,12 +258,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "농장 동물 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "giraffe",
       "title": "기린과 코끼리",
-      "category": "동물",
+      "category": "자체 제작",
+      "topic": "동물",
       "width": 1200,
       "height": 1800,
       "src": "/images/builtin/giraffe.webp",
@@ -251,12 +278,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "기린과 코끼리 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "dinosaurs",
       "title": "공룡 계곡",
-      "category": "동물",
+      "category": "자체 제작",
+      "topic": "동물",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/dinosaurs.webp",
@@ -269,12 +298,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "공룡 계곡 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "train",
       "title": "기차 여행",
-      "category": "탈것",
+      "category": "자체 제작",
+      "topic": "탈것",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/train.webp",
@@ -287,12 +318,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "기차 여행 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "balloons",
       "title": "열기구",
-      "category": "탈것",
+      "category": "자체 제작",
+      "topic": "탈것",
       "width": 1200,
       "height": 1800,
       "src": "/images/builtin/balloons.webp",
@@ -305,12 +338,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "열기구 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "lighthouse",
       "title": "밤바다 등대",
-      "category": "자연",
+      "category": "자체 제작",
+      "topic": "자연",
       "width": 1200,
       "height": 1800,
       "src": "/images/builtin/lighthouse.webp",
@@ -323,12 +358,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "밤바다 등대 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "chuseok",
       "title": "추석 보름달",
-      "category": "명절",
+      "category": "자체 제작",
+      "topic": "명절",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/chuseok.webp",
@@ -341,12 +378,14 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "추석 보름달 — 함께 퍼즐 자체 제작"
     },
     {
       "key": "seollal",
       "title": "설날 연날리기",
-      "category": "명절",
+      "category": "자체 제작",
+      "topic": "명절",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/seollal.webp",
@@ -359,7 +398,649 @@
       "license": {
         "name": "함께 퍼즐 수업용으로 자유롭게 사용",
         "url": null
-      }
+      },
+      "credit": "설날 연날리기 — 함께 퍼즐 자체 제작"
+    },
+    {
+      "key": "starry-night",
+      "title": "별이 빛나는 밤",
+      "category": "명화",
+      "width": 1800,
+      "height": 1425,
+      "src": "/images/builtin/starry-night.webp",
+      "thumb": "/images/builtin/starry-night-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Google Art Project)",
+        "author": "빈센트 반 고흐",
+        "url": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "별이 빛나는 밤, 빈센트 반 고흐, 1889 — 뉴욕 현대미술관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인",
+      "year": "1889",
+      "holder": "뉴욕 현대미술관"
+    },
+    {
+      "key": "cafe-terrace",
+      "title": "밤의 카페 테라스",
+      "category": "명화",
+      "width": 1371,
+      "height": 1800,
+      "src": "/images/builtin/cafe-terrace.webp",
+      "thumb": "/images/builtin/cafe-terrace-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "빈센트 반 고흐",
+        "url": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Terrasse_des_Caf%C3%A9s_an_der_Place_du_Forum_in_Arles_am_Abend1.jpeg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "밤의 카페 테라스, 빈센트 반 고흐, 1888 — 크뢸러뮐러 미술관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1888",
+      "holder": "크뢸러뮐러 미술관"
+    },
+    {
+      "key": "bedroom",
+      "title": "침실",
+      "category": "명화",
+      "width": 1800,
+      "height": 1405,
+      "src": "/images/builtin/bedroom.webp",
+      "thumb": "/images/builtin/bedroom-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Google Art Project)",
+        "author": "빈센트 반 고흐",
+        "url": "https://commons.wikimedia.org/wiki/File:Vincent_van_Gogh_-_The_Bedroom_-_Google_Art_Project.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "침실, 빈센트 반 고흐, 1889 — 시카고 미술관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인",
+      "year": "1889",
+      "holder": "시카고 미술관"
+    },
+    {
+      "key": "wheat-cypresses",
+      "title": "사이프러스가 있는 밀밭",
+      "category": "명화",
+      "width": 1800,
+      "height": 1410,
+      "src": "/images/builtin/wheat-cypresses.webp",
+      "thumb": "/images/builtin/wheat-cypresses-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스)",
+        "author": "빈센트 반 고흐",
+        "url": "https://commons.wikimedia.org/wiki/File:Wheat-Field-with-Cypresses-(1889)-Vincent-van-Gogh-Met.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "사이프러스가 있는 밀밭, 빈센트 반 고흐, 1889 — 메트로폴리탄 미술관 / 이미지: Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스), 퍼블릭 도메인",
+      "year": "1889",
+      "holder": "메트로폴리탄 미술관"
+    },
+    {
+      "key": "water-lily-bridge",
+      "title": "수련 연못 위의 다리",
+      "category": "명화",
+      "width": 1435,
+      "height": 1800,
+      "src": "/images/builtin/water-lily-bridge.webp",
+      "thumb": "/images/builtin/water-lily-bridge-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스)",
+        "author": "클로드 모네",
+        "url": "https://commons.wikimedia.org/wiki/File:Bridge_over_a_Pond_of_Water_Lilies_MET_DT1854.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "수련 연못 위의 다리, 클로드 모네, 1899 — 메트로폴리탄 미술관 / 이미지: Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스), CC0 1.0",
+      "year": "1899",
+      "holder": "메트로폴리탄 미술관",
+      "note": "스캔 테두리를 잘라 냄"
+    },
+    {
+      "key": "poppy-field",
+      "title": "아르장퇴유 근처 양귀비 들판",
+      "category": "명화",
+      "width": 1800,
+      "height": 1331,
+      "src": "/images/builtin/poppy-field.webp",
+      "thumb": "/images/builtin/poppy-field-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스)",
+        "author": "클로드 모네",
+        "url": "https://commons.wikimedia.org/wiki/File:Poppy_Fields_near_Argenteuil_MET_DT1034.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "아르장퇴유 근처 양귀비 들판, 클로드 모네, 1875 — 메트로폴리탄 미술관 / 이미지: Wikimedia Commons (메트로폴리탄 미술관 오픈 액세스), CC0 1.0",
+      "year": "1875",
+      "holder": "메트로폴리탄 미술관",
+      "note": "스캔 테두리를 잘라 냄"
+    },
+    {
+      "key": "moulin-galette",
+      "title": "물랭 드 라 갈레트의 무도회",
+      "category": "명화",
+      "width": 1800,
+      "height": 1338,
+      "src": "/images/builtin/moulin-galette.webp",
+      "thumb": "/images/builtin/moulin-galette-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Google Art Project)",
+        "author": "피에르오귀스트 르누아르",
+        "url": "https://commons.wikimedia.org/wiki/File:Auguste_Renoir_-_Dance_at_Le_Moulin_de_la_Galette_-_Google_Art_Project.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "물랭 드 라 갈레트의 무도회, 피에르오귀스트 르누아르, 1876 — 오르세 미술관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인",
+      "year": "1876",
+      "holder": "오르세 미술관"
+    },
+    {
+      "key": "grande-jatte",
+      "title": "그랑드 자트 섬의 일요일 오후",
+      "category": "명화",
+      "width": 1800,
+      "height": 1198,
+      "src": "/images/builtin/grande-jatte.webp",
+      "thumb": "/images/builtin/grande-jatte-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Google Art Project)",
+        "author": "조르주 쇠라",
+        "url": "https://commons.wikimedia.org/wiki/File:Georges_Seurat_-_A_Sunday_on_La_Grande_Jatte_--_1884_-_Google_Art_Project.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "그랑드 자트 섬의 일요일 오후, 조르주 쇠라, 1884–1886 — 시카고 미술관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인",
+      "year": "1884–1886",
+      "holder": "시카고 미술관"
+    },
+    {
+      "key": "childrens-games",
+      "title": "아이들의 놀이",
+      "category": "명화",
+      "width": 1800,
+      "height": 1307,
+      "src": "/images/builtin/childrens-games.webp",
+      "thumb": "/images/builtin/childrens-games-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Google Art Project)",
+        "author": "피터르 브뤼헐",
+        "url": "https://commons.wikimedia.org/wiki/File:Pieter_Bruegel_the_Elder_-_Children%E2%80%99s_Games_-_Google_Art_Project.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "아이들의 놀이, 피터르 브뤼헐, 1560 — 빈 미술사 박물관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인",
+      "year": "1560",
+      "holder": "빈 미술사 박물관"
+    },
+    {
+      "key": "hunters-snow",
+      "title": "눈 속의 사냥꾼",
+      "category": "명화",
+      "width": 1800,
+      "height": 1281,
+      "src": "/images/builtin/hunters-snow.webp",
+      "thumb": "/images/builtin/hunters-snow-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Google Art Project)",
+        "author": "피터르 브뤼헐",
+        "url": "https://commons.wikimedia.org/wiki/File:Pieter_Bruegel_the_Elder_-_Hunters_in_the_Snow_(Winter)_-_Google_Art_Project.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "눈 속의 사냥꾼, 피터르 브뤼헐, 1565 — 빈 미술사 박물관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인",
+      "year": "1565",
+      "holder": "빈 미술사 박물관"
+    },
+    {
+      "key": "great-wave",
+      "title": "가나가와 해변의 큰 파도",
+      "category": "명화",
+      "width": 1800,
+      "height": 1232,
+      "src": "/images/builtin/great-wave.webp",
+      "thumb": "/images/builtin/great-wave-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "가쓰시카 호쿠사이",
+        "url": "https://commons.wikimedia.org/wiki/File:Great_Wave_off_Kanagawa2.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "가나가와 해변의 큰 파도, 가쓰시카 호쿠사이, 1830년대 초(원판) — 미국 의회도서관 소장 아다치 재판본 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1830년대 초(원판)",
+      "holder": "미국 의회도서관",
+      "note": "쇼와 시대(1926~1989) 아다치 판 재판본을 복원한 이미지"
+    },
+    {
+      "key": "sunflowers",
+      "title": "해바라기",
+      "category": "명화",
+      "width": 1364,
+      "height": 1800,
+      "src": "/images/builtin/sunflowers.webp",
+      "thumb": "/images/builtin/sunflowers-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Google Art Project)",
+        "author": "빈센트 반 고흐",
+        "url": "https://commons.wikimedia.org/wiki/File:Vincent_van_Gogh_-_Zonnebloemen_-_Google_Art_Project.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "해바라기, 빈센트 반 고흐, 1889 — 반 고흐 미술관 / 이미지: Wikimedia Commons (Google Art Project), 퍼블릭 도메인",
+      "year": "1889",
+      "holder": "반 고흐 미술관"
+    },
+    {
+      "key": "ssireum",
+      "title": "씨름",
+      "category": "우리 그림",
+      "width": 1463,
+      "height": 1800,
+      "src": "/images/builtin/ssireum.webp",
+      "thumb": "/images/builtin/ssireum-thumb.webp",
+      "source": {
+        "name": "국립중앙박물관",
+        "author": "김홍도",
+        "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=551"
+      },
+      "license": {
+        "name": "공공누리 제1유형 (출처표시)",
+        "url": "https://www.kogl.or.kr/info/licenseType1.do"
+      },
+      "credit": "씨름, 《단원 풍속도첩》, 김홍도, 18세기 후반 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+      "year": "18세기 후반",
+      "holder": "국립중앙박물관",
+      "note": "색 보정표를 잘라 냄"
+    },
+    {
+      "key": "seodang",
+      "title": "서당",
+      "category": "우리 그림",
+      "width": 1513,
+      "height": 1800,
+      "src": "/images/builtin/seodang.webp",
+      "thumb": "/images/builtin/seodang-thumb.webp",
+      "source": {
+        "name": "국립중앙박물관",
+        "author": "김홍도",
+        "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=552"
+      },
+      "license": {
+        "name": "공공누리 제1유형 (출처표시)",
+        "url": "https://www.kogl.or.kr/info/licenseType1.do"
+      },
+      "credit": "서당, 《단원 풍속도첩》, 김홍도, 18세기 후반 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+      "year": "18세기 후반",
+      "holder": "국립중앙박물관",
+      "note": "색 보정표를 잘라 냄"
+    },
+    {
+      "key": "mudong",
+      "title": "춤추는 아이",
+      "category": "우리 그림",
+      "width": 1485,
+      "height": 1800,
+      "src": "/images/builtin/mudong.webp",
+      "thumb": "/images/builtin/mudong-thumb.webp",
+      "source": {
+        "name": "국립중앙박물관",
+        "author": "김홍도",
+        "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=553"
+      },
+      "license": {
+        "name": "공공누리 제1유형 (출처표시)",
+        "url": "https://www.kogl.or.kr/info/licenseType1.do"
+      },
+      "credit": "춤추는 아이, 《단원 풍속도첩》, 김홍도, 18세기 후반 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+      "year": "18세기 후반",
+      "holder": "국립중앙박물관",
+      "note": "색 보정표를 잘라 냄"
+    },
+    {
+      "key": "chaekgado",
+      "title": "책가도",
+      "category": "우리 그림",
+      "width": 1800,
+      "height": 818,
+      "src": "/images/builtin/chaekgado.webp",
+      "thumb": "/images/builtin/chaekgado-thumb.webp",
+      "source": {
+        "name": "국립중앙박물관",
+        "author": "작가 미상",
+        "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=36559783"
+      },
+      "license": {
+        "name": "공공누리 제1유형 (출처표시)",
+        "url": "https://www.kogl.or.kr/info/licenseType1.do"
+      },
+      "credit": "책가도, 작가 미상, 조선 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+      "year": "조선",
+      "holder": "국립중앙박물관",
+      "note": "액자 테두리를 잘라 냄"
+    },
+    {
+      "key": "magpie-tiger",
+      "title": "까치와 호랑이",
+      "category": "우리 그림",
+      "width": 1038,
+      "height": 1800,
+      "src": "/images/builtin/magpie-tiger.webp",
+      "thumb": "/images/builtin/magpie-tiger-thumb.webp",
+      "source": {
+        "name": "국립중앙박물관",
+        "author": "작가 미상",
+        "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=36552744"
+      },
+      "license": {
+        "name": "공공누리 제1유형 (출처표시)",
+        "url": "https://www.kogl.or.kr/info/licenseType1.do"
+      },
+      "credit": "까치와 호랑이, 작가 미상, 조선 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+      "year": "조선",
+      "holder": "국립중앙박물관",
+      "note": "족자 표장을 잘라 냄"
+    },
+    {
+      "key": "irworobongdo",
+      "title": "일월오봉도",
+      "category": "우리 그림",
+      "width": 1800,
+      "height": 944,
+      "src": "/images/builtin/irworobongdo.webp",
+      "thumb": "/images/builtin/irworobongdo-thumb.webp",
+      "source": {
+        "name": "국립중앙박물관",
+        "author": "작가 미상",
+        "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=225080"
+      },
+      "license": {
+        "name": "공공누리 제1유형 (출처표시)",
+        "url": "https://www.kogl.or.kr/info/licenseType1.do"
+      },
+      "credit": "일월오봉도, 작가 미상, 조선 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+      "year": "조선",
+      "holder": "국립중앙박물관",
+      "note": "병풍 아래 받침을 잘라 냄"
+    },
+    {
+      "key": "sipjangsaeng",
+      "title": "십장생도",
+      "category": "우리 그림",
+      "width": 1800,
+      "height": 1144,
+      "src": "/images/builtin/sipjangsaeng.webp",
+      "thumb": "/images/builtin/sipjangsaeng-thumb.webp",
+      "source": {
+        "name": "국립중앙박물관",
+        "author": "작가 미상",
+        "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=72963"
+      },
+      "license": {
+        "name": "공공누리 제1유형 (출처표시)",
+        "url": "https://www.kogl.or.kr/info/licenseType1.do"
+      },
+      "credit": "십장생도, 작가 미상, 조선 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+      "year": "조선",
+      "holder": "국립중앙박물관",
+      "note": "병풍 8폭 가운데 5~8폭을 이어 붙임"
+    },
+    {
+      "key": "taepyeong",
+      "title": "태평성시도",
+      "category": "우리 그림",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/taepyeong.webp",
+      "thumb": "/images/builtin/taepyeong-thumb.webp",
+      "source": {
+        "name": "국립중앙박물관",
+        "author": "작가 미상",
+        "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=1349"
+      },
+      "license": {
+        "name": "공공누리 제1유형 (출처표시)",
+        "url": "https://www.kogl.or.kr/info/licenseType1.do"
+      },
+      "credit": "태평성시도, 작가 미상, 조선 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+      "year": "조선",
+      "holder": "국립중앙박물관",
+      "note": "박물관이 제공한 부분 이미지(도시 풍경)"
+    },
+    {
+      "key": "dog-puppies",
+      "title": "어미개와 강아지",
+      "category": "우리 그림",
+      "width": 1045,
+      "height": 1800,
+      "src": "/images/builtin/dog-puppies.webp",
+      "thumb": "/images/builtin/dog-puppies-thumb.webp",
+      "source": {
+        "name": "국립중앙박물관",
+        "author": "이암",
+        "url": "https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?schM=view&relicId=331"
+      },
+      "license": {
+        "name": "공공누리 제1유형 (출처표시)",
+        "url": "https://www.kogl.or.kr/info/licenseType1.do"
+      },
+      "credit": "어미개와 강아지, 이암, 16세기 — 국립중앙박물관, 공공누리 제1유형 (www.museum.go.kr)",
+      "year": "16세기",
+      "holder": "국립중앙박물관"
+    },
+    {
+      "key": "blue-marble",
+      "title": "블루 마블 (지구)",
+      "category": "사진",
+      "width": 1800,
+      "height": 900,
+      "src": "/images/builtin/blue-marble.webp",
+      "thumb": "/images/builtin/blue-marble-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "NASA",
+        "url": "https://commons.wikimedia.org/wiki/File:Blue_Marble_2002.png"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "블루 마블 (지구) — NASA, 퍼블릭 도메인",
+      "year": "2002",
+      "holder": "NASA"
+    },
+    {
+      "key": "pluto",
+      "title": "명왕성",
+      "category": "사진",
+      "width": 1800,
+      "height": 1800,
+      "src": "/images/builtin/pluto.webp",
+      "thumb": "/images/builtin/pluto-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "NASA 뉴허라이즌스",
+        "url": "https://commons.wikimedia.org/wiki/File:Pluto_in_True_Color_-_High-Res.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "명왕성 — NASA, 퍼블릭 도메인",
+      "year": "2015",
+      "holder": "NASA"
+    },
+    {
+      "key": "prismatic-spring",
+      "title": "그랜드 프리즈매틱 온천",
+      "category": "사진",
+      "width": 1800,
+      "height": 1189,
+      "src": "/images/builtin/prismatic-spring.webp",
+      "thumb": "/images/builtin/prismatic-spring-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "옐로스톤 국립공원",
+        "url": "https://commons.wikimedia.org/wiki/File:Grand_Prismatic_Spring_(18650461993).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "그랜드 프리즈매틱 온천 — 미국 국립공원관리청, 퍼블릭 도메인",
+      "year": "",
+      "holder": "미국 국립공원관리청"
+    },
+    {
+      "key": "neuschwanstein",
+      "title": "노이슈반슈타인성",
+      "category": "사진",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/neuschwanstein.webp",
+      "thumb": "/images/builtin/neuschwanstein-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "Wilfredor",
+        "url": "https://commons.wikimedia.org/wiki/File:Neuschwanstein_Castle_2024.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "노이슈반슈타인성 — Wilfredor, Wikimedia Commons, CC0 1.0",
+      "year": "2024",
+      "holder": "Wikimedia Commons"
+    },
+    {
+      "key": "monarch-butterfly",
+      "title": "제왕나비와 박주가리 꽃",
+      "category": "사진",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/monarch-butterfly.webp",
+      "thumb": "/images/builtin/monarch-butterfly-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "미국 어류야생동물관리국",
+        "url": "https://commons.wikimedia.org/wiki/File:Monarch_butterfly_on_butterfly_milkweed_(53069280718).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "제왕나비와 박주가리 꽃 — U.S. Fish and Wildlife Service, 퍼블릭 도메인",
+      "year": "",
+      "holder": "U.S. Fish and Wildlife Service"
+    },
+    {
+      "key": "hyangwonjeong",
+      "title": "경복궁 향원정",
+      "category": "사진",
+      "width": 1800,
+      "height": 1350,
+      "src": "/images/builtin/hyangwonjeong.webp",
+      "thumb": "/images/builtin/hyangwonjeong-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "Huntsmanleader",
+        "url": "https://commons.wikimedia.org/wiki/File:Gyeongbok_Palace_Lake.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "경복궁 향원정 — Huntsmanleader, Wikimedia Commons, CC0 1.0",
+      "year": "",
+      "holder": "Wikimedia Commons"
+    },
+    {
+      "key": "nursery-alice",
+      "title": "너서리 앨리스",
+      "category": "삽화",
+      "width": 1800,
+      "height": 1221,
+      "src": "/images/builtin/nursery-alice.webp",
+      "thumb": "/images/builtin/nursery-alice-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "존 테니얼",
+        "url": "https://commons.wikimedia.org/wiki/File:John_Tenniel_-_Illustration_from_The_Nursery_Alice_(1890)_-_c03757_07.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "너서리 앨리스, 존 테니얼, 1890 — 영국 도서관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1890",
+      "holder": "영국 도서관"
+    },
+    {
+      "key": "wizard-of-oz",
+      "title": "오즈의 마법사 표지",
+      "category": "삽화",
+      "width": 1452,
+      "height": 1800,
+      "src": "/images/builtin/wizard-of-oz.webp",
+      "thumb": "/images/builtin/wizard-of-oz-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "W. W. 덴슬로",
+        "url": "https://commons.wikimedia.org/wiki/File:The_Wonderful_Wizard_of_Oz_-_W.W._Denslow_cover.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "오즈의 마법사 표지, W. W. 덴슬로, 1900 — 미국 의회도서관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1900",
+      "holder": "미국 의회도서관"
+    },
+    {
+      "key": "under-the-window",
+      "title": "창문 아래 (표지)",
+      "category": "삽화",
+      "width": 1446,
+      "height": 1800,
+      "src": "/images/builtin/under-the-window.webp",
+      "thumb": "/images/builtin/under-the-window-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (프랑스 국립도서관 Gallica)",
+        "author": "케이트 그리너웨이",
+        "url": "https://commons.wikimedia.org/wiki/File:Under_the_Window_-_Pictures_and_Rhymes_for_Children_-_by_Kate_Greenaway_;_Engraved_and_printed_by_Edmund_Evans_-_btv1b105084617_(01_of_74).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "창문 아래 (표지), 케이트 그리너웨이, 1879 — 프랑스 국립도서관 / 이미지: Wikimedia Commons (프랑스 국립도서관 Gallica), 퍼블릭 도메인",
+      "year": "1879",
+      "holder": "프랑스 국립도서관"
     }
   ]
 }
