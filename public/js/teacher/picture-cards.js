@@ -35,15 +35,3 @@ export function uploadedDetail(image) {
 export function faceWarning() {
   return h('p', { class: 't-warnline' }, icon('warn', 18), '학생 얼굴이 나온 사진은 학교 방침을 확인한 뒤 올려 주세요.');
 }
-
-// Upload arrives in T8; until then the box explains what it will do.
-export function uploadBox() {
-  return h(
-    'div',
-    { class: 't-upload', 'aria-disabled': 'true' },
-    icon('upload', 28),
-    h('b', {}, '사진 올리기'),
-    h('span', {}, '크기를 자동으로 줄이고', h('br'), '촬영 위치 정보를 지워요'),
-    h('span', { class: 'pill' }, '곧 열려요'),
-  );
-}

@@ -191,6 +191,38 @@ a.t-session:hover { box-shadow: 0 6px 18px rgba(20, 30, 60, .08), inset 0 0 0 1.
 .t-upload-tile { cursor: pointer; }
 .t-upload-tile:hover { border-color: var(--pri); background: #F7F8FF; }
 
+/* 사진 올리기 (T8): drop zone, picker and camera, progress, errors */
+.t-uploader { display: flex; flex-direction: column; gap: 12px; }
+.t-drop {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;
+  padding: 26px 18px; border-radius: 16px; border: 2px dashed #D8D0C2; background: #FFFDF9; color: var(--sub);
+}
+.t-drop > .t-icon { color: var(--pri); }
+.t-drop b { color: var(--ink); font-size: 16px; }
+.t-drop-note { font-size: 13px; line-height: 1.5; color: var(--muted); max-width: 46ch; }
+.t-drop-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 6px; }
+.t-drop-actions .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 18px; }
+.t-drop.is-over { border-color: var(--pri); background: var(--pri-weak); }
+.t-drop.is-busy { opacity: .7; }
+.t-upload-status { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; color: var(--sub); }
+.t-upload-status[hidden] { display: none; }
+.t-upload-bar { width: 100%; height: 8px; appearance: none; border: 0; border-radius: 999px; background: #EFEAE1; overflow: hidden; }
+.t-upload-bar::-webkit-progress-bar { background: #EFEAE1; border-radius: 999px; }
+.t-upload-bar::-webkit-progress-value { background: var(--pri); border-radius: 999px; transition: width .2s; }
+.t-upload-bar::-moz-progress-bar { background: var(--pri); border-radius: 999px; }
+@media (prefers-reduced-motion: reduce) {
+  .t-upload-bar::-webkit-progress-value { transition: none; }
+}
+.t-images-upload { margin-bottom: 18px; }
+.t-images-upload .t-step { margin-bottom: 12px; }
+.t-done { margin-bottom: 12px; font-size: 15px; font-weight: 600; color: var(--ok-ink); }
+.t-pic-manage { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.t-pic-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.t-pic-actions .btn { min-height: 44px; padding: 0 14px; font-size: 14px; }
+.t-confirm-text { flex: 1 0 100%; font-size: 13px; color: var(--sub); }
+.t-pic-msg { font-size: 13px; line-height: 1.45; color: var(--danger-ink); }
+.t-pic-msg:empty { display: none; }
+
 .t-side { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
 .t-side-scroll { position: relative; display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
 .t-side-body { display: flex; flex-direction: column; gap: 22px; min-height: 0; --fade: 32px; }
