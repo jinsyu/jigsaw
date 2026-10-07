@@ -1,13 +1,22 @@
-// 새 수업 만들기 (mockup teacher-create): pick a picture, a piece count and a group count,
-// then '수업 열기' calls create_session and opens the lobby with the code and QR.
+// 새 수업 만들기 (mockup teacher-create): pick a picture, a piece count, a group count and
+// the help settings, then '수업 열기' calls create_session and opens the lobby with the code and QR.
 import { createSession } from './data.js';
 import { h, icon, setTitle } from './dom.js';
-import { GROUP_COUNT, PIECE_COUNT_INITIAL, clampGroupCount, createErrorMessage, piecesPerStudentNote } from './format.js';
+import {
+  GROUP_COUNT,
+  HINT_OPTIONS,
+  PIECE_COUNT_INITIAL,
+  clampGroupCount,
+  createErrorMessage,
+  onOffLabel,
+  piecesPerStudentNote,
+} from './format.js';
 import { faceWarning, pictureCard, uploadBox, uploadedDetail } from './picture-cards.js';
 import { loadBuiltins, loadMyImages } from './pictures.js';
 import { previewOutline } from './preview.js';
 import { sessionPath } from './routes.js';
 import { PIECE_COUNTS } from '../puzzle/geometry.js';
+import { DEFAULT_HINTS } from '../store/puzzle-store.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -15,7 +24,7 @@ export function renderCreate(main, ctx) {
   ctx.setBar('nav', { active: 'new' });
   setTitle('새 수업 만들기');
 
-  const state = { picture: null, pieceCount: PIECE_COUNT_INITIAL, busy: false };
+  const state = { picture: null, pieceCount: PIECE_COUNT_INITIAL, hints: { ...DEFAULT_HINTS }, busy: false };
   let alive = true;
 
   // ----- 1. picture tabs -----
@@ -131,6 +140,40 @@ export function renderCreate(main, ctx) {
   groupInput.addEventListener('change', () => setGroups(groupInput.value));
   setGroups(GROUP_COUNT.initial);
 
+  // 4. help settings (spec rule 10) with a small picture of the frame students will see.
+  const frameMini = h('div', { class: 't-frame-mini' });
+  const hintSwitches = HINT_OPTIONS.map((option) => {
+    const id = `t-hint-${option.key}`;
+    return h(
+      'li',
+      {},
+      h(
+        'label',
+        { class: 't-switch', for: id },
+        h(
+          'span',
+          { class: 't-switch-text' },
+          h('b', { id: `${id}-label` }, option.label),
+          h('small', { id: `${id}-help` }, option.help, ' ', h('em', {}, `(기본: ${onOffLabel(DEFAULT_HINTS[option.key])})`)),
+        ),
+        h('input', {
+          id,
+          type: 'checkbox',
+          role: 'switch',
+          class: 't-switch-input',
+          name: option.key,
+          checked: state.hints[option.key],
+          'aria-labelledby': `${id}-label`,
+          'aria-describedby': `${id}-help`,
+          onchange: (event) => {
+            state.hints[option.key] = event.target.checked;
+            updateFrameMini();
+          },
+        }),
+      ),
+    );
+  });
+
   const error = h('p', { class: 't-error', role: 'alert' });
   const openButton = h('button', { class: 'btn pri big t-open', type: 'button', onclick: open }, '수업 열기');
 
@@ -151,6 +194,14 @@ export function renderCreate(main, ctx) {
       h('label', { class: 't-step', for: 't-group-count' }, h('i', { 'aria-hidden': 'true' }, '3'), '모둠 수'),
       h('div', { class: 't-stepper' }, minus, groupInput, plus),
       h('p', { class: 't-note', id: 't-group-note' }, '모둠마다 따로 퍼즐이 열려요. 모둠당 4~6명이 알맞아요.'),
+    ),
+    h(
+      'fieldset',
+      { class: 't-field t-hints', 'aria-describedby': 't-hints-note' },
+      h('legend', { class: 't-step' }, h('i', { 'aria-hidden': 'true' }, '4'), '도움 설정'),
+      h('p', { class: 't-note t-hints-note', id: 't-hints-note' }, '학년과 목적에 맞게 골라요. 이 수업의 모든 모둠에 똑같이 적용돼요.'),
+      h('figure', { class: 't-frame-look' }, frameMini, h('figcaption', {}, '학생 판 가운데 틀은 이렇게 보여요')),
+      h('ul', { class: 't-switches' }, hintSwitches),
     ),
     h('div', { class: 'spacer' }),
     error,
@@ -194,6 +245,7 @@ export function renderCreate(main, ctx) {
 
   function updatePreview() {
     previewNote.textContent = `${state.pieceCount}조각 미리보기`;
+    updateFrameMini();
     if (!state.picture) {
       previewTitle.textContent = '그림을 골라 주세요';
       preview.replaceChildren(h('span', { class: 't-preview-empty' }, icon('image', 32)));
@@ -201,6 +253,16 @@ export function renderCreate(main, ctx) {
     }
     previewTitle.textContent = state.picture.title;
     preview.replaceChildren(previewSvg(state.picture, state.pieceCount));
+  }
+
+  function updateFrameMini() {
+    frameMini.dataset.outline = String(state.hints.outline);
+    frameMini.dataset.underlay = String(state.hints.underlay);
+    if (!state.picture) {
+      frameMini.replaceChildren();
+      return;
+    }
+    frameMini.replaceChildren(frameSvg(state.picture, state.pieceCount, state.hints));
   }
 
   function choiceRadio(value, picture, checked) {
@@ -329,6 +391,7 @@ export function renderCreate(main, ctx) {
         picture: state.picture,
         pieceCount: state.pieceCount,
         groupCount: clampGroupCount(groupInput.value),
+        hints: state.hints,
       });
       if (alive) ctx.navigate(sessionPath(session.id));
     } catch (err) {
@@ -378,6 +441,38 @@ function previewSvg(picture, pieceCount) {
     path.setAttribute('vector-effect', 'non-scaling-stroke');
     svg.append(path);
   }
+  return svg;
+}
+
+// The empty frame as the student board draws it (play/frame.js): piece outlines and the
+// faint picture follow the help settings.
+function frameSvg(picture, pieceCount, hints) {
+  const outline = previewOutline(pieceCount, picture.width, picture.height);
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${outline.width} ${outline.height}`);
+  svg.setAttribute('role', 'img');
+  const parts = [hints.outline ? '조각 윤곽선 있음' : '바깥 테두리만', hints.underlay ? '흐린 밑그림 있음' : '밑그림 없음'];
+  svg.setAttribute('aria-label', `학생 판의 틀: ${parts.join(', ')}`);
+  const add = (tag, attrs) => {
+    const node = document.createElementNS(SVG_NS, tag);
+    for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+    svg.append(node);
+  };
+  add('rect', { width: outline.width, height: outline.height, fill: '#FBF8F1' });
+  if (hints.underlay) {
+    add('image', {
+      href: picture.src,
+      width: outline.width,
+      height: outline.height,
+      preserveAspectRatio: 'xMidYMid slice',
+      opacity: '0.2',
+    });
+  }
+  const line = { fill: 'none', 'stroke-linejoin': 'round', 'vector-effect': 'non-scaling-stroke' };
+  if (hints.outline) {
+    add('path', { ...line, class: 't-frame-seams', d: outline.paths.join(''), stroke: 'rgba(96, 78, 52, .36)', 'stroke-width': 1 });
+  }
+  add('rect', { ...line, width: outline.width, height: outline.height, stroke: 'rgba(96, 78, 52, .45)', 'stroke-width': 2 });
   return svg;
 }
 

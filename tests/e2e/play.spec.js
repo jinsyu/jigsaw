@@ -384,6 +384,9 @@ test('mouse: drag empty board to pan, wheel to zoom', async ({ page }, testInfo)
 test('first view: the whole frame on phones, the whole board on tablets and desktops', async ({ page }, testInfo) => {
   await openDemo(page);
   const { layout } = await state(page);
+  // Spec rule 5: the board is three times the picture area, each side sqrt(3) times.
+  expect(layout.boardWidth).toBe(layout.width * Math.sqrt(3));
+  expect(layout.boardHeight).toBe(layout.height * Math.sqrt(3));
   const tx = (layout.boardWidth - layout.width) / 2;
   const ty = (layout.boardHeight - layout.height) / 2;
   const box = await boardBox(page);
@@ -400,6 +403,7 @@ test('first view: the whole frame on phones, the whole board on tablets and desk
   const mid = await toClient(page, tx + layout.width / 2, ty + layout.height / 2);
   expect(Math.abs(mid.x - (box.x + box.width / 2))).toBeLessThanOrEqual(1);
   expect(Math.abs(mid.y - (box.y + box.height / 2))).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: testInfo.outputPath('play-first-view.png') });
 });
 
 test('a tablet in portrait (768 x 1024) starts with the whole board', async ({ page }, testInfo) => {

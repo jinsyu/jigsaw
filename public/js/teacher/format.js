@@ -26,6 +26,43 @@ export function sessionSummary({ title, pieceCount, groupCount }) {
   return `${title} · ${pieceCount}조각 · ${groupCount}모둠`;
 }
 
+// Help settings on the create screen (spec rule 10), in screen order.
+// short: the name in the summary on the lobby and 내 수업.
+export const HINT_OPTIONS = [
+  {
+    key: 'preview',
+    label: '들어갈 칸 미리 보기',
+    short: '칸 미리 보기',
+    help: '조각을 끌 때 붙을 자리를 초록색으로 알려 줘요. 꺼도 가까이 놓으면 붙어요.',
+  },
+  {
+    key: 'outline',
+    label: '틀 안 조각 윤곽선',
+    short: '조각 윤곽선',
+    help: '판 가운데 틀에 조각 모양 선을 흐리게 그려요. 끄면 바깥 테두리만 보여요.',
+  },
+  {
+    key: 'pictureButton',
+    label: '완성 그림 보기 버튼',
+    short: '완성 그림 버튼',
+    help: '학생이 완성 그림을 작게 열어 볼 수 있어요. 끄면 그림을 보지 않고 맞춰요.',
+  },
+  {
+    key: 'underlay',
+    label: '틀 안 흐린 밑그림',
+    short: '흐린 밑그림',
+    help: '완성 그림을 틀 안에 아주 흐리게 깔아 줘요. 어린 학년에게 알맞아요.',
+  },
+];
+
+export const onOffLabel = (on) => (on ? '켜짐' : '꺼짐');
+
+// '도움: 조각 윤곽선 · 완성 그림 버튼' (settings that are on), or '도움: 모두 꺼짐'.
+export function hintsSummary(hints) {
+  const on = HINT_OPTIONS.filter((o) => hints[o.key]).map((o) => o.short);
+  return `도움: ${on.length ? on.join(' · ') : '모두 꺼짐'}`;
+}
+
 const STATUS_LABELS = { waiting: '학생 기다리는 중', playing: '퍼즐 하는 중', ended: '끝난 수업' };
 
 export function statusLabel(status) {

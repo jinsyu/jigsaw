@@ -2,7 +2,7 @@
 // changes puzzle data only through a PuzzleStore, so the in-memory demo store
 // and the Supabase store (T11) plug in the same way.
 import { makePuzzle } from '../puzzle/geometry.js';
-import { cellOfPiece, isPuzzleStore, pieceOfCell } from '../store/puzzle-store.js';
+import { cellOfPiece, isPuzzleStore, normalizeHints, pieceOfCell } from '../store/puzzle-store.js';
 import { createBoardView } from './board-view.js';
 import { frameRect } from './frame.js';
 import { predictDrop, snapPreview } from './magnet.js';
@@ -142,7 +142,8 @@ export async function mountPlayScreen(main, store) {
   const { layout } = state;
   ui.title.textContent = state.groupName;
   ui.bar.setAttribute('aria-valuemax', String(state.progress.total));
-  const { hints } = state;
+  // Remote stores pass what the server sent: fill gaps with the defaults once more.
+  const hints = normalizeHints(state.hints);
   if (hints.pictureButton) {
     ui.dialogImg.src = state.picture.src;
     ui.dialogImg.width = state.picture.width;

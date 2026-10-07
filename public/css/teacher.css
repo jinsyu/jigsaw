@@ -121,6 +121,7 @@ a.t-session:hover { box-shadow: 0 6px 18px rgba(20, 30, 60, .08), inset 0 0 0 1.
 .t-session-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .t-session-title { font-size: 17px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .t-session-meta { font-size: 13px; color: var(--sub); line-height: 1.4; }
+.t-session-hints { font-size: 12px; color: var(--muted); line-height: 1.4; }
 .t-nowrap { white-space: nowrap; }
 .t-session-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 2px; }
 .t-session-row .pill { padding: 4px 10px; font-size: 13px; }
@@ -215,6 +216,38 @@ a.t-session:hover { box-shadow: 0 6px 18px rgba(20, 30, 60, .08), inset 0 0 0 1.
 }
 .t-stepper input::-webkit-outer-spin-button, .t-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .t-side .spacer { display: none; }
+.t-hints-note { margin: -4px 0 12px; }
+.t-frame-look { margin: 0 0 6px; display: flex; align-items: center; gap: 12px; }
+.t-frame-mini { flex: none; width: 96px; border-radius: 8px; overflow: hidden; background: var(--board); padding: 6px; }
+.t-frame-mini:empty { display: none; }
+.t-frame-mini svg { display: block; width: 100%; height: auto; }
+.t-frame-look figcaption { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.t-frame-mini:empty + figcaption { display: none; }
+.t-switches { list-style: none; margin: 0; padding: 0; }
+.t-switches li + li { border-top: 1px solid var(--line); }
+.t-switch { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 10px 0; cursor: pointer; }
+.t-switch-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.t-switch-text b { font-size: 15px; font-weight: 700; color: var(--ink); }
+.t-switch-text small { font-size: 13px; color: var(--sub); line-height: 1.45; }
+.t-switch-text em { font-style: normal; color: var(--muted); white-space: nowrap; }
+.t-switch-input {
+  appearance: none; -webkit-appearance: none; flex: none; position: relative; margin: 0; cursor: pointer;
+  width: 50px; height: 30px; border-radius: 999px; background: #8A93A3; transition: background-color .15s;
+}
+.t-switch-input::before {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform .15s;
+}
+.t-switch-input:checked { background: var(--pri); }
+.t-switch-input:checked::before { transform: translateX(20px); }
+.t-switch-input:focus-visible { outline: 3px solid var(--pri); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .t-switch-input, .t-switch-input::before { transition: none; }
+}
+@media (forced-colors: active) {
+  .t-switch-input { border: 2px solid ButtonText; }
+  .t-switch-input::before { background: ButtonText; }
+}
 
 @media (min-width: 720px) {
   .t-pics { grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 14px; }
@@ -255,6 +288,7 @@ a.t-session:hover { box-shadow: 0 6px 18px rgba(20, 30, 60, .08), inset 0 0 0 1.
 .t-join-note { font-size: clamp(14px, 2.6cqi, 19px); color: var(--muted); }
 .t-join-wait { display: flex; align-items: center; gap: 10px; margin-top: clamp(14px, 3.4cqi, 26px); font-size: clamp(16px, 3.4cqi, 24px); font-weight: 700; }
 .t-join-wait .dot { width: 12px; height: 12px; }
+.t-join-hints { margin-top: clamp(8px, 2cqi, 14px); font-size: clamp(13px, 2.2cqi, 16px); color: var(--muted); }
 .t-pulse { animation: t-pulse 1.8s ease-in-out infinite; }
 @keyframes t-pulse { 50% { opacity: .35; } }
 
