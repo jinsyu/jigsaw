@@ -4,12 +4,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { pickConfig } from '../../public/js/config.js';
 import { TEACHER_AUTH_KEY } from '../../public/js/supabase-client.js';
+import { DB_SCHEMA } from '../../public/js/supabase-names.js';
 
 export const LOCAL_TEACHER = { email: 'teacher1@jigsaw.test', password: 'local-teacher-only' };
 export { TEACHER_AUTH_KEY };
 
 const LOCAL = pickConfig('localhost');
-const NODE_CLIENT = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } };
+const NODE_CLIENT = {
+  db: { schema: DB_SCHEMA },
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+};
 
 // Signs the test teacher in against the local stack. Returns { client, session }.
 export async function signInLocalTeacher() {

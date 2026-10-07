@@ -1,8 +1,8 @@
 // Drop resolution: board clamp, snap (merge) detection, snapping into the frame
 // and progress.
 //
-// The server implements exactly these rules in SQL (private.resolve_drop and
-// private.held_by_other in supabase/migrations/*_puzzle_rpc.sql). Both sides are
+// The server implements exactly these rules in SQL (jigsaw_private.resolve_drop and
+// jigsaw_private.held_by_other in supabase/migrations/*_puzzle_rpc.sql). Both sides are
 // checked against tests/fixtures/snap-cases.json (tests/unit/snap.test.js and
 // tests/db/snap-parity.test.js). Change the fixture rules text together with this file.
 //
@@ -203,7 +203,7 @@ export function resolveDrop(layout, clusters, drop, tol = SNAP_TOLERANCE) {
 
 // Holds. A cluster is held by another student when heldBy is set, heldBy !== me,
 // it was grabbed less than HOLD_MS ago (now - heldAt < HOLD_MS, both in ms) and the
-// holder is connected (isOnline(heldBy)). Same test as SQL private.held_by_other().
+// holder is connected (isOnline(heldBy)). Same test as SQL jigsaw_private.held_by_other().
 export function isHeldByOther(cluster, me, now, isOnline) {
   return (
     cluster.heldBy != null &&

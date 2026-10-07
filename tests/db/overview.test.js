@@ -34,7 +34,7 @@ async function startedClass() {
     p_aspect: 4 / 3,
   });
   sessionIds.push(session.id);
-  const { rows } = await sql('select id from public.groups where session_id = $1 order by number', [session.id]);
+  const { rows } = await sql('select id from jigsaw.groups where session_id = $1 order by number', [session.id]);
   const groupIds = rows.map((r) => Number(r.id));
   const students = await Promise.all([studentClient(), studentClient(), studentClient()]);
   for (const [i, student] of students.entries()) {
@@ -53,21 +53,21 @@ describe('session_overview', () => {
 
     // Group 1: piece (0,0) locked in the frame, piece (1,0) and (2,0) stuck together off the frame.
     const { rows: c1 } = await sql(
-      'select cluster_id, col, "row" from public.pieces where group_id = $1 order by "row", col',
+      'select cluster_id, col, "row" from jigsaw.pieces where group_id = $1 order by "row", col',
       [g1],
     );
     const clusterOf = (col, row) => Number(c1.find((p) => p.col === col && p.row === row).cluster_id);
-    await sql('update public.pieces set on_board = true, owner_id = null where group_id = $1 and "row" = 0 and col < 3', [g1]);
-    await sql('update public.clusters set x = 10.5, y = 20.25, locked = true where id = $1', [clusterOf(0, 0)]);
-    await sql('update public.pieces set cluster_id = $1 where group_id = $2 and "row" = 0 and col = 2', [clusterOf(1, 0), g1]);
-    await sql("update public.clusters set x = 1.7761332099907492, y = 3, z = 5, grabbed_by = $2, grabbed_at = now() where id = $1", [
+    await sql('update jigsaw.pieces set on_board = true, owner_id = null where group_id = $1 and "row" = 0 and col < 3', [g1]);
+    await sql('update jigsaw.clusters set x = 10.5, y = 20.25, locked = true where id = $1', [clusterOf(0, 0)]);
+    await sql('update jigsaw.pieces set cluster_id = $1 where group_id = $2 and "row" = 0 and col = 2', [clusterOf(1, 0), g1]);
+    await sql("update jigsaw.clusters set x = 1.7761332099907492, y = 3, z = 5, grabbed_by = $2, grabbed_at = now() where id = $1", [
       clusterOf(1, 0),
       students[0].userId,
     ]);
     // Group 2: complete.
-    await sql('update public.pieces set on_board = true, owner_id = null where group_id = $1', [g2]);
-    await sql('update public.clusters set locked = true where group_id = $1', [g2]);
-    await sql("update public.groups set completed_at = now() where id = $1", [g2]);
+    await sql('update jigsaw.pieces set on_board = true, owner_id = null where group_id = $1', [g2]);
+    await sql('update jigsaw.clusters set locked = true where group_id = $1', [g2]);
+    await sql("update jigsaw.groups set completed_at = now() where id = $1", [g2]);
 
     const overview = await rpcOk(teacher1.client, 'session_overview', { p_session: session.id });
     expect(overview.status).toBe('playing');
@@ -97,10 +97,10 @@ describe('session_overview', () => {
 
   it('잡은 지 10초가 지난 덩어리는 잡은 사람을 보이지 않는다', async () => {
     const { session, groupIds, students } = await startedClass();
-    await sql('update public.pieces set on_board = true, owner_id = null where group_id = $1 and "row" = 0 and col = 0', [groupIds[0]]);
+    await sql('update jigsaw.pieces set on_board = true, owner_id = null where group_id = $1 and "row" = 0 and col = 0', [groupIds[0]]);
     await sql(
-      `update public.clusters set grabbed_by = $2, grabbed_at = now() - interval '11 seconds'
-       where id = (select cluster_id from public.pieces where group_id = $1 and "row" = 0 and col = 0)`,
+      `update jigsaw.clusters set grabbed_by = $2, grabbed_at = now() - interval '11 seconds'
+       where id = (select cluster_id from jigsaw.pieces where group_id = $1 and "row" = 0 and col = 0)`,
       [groupIds[0], students[1].userId],
     );
     const overview = await rpcOk(teacher1.client, 'session_overview', { p_session: session.id });
@@ -122,12 +122,12 @@ describe('session_overview', () => {
 
   it('접속이 끊긴 학생이 잡은 덩어리는 잡은 사람을 보이지 않는다 (서버 held_by_other 와 같은 기준)', async () => {
     const { session, groupIds, students } = await startedClass();
-    const cell = 'select cluster_id from public.pieces where group_id = $1 and "row" = 0 and col = $2';
-    await sql('update public.pieces set on_board = true, owner_id = null where group_id = $1 and "row" = 0 and col < 2', [groupIds[0]]);
-    await sql(`update public.clusters set grabbed_by = $2, grabbed_at = now() where id = (${cell.replace('$2', '0')})`, [groupIds[0], students[0].userId]);
-    await sql(`update public.clusters set grabbed_by = $2, grabbed_at = now() where id = (${cell.replace('$2', '1')})`, [groupIds[0], students[1].userId]);
-    await sql("update public.members set last_seen = now() - interval '20 seconds' where user_id = $1", [students[1].userId]);
-    await sql('update public.members set last_seen = now() where user_id = $1', [students[0].userId]);
+    const cell = 'select cluster_id from jigsaw.pieces where group_id = $1 and "row" = 0 and col = $2';
+    await sql('update jigsaw.pieces set on_board = true, owner_id = null where group_id = $1 and "row" = 0 and col < 2', [groupIds[0]]);
+    await sql(`update jigsaw.clusters set grabbed_by = $2, grabbed_at = now() where id = (${cell.replace('$2', '0')})`, [groupIds[0], students[0].userId]);
+    await sql(`update jigsaw.clusters set grabbed_by = $2, grabbed_at = now() where id = (${cell.replace('$2', '1')})`, [groupIds[0], students[1].userId]);
+    await sql("update jigsaw.members set last_seen = now() - interval '20 seconds' where user_id = $1", [students[1].userId]);
+    await sql('update jigsaw.members set last_seen = now() where user_id = $1', [students[0].userId]);
     const overview = await rpcOk(teacher1.client, 'session_overview', { p_session: session.id });
     const held = Object.fromEntries(overview.groups[0].clusters.map((c) => [c.pieces[0], c.held_by]));
     expect(held).toEqual({ 0: students[0].userId, 1: null });

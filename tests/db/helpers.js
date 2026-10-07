@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import pg from 'pg';
 import { inject } from 'vitest';
 import { gridFor } from '../../public/js/puzzle/geometry.js';
+import { DB_SCHEMA } from '../../public/js/supabase-names.js';
 
 // Seeded local test teachers (supabase/seed.sql). Local stack only.
 export const TEACHERS = {
@@ -13,6 +14,7 @@ export const TEACHERS = {
 const TEACHER_PASSWORD = 'local-teacher-only';
 
 const CLIENT_OPTIONS = {
+  db: { schema: DB_SCHEMA },
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 };
 
@@ -90,7 +92,7 @@ async function insertSession(teacherId, { pieceCount, aspect, imageId }) {
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
     try {
       const { rows: inserted } = await sql(
-        `insert into public.sessions (teacher_id, code, image_id, builtin_key, piece_count, cols, rows, aspect, seed)
+        `insert into jigsaw.sessions (teacher_id, code, image_id, builtin_key, piece_count, cols, rows, aspect, seed)
          values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *`,
         [
           teacherId,
@@ -118,11 +120,11 @@ async function insertPuzzle(groupId, cols, rows) {
   for (let row = 0; row < rows; row += 1) {
     for (let col = 0; col < cols; col += 1) {
       const { rows: cluster } = await sql(
-        'insert into public.clusters (group_id, x, y) values ($1, $2, $3) returning id',
+        'insert into jigsaw.clusters (group_id, x, y) values ($1, $2, $3) returning id',
         [groupId, col * 100, row * 100],
       );
       await sql(
-        'insert into public.pieces (group_id, col, "row", cluster_id) values ($1, $2, $3, $4)',
+        'insert into jigsaw.pieces (group_id, col, "row", cluster_id) values ($1, $2, $3, $4)',
         [groupId, col, row, cluster[0].id],
       );
       pieces.push({ col, row, clusterId: Number(cluster[0].id) });
@@ -140,7 +142,7 @@ export async function createSessionFixture(
   const groups = [];
   for (let number = 1; number <= groupCount; number += 1) {
     const { rows } = await sql(
-      'insert into public.groups (session_id, number) values ($1, $2) returning id',
+      'insert into jigsaw.groups (session_id, number) values ($1, $2) returning id',
       [session.id, number],
     );
     const id = Number(rows[0].id);
@@ -151,7 +153,7 @@ export async function createSessionFixture(
 
 export async function addMember(sessionId, userId, groupId = null, color = null) {
   const { rows } = await sql(
-    `insert into public.members (session_id, user_id, group_id, color)
+    `insert into jigsaw.members (session_id, user_id, group_id, color)
      values ($1, $2, $3, $4) returning id`,
     [sessionId, userId, groupId, color],
   );
@@ -161,14 +163,14 @@ export async function addMember(sessionId, userId, groupId = null, color = null)
 export async function insertImageRow(teacherId, { width = 1600, height = 1200 } = {}) {
   const id = randomUUID();
   const { rows } = await sql(
-    'insert into public.images (id, teacher_id, width, height) values ($1, $2, $3, $4) returning *',
+    'insert into jigsaw.images (id, teacher_id, width, height) values ($1, $2, $3, $4) returning *',
     [id, teacherId, width, height],
   );
   return rows[0];
 }
 
 export async function deleteSessions(ids) {
-  if (ids.length) await sql('delete from public.sessions where id = any($1::bigint[])', [ids]);
+  if (ids.length) await sql('delete from jigsaw.sessions where id = any($1::bigint[])', [ids]);
 }
 
 // Subscribes to a Realtime channel and resolves with the join outcome.

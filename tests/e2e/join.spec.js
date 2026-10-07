@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { expect, test } from '@playwright/test';
 import { pickConfig } from '../../public/js/config.js';
+import { DB_SCHEMA } from '../../public/js/supabase-names.js';
 import { closeSql, deleteSessions, signInPage, sql, teacherSession } from './support/teacher.js';
 
 // T9: students join with a code and a name, wait, and the teacher groups them and starts
@@ -16,7 +17,7 @@ test.afterAll(async () => {
   if (createdSessions.length) {
     await sql(
       `delete from auth.users where is_anonymous and id in
-         (select user_id from public.members where session_id = any($1::bigint[]))`,
+         (select user_id from jigsaw.members where session_id = any($1::bigint[]))`,
       [createdSessions],
     );
   }
@@ -34,7 +35,7 @@ async function openSession(groupCount = 4) {
   });
   if (error) throw error;
   createdSessions.push(data.id);
-  const { rows } = await sql('select id, number from public.groups where session_id = $1 order by number', [data.id]);
+  const { rows } = await sql('select id, number from jigsaw.groups where session_id = $1 order by number', [data.id]);
   return { ...data, groups: rows.map((r) => ({ id: Number(r.id), number: r.number })), client };
 }
 
@@ -177,7 +178,7 @@ test('D3·D4·D14: students join by code or QR, the teacher sees names live, gro
   ]) {
     const { memberId } = await savedEntry(student.page);
     const { rows } = await sql(
-      'select g.number from public.members m join public.groups g on g.id = m.group_id where m.id = $1',
+      'select g.number from jigsaw.members m join jigsaw.groups g on g.id = m.group_id where m.id = $1',
       [memberId],
     );
     await expect(student.page.getByRole('heading', { level: 1 })).toHaveText(`${name}, ${rows[0].number}모둠이에요!`);
@@ -248,7 +249,7 @@ test('D3·D4·D14: students join by code or QR, the teacher sees names live, gro
   }
   await expectNoHorizontalOverflow(a.page);
   await a.page.screenshot({ path: testInfo.outputPath('student-4-started.png') });
-  expect((await sql('select status from public.sessions where id = $1', [session.id])).rows[0].status).toBe('playing');
+  expect((await sql('select status from jigsaw.sessions where id = $1', [session.id])).rows[0].status).toBe('playing');
 
   // Same device again: back to the same name, group and tray without asking.
   const tray = await a.page.evaluate(() => [...window.__puzzle.state().tray].sort((x, y) => x - y));
@@ -260,9 +261,9 @@ test('D3·D4·D14: students join by code or QR, the teacher sees names live, gro
 
   // D14: no student name anywhere in the database.
   const dumps = await sql(`
-    select 'public.' || relname as t from pg_stat_user_tables where schemaname = 'public'
+    select schemaname || '.' || relname as t from pg_stat_user_tables where schemaname in ('jigsaw', 'jigsaw_private')
   `);
-  const tables = [...dumps.rows.map((r) => r.t), 'auth.users', 'auth.identities', 'realtime.messages', 'private.join_failures'];
+  const tables = [...dumps.rows.map((r) => r.t), 'auth.users', 'auth.identities', 'realtime.messages'];
   for (const table of tables) {
     const { rows } = await sql(`select coalesce(string_agg(row_to_json(t)::text, ' '), '') as dump from ${table} t`);
     for (const name of ['다솜이', '보람찬', '한결이']) expect(rows[0].dump, `${table} has ${name}`).not.toContain(name);
@@ -331,13 +332,14 @@ test('lobby on a 1920 x 1080 whiteboard with 25 students: names, groups and butt
   const more = ['지아', '은우', '채원', '건우', '윤서', '현우', '다은', '선우', '예린', '소율', '연우', '정우'];
   for (const name of [...names, ...more]) {
     const client = createClient(LOCAL.supabaseUrl, LOCAL.publishableKey, {
+      db: { schema: DB_SCHEMA },
       auth: { persistSession: false, autoRefreshToken: false },
     });
     nodeClients.push(client);
     const { data } = await client.auth.signInAnonymously();
     const { data: joined } = await client.rpc('join_session', { p_code: session.code });
     await client.realtime.setAuth(data.session.access_token);
-    const channel = client.channel(`session:${session.id}`, { config: { private: true, presence: { key: data.user.id } } });
+    const channel = client.channel(`jigsaw:session:${session.id}`, { config: { private: true, presence: { key: data.user.id } } });
     await new Promise((resolve) => channel.subscribe((s) => s === 'SUBSCRIBED' && resolve()));
     await channel.track({ member: joined.member_id, name });
   }

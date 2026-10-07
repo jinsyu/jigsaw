@@ -1,4 +1,4 @@
-// Storage bucket "images": teachers write only their own folder, students read only the
+// Storage bucket "jigsaw-images": teachers write only their own folder, students read only the
 // picture of the session they are in.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -15,7 +15,7 @@ import {
   teacherClient,
 } from './helpers.js';
 
-const BUCKET = 'images';
+const BUCKET = 'jigsaw-images';
 // Storage checks the declared content type, not the bytes; a RIFF/WEBP header is enough here.
 const WEBP_BYTES = Buffer.from('RIFF\x0c\x00\x00\x00WEBPVP8 ', 'binary');
 
@@ -59,7 +59,7 @@ beforeAll(async () => {
 afterAll(async () => {
   if (uploaded.length) await adminClient().storage.from(BUCKET).remove(uploaded);
   await deleteSessions([sessionA?.id, sessionB?.id].filter(Boolean));
-  await sql('delete from public.images where id = any($1::uuid[])', [[used?.id, unused?.id].filter(Boolean)]);
+  await sql('delete from jigsaw.images where id = any($1::uuid[])', [[used?.id, unused?.id].filter(Boolean)]);
   await cleanup();
 });
 
@@ -123,8 +123,8 @@ describe('지우기', () => {
 });
 
 describe('열린 수업이 쓰는 그림 지우기 (서버에서 막기)', () => {
-  const rowExists = async (id) => (await sql('select 1 from public.images where id = $1', [id])).rowCount === 1;
-  const setStatus = (status) => sql('update public.sessions set status = $1 where id = $2', [status, sessionA.id]);
+  const rowExists = async (id) => (await sql('select 1 from jigsaw.images where id = $1', [id])).rowCount === 1;
+  const setStatus = (status) => sql('update jigsaw.sessions set status = $1 where id = $2', [status, sessionA.id]);
 
   it.each(['waiting', 'playing'])('수업이 %s 이면 교사도 파일과 행을 지우지 못한다', async (status) => {
     await setStatus(status);

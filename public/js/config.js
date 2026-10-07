@@ -3,8 +3,8 @@
 //
 // - localhost, 127.0.0.1, private LAN addresses and *.local: the local stack
 //   (pnpm db:start). A tablet on the same Wi-Fi reaches it through the same host.
-// - Any other host: the hosted project. Its URL and key are filled in at T14;
-//   until then isConfigured() is false and teacher screens show "준비 중".
+// - Any other host: the hosted project, the shared gyosil Supabase project (jigsaw's tables
+//   and RPCs are in its own schema, see supabase-names.js).
 
 const LOCAL_PORT = 56321;
 // Default publishable key of every local Supabase CLI stack (not a secret).
@@ -12,8 +12,8 @@ const LOCAL_PUBLISHABLE_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
 
 const REMOTE = {
   env: 'remote',
-  supabaseUrl: '',
-  publishableKey: '',
+  supabaseUrl: 'https://ozfzpyumnaaggrlevygz.supabase.co',
+  publishableKey: 'sb_publishable_4aqM2RzByxldw4EokVETtA_Xb_ZyuRa',
   googleSignIn: true,
 };
 

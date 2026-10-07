@@ -1,4 +1,4 @@
-// Names from Realtime Presence on session:<id>. Students track { member, name } under
+// Names from Realtime Presence on jigsaw:session:<id>. Students track { member, name } under
 // their own user id as the Presence key. Keys and payloads are chosen by the client and
 // the server does not check them, so a name is shown only when the key is the user id of
 // a members row we read from the database and the payload names that same row.

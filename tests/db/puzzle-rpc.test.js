@@ -47,7 +47,7 @@ async function playing({ count = 2, groups = 1, start = true } = {}) {
     p_aspect: 4 / 3,
   });
   sessionIds.push(session.id);
-  const { rows } = await sql('select id from public.groups where session_id = $1 order by number', [session.id]);
+  const { rows } = await sql('select id from jigsaw.groups where session_id = $1 order by number', [session.id]);
   const groupIds = rows.map((r) => Number(r.id));
   const students = [];
   for (let i = 0; i < count; i += 1) {
@@ -58,7 +58,9 @@ async function playing({ count = 2, groups = 1, start = true } = {}) {
     students.push(student);
   }
   if (start) await rpcOk(teacher.client, 'start_session', { p_session: session.id });
-  const layout = layoutFor(session.cols, session.rows, session.aspect);
+  // Exact aspect: the session row returned by create_session prints float8 with 15 digits.
+  const { aspect } = await rpcOk(teacher.client, 'session_setup', { p_session: session.id });
+  const layout = layoutFor(session.cols, session.rows, aspect);
   return { session, groupId: groupIds[0], groupIds, students, layout };
 }
 
@@ -67,7 +69,7 @@ const pieceOf = ([col, row]) => row * 4 + col;
 // Puts the given cells into a student's tray (test setup only).
 async function giveTray(groupId, userId, cells) {
   for (const [col, row] of cells) {
-    await sql('update public.pieces set owner_id = $1 where group_id = $2 and col = $3 and "row" = $4', [
+    await sql('update jigsaw.pieces set owner_id = $1 where group_id = $2 and col = $3 and "row" = $4', [
       userId,
       groupId,
       col,
@@ -79,7 +81,7 @@ async function giveTray(groupId, userId, cells) {
 async function pieceRow(groupId, [col, row]) {
   const { rows } = await sql(
     `select p.owner_id, p.on_board, c.id as cluster_id, c.x, c.y, c.locked, c.grabbed_by, c.grabbed_at
-     from public.pieces p join public.clusters c on c.id = p.cluster_id
+     from jigsaw.pieces p join jigsaw.clusters c on c.id = p.cluster_id
      where p.group_id = $1 and p.col = $2 and p."row" = $3`,
     [groupId, col, row],
   );
@@ -98,7 +100,7 @@ async function takeOk(student, groupId, cell, x, y) {
 
 async function touch(...students) {
   for (const s of students) {
-    await sql('update public.members set last_seen = now() where user_id = $1', [s.userId]);
+    await sql('update jigsaw.members set last_seen = now() where user_id = $1', [s.userId]);
   }
 }
 
@@ -228,17 +230,17 @@ describe('grab', () => {
     expect(await grab(b)).toMatchObject({ ok: false, reason: 'held' });
     expect((await grab(a)).ok).toBe(true); // grabbing my own cluster again is fine
 
-    await sql("update public.clusters set grabbed_at = now() - interval '11 seconds' where id = $1", [id]);
+    await sql("update jigsaw.clusters set grabbed_at = now() - interval '11 seconds' where id = $1", [id]);
     expect((await grab(b)).ok).toBe(true);
 
     await touch(a, b);
-    await sql("update public.members set last_seen = now() - interval '20 seconds' where user_id = $1", [b.userId]);
+    await sql("update jigsaw.members set last_seen = now() - interval '20 seconds' where user_id = $1", [b.userId]);
     expect((await grab(a)).ok).toBe(true); // b is disconnected
 
     await touch(a, b);
     expect(await grab(b)).toMatchObject({ ok: false, reason: 'held', held_by: a.userId });
     await rpcOk(teacher.client, 'assign_member', { p_member: a.memberId, p_group: groupIds[1] });
-    await sql('update public.clusters set grabbed_by = $1, grabbed_at = now() where id = $2', [a.userId, id]);
+    await sql('update jigsaw.clusters set grabbed_by = $1, grabbed_at = now() where id = $2', [a.userId, id]);
     expect((await grab(b)).ok).toBe(true); // a is no longer in this group
   });
 
@@ -284,7 +286,7 @@ describe('drop', () => {
     expect(await pieceRow(groupId, [0, 0])).toMatchObject({ x: FAR.x, y: FAR.y, grabbed_by: a.userId });
 
     // Taken over after 10 seconds: the first holder can no longer drop it.
-    await sql("update public.clusters set grabbed_at = now() - interval '11 seconds' where id = $1", [id]);
+    await sql("update jigsaw.clusters set grabbed_at = now() - interval '11 seconds' where id = $1", [id]);
     await rpcOk(b.client, 'grab', { p_cluster: id });
     expect(await drop(a, 10, 10)).toEqual({ ok: false, reason: 'not_held' });
     const dropped = await drop(b, 200, 150);
@@ -305,7 +307,7 @@ describe('drop', () => {
     const merged = await rpcOk(a.client, 'drop', { p_cluster: right.id, p_x: FAR.x + 20, p_y: FAR.y + 30 });
     const survivor = Math.min(left.id, right.id);
     expect(merged).toMatchObject({ id: survivor, x: FAR.x, y: FAR.y, absorbed: [Math.max(left.id, right.id)] });
-    const { rows: gone } = await sql('select count(*)::int as n from public.clusters where id = $1', [
+    const { rows: gone } = await sql('select count(*)::int as n from jigsaw.clusters where id = $1', [
       Math.max(left.id, right.id),
     ]);
     expect(gone[0].n).toBe(0);
@@ -329,7 +331,7 @@ describe('drop', () => {
     expect(next.absorbed).toEqual([]);
     expect(await pieceRow(groupId, [0, 0])).toMatchObject({ cluster_id: held.id, grabbed_by: b.userId });
 
-    await sql("update public.clusters set grabbed_at = now() - interval '11 seconds' where id = $1", [held.id]);
+    await sql("update jigsaw.clusters set grabbed_at = now() - interval '11 seconds' where id = $1", [held.id]);
     await rpcOk(a.client, 'grab', { p_cluster: next.id });
     const merged = await rpcOk(a.client, 'drop', { p_cluster: next.id, p_x: FAR.x, p_y: FAR.y });
     expect(merged).toMatchObject({ id: held.id, absorbed: [next.id] });
@@ -361,9 +363,9 @@ describe('drop', () => {
     const cells = [];
     for (let row = 0; row < 3; row += 1) for (let col = 0; col < 4; col += 1) cells.push([col, row]);
     await giveTray(groupId, a.userId, cells);
-    const sub = await subscribe(b.client, `group:${groupId}`);
+    const sub = await subscribe(b.client, `jigsaw:group:${groupId}`);
     expect(sub.status).toBe('SUBSCRIBED');
-    await warmUp(sub, `group:${groupId}`);
+    await warmUp(sub, `jigsaw:group:${groupId}`);
 
     const frame = frameOrigin(layout);
     const results = [];
@@ -375,8 +377,8 @@ describe('drop', () => {
 
     const { rows } = await sql(
       `select g.completed_at, count(distinct c.id)::int as clusters
-       from public.groups g join public.clusters c on c.group_id = g.id
-       join public.pieces p on p.cluster_id = c.id and p.on_board
+       from jigsaw.groups g join jigsaw.clusters c on c.group_id = g.id
+       join jigsaw.pieces p on p.cluster_id = c.id and p.on_board
        where g.id = $1 group by g.completed_at`,
       [groupId],
     );
@@ -389,14 +391,14 @@ describe('drop', () => {
   });
 });
 
-describe('방송 (group:<id>)', () => {
+describe('방송 (jigsaw:group:<id>)', () => {
   it('꺼내기·잡기·놓기(합치기)를 모둠원에게 보내고, 좌표는 float8 그대로다', async () => {
     const { groupId, students } = await playing({ count: 2 });
     const [a, b] = students;
     await giveTray(groupId, a.userId, [[0, 0], [1, 0]]);
-    const sub = await subscribe(b.client, `group:${groupId}`);
+    const sub = await subscribe(b.client, `jigsaw:group:${groupId}`);
     expect(sub.status).toBe('SUBSCRIBED');
-    await warmUp(sub, `group:${groupId}`);
+    await warmUp(sub, `jigsaw:group:${groupId}`);
 
     const x = 0.1 + 0.2; // 0.30000000000000004 needs 17 significant digits
     const y = 250 + 1 / 3;
@@ -431,7 +433,7 @@ describe('방송 (group:<id>)', () => {
     const conn = await dbClient();
     await beginAsStudent(conn, a.userId);
     await conn.query('set local extra_float_digits = 0');
-    const { rows } = await conn.query('select public.take_from_tray($1, $2, $3, $4) as r', [
+    const { rows } = await conn.query('select jigsaw.take_from_tray($1, $2, $3, $4) as r', [
       groupId,
       0,
       String(x),
@@ -443,7 +445,7 @@ describe('방송 (group:<id>)', () => {
     const { rows: sent } = await conn.query(
       `select payload from realtime.messages where topic = $1 and event = 'take'
        order by inserted_at desc limit 1`,
-      [`group:${groupId}`],
+      [`jigsaw:group:${groupId}`],
     );
     expect(Object.is(sent[0].payload.x, x)).toBe(true);
     await conn.query('rollback');
@@ -456,7 +458,7 @@ describe('T4 참고 1: 조각 나누기와 꺼내기 경쟁', () => {
   async function raceTake(student, groupId, cell, other) {
     const conn = await dbClient();
     await beginAsStudent(conn, student.userId);
-    const { rows } = await conn.query('select public.take_from_tray($1, $2, $3, $4) as r', [
+    const { rows } = await conn.query('select jigsaw.take_from_tray($1, $2, $3, $4) as r', [
       groupId,
       pieceOf(cell),
       FAR.x,
@@ -477,11 +479,11 @@ describe('T4 참고 1: 조각 나누기와 꺼내기 경쟁', () => {
   it('deal_tray 가 꺼내는 중인 조각을 기다렸다가 건너뛴다(판 위 조각에 주인이 다시 생기지 않음)', async () => {
     const { groupId, students } = await playing({ count: 2 });
     const [a, b] = students;
-    await sql('update public.pieces set owner_id = $1 where group_id = $2', [b.userId, groupId]);
+    await sql('update jigsaw.pieces set owner_id = $1 where group_id = $2', [b.userId, groupId]);
     await giveTray(groupId, a.userId, [[0, 0], [1, 0], [2, 0]]);
 
     const { result, blocked } = await raceTake(a, groupId, [0, 0], () =>
-      sql('select private.deal_tray($1, $2::uuid[], $3::uuid[]) as dealt', [groupId, [a.userId], [b.userId]]),
+      sql('select jigsaw_private.deal_tray($1, $2::uuid[], $3::uuid[]) as dealt', [groupId, [a.userId], [b.userId]]),
     );
     expect(blocked).toBe(true);
     const dealt = result.rows[0].dealt;
@@ -494,7 +496,7 @@ describe('T4 참고 1: 조각 나누기와 꺼내기 경쟁', () => {
     const { groupId, groupIds, students } = await playing({ count: 2, groups: 2 });
     const [a, b] = students;
     await touch(a, b);
-    await sql('update public.pieces set owner_id = $1 where group_id = $2', [b.userId, groupId]);
+    await sql('update jigsaw.pieces set owner_id = $1 where group_id = $2', [b.userId, groupId]);
     await giveTray(groupId, a.userId, [[0, 0], [1, 0]]);
 
     await raceTake(a, groupId, [0, 0], () =>
@@ -503,7 +505,7 @@ describe('T4 참고 1: 조각 나누기와 꺼내기 경쟁', () => {
     expect(await pieceRow(groupId, [0, 0])).toMatchObject({ on_board: true, owner_id: null });
     expect((await pieceRow(groupId, [1, 0])).owner_id).toBe(b.userId);
     const { rows } = await sql(
-      'select count(*)::int as n from public.pieces where group_id = $1 and owner_id is not null and on_board',
+      'select count(*)::int as n from jigsaw.pieces where group_id = $1 and owner_id is not null and on_board',
       [groupId],
     );
     expect(rows[0].n).toBe(0);
@@ -516,7 +518,7 @@ describe('잠금 순서 (모둠 행 → 덩어리)', () => {
   async function expectGroupLockFirst(groupId, clusterId, call) {
     const holder = await dbClient();
     await holder.query('begin');
-    await holder.query('select 1 from public.groups where id = $1 for update', [groupId]);
+    await holder.query('select 1 from jigsaw.groups where id = $1 for update', [groupId]);
     let finished = false;
     const pending = call().then((value) => {
       finished = true;
@@ -528,7 +530,7 @@ describe('잠금 순서 (모둠 행 → 덩어리)', () => {
     const probe = await dbClient();
     await probe.query('begin');
     const free = await probe
-      .query('select id from public.clusters where id = $1 for update nowait', [clusterId])
+      .query('select id from jigsaw.clusters where id = $1 for update nowait', [clusterId])
       .then(() => true, (error) => error.code);
     await probe.query('rollback');
     await holder.query('commit');
@@ -539,7 +541,7 @@ describe('잠금 순서 (모둠 행 → 덩어리)', () => {
   async function heldCluster(groupId, student) {
     await giveTray(groupId, student.userId, [[0, 0]]);
     const { id } = await takeOk(student, groupId, [0, 0], FAR.x, FAR.y);
-    await sql('update public.clusters set grabbed_by = $1, grabbed_at = now() where id = $2', [student.userId, id]);
+    await sql('update jigsaw.clusters set grabbed_by = $1, grabbed_at = now() where id = $2', [student.userId, id]);
     return id;
   }
 

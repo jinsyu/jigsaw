@@ -9,11 +9,11 @@ export const createdImages = new Set();
 export const createdSessions = new Set();
 
 export async function cleanUpUploads() {
-  if (createdSessions.size) await sql('delete from public.sessions where id = any($1::bigint[])', [[...createdSessions]]);
+  if (createdSessions.size) await sql('delete from jigsaw.sessions where id = any($1::bigint[])', [[...createdSessions]]);
   if (createdImages.size) {
-    const { rows } = await sql('select id, path from public.images where id = any($1::uuid[])', [[...createdImages]]);
-    if (rows.length) await storageAdmin().storage.from('images').remove(rows.map((r) => r.path));
-    await sql('delete from public.images where id = any($1::uuid[])', [[...createdImages]]);
+    const { rows } = await sql('select id, path from jigsaw.images where id = any($1::uuid[])', [[...createdImages]]);
+    if (rows.length) await storageAdmin().storage.from('jigsaw-images').remove(rows.map((r) => r.path));
+    await sql('delete from jigsaw.images where id = any($1::uuid[])', [[...createdImages]]);
   }
   await closeSql();
 }
@@ -23,12 +23,12 @@ export async function uploadedImage(uploader) {
   await expect(uploader).toHaveAttribute('data-uploaded-id', /^[0-9a-f-]{36}$/, { timeout: 30_000 });
   const id = await uploader.getAttribute('data-uploaded-id');
   createdImages.add(id);
-  const { rows } = await sql('select id, path, width, height from public.images where id = $1', [id]);
+  const { rows } = await sql('select id, path, width, height from jigsaw.images where id = $1', [id]);
   return rows[0];
 }
 
 export async function storedFile(path) {
-  const { data, error } = await storageAdmin().storage.from('images').download(path);
+  const { data, error } = await storageAdmin().storage.from('jigsaw-images').download(path);
   if (error) return null;
   return Buffer.from(await data.arrayBuffer());
 }

@@ -41,7 +41,7 @@ async function openSession(teacher = teacher1, args = {}) {
 }
 
 async function groupIdsOf(sessionId) {
-  const { rows } = await sql('select id from public.groups where session_id = $1 order by number', [
+  const { rows } = await sql('select id from jigsaw.groups where session_id = $1 order by number', [
     sessionId,
   ]);
   return rows.map((r) => Number(r.id));
@@ -66,7 +66,7 @@ async function assign(students, groupId, teacher = teacher1) {
 // Tray piece count per owner in a group: { [uid]: n } (null key = nobody's tray).
 async function trayCounts(groupId) {
   const { rows } = await sql(
-    `select owner_id, count(*)::int as n from public.pieces
+    `select owner_id, count(*)::int as n from jigsaw.pieces
      where group_id = $1 and not on_board group by owner_id`,
     [groupId],
   );
@@ -92,7 +92,7 @@ afterEach(leaveAllChannels);
 
 afterAll(async () => {
   await deleteSessions(sessionIds);
-  if (imageIds.length) await sql('delete from public.images where id = any($1::uuid[])', [imageIds]);
+  if (imageIds.length) await sql('delete from jigsaw.images where id = any($1::uuid[])', [imageIds]);
   await cleanup();
 });
 
@@ -104,9 +104,10 @@ describe('create_session', () => {
     expect(session.teacher_id).toBe(TEACHERS.one.id);
     expect(session.seed).toBeGreaterThanOrEqual(1);
     expect(session.seed).toBeLessThanOrEqual(2 ** 32 - 1);
-    expect(Object.is(session.aspect, 4 / 3)).toBe(true);
+    // The row an RPC returns prints float8 with 15 digits (image default); session_setup is exact.
+    expect(Object.is((await rpcOk(teacher1.client, 'session_setup', { p_session: session.id })).aspect, 4 / 3)).toBe(true);
     expect({ cols: session.cols, rows: session.rows }).toEqual(gridFor(24, 4 / 3));
-    const { rows } = await sql('select number from public.groups where session_id = $1 order by number', [
+    const { rows } = await sql('select number from jigsaw.groups where session_id = $1 order by number', [
       session.id,
     ]);
     expect(rows.map((r) => r.number)).toEqual([1, 2, 3, 4, 5, 6]);
@@ -116,7 +117,7 @@ describe('create_session', () => {
     const aspects = [4 / 3, 1, 1 - 1e-9, 3 / 4, 16 / 9, 1920 / 1081, 0.5, 2000 / 1999];
     for (const pieceCount of PIECE_COUNTS) {
       for (const aspect of aspects) {
-        const { rows } = await sql('select cols, rows from private.grid_for($1, $2)', [pieceCount, aspect]);
+        const { rows } = await sql('select cols, rows from jigsaw_private.grid_for($1, $2)', [pieceCount, aspect]);
         expect(rows[0], `${pieceCount} @ ${aspect}`).toEqual(gridFor(pieceCount, aspect));
       }
     }
@@ -127,7 +128,7 @@ describe('create_session', () => {
   it('내 그림으로 열면 비율은 너비/높이(JS 와 같은 실수)이고 마지막 사용일이 갱신된다', async () => {
     const image = await insertImageRow(TEACHERS.one.id, { width: 1999, height: 1123 });
     imageIds.push(image.id);
-    await sql("update public.images set last_used_at = now() - interval '200 days' where id = $1", [
+    await sql("update jigsaw.images set last_used_at = now() - interval '200 days' where id = $1", [
       image.id,
     ]);
     const session = await openSession(teacher1, {
@@ -135,11 +136,12 @@ describe('create_session', () => {
       p_aspect: null,
       p_image_id: image.id,
     });
-    expect(Object.is(session.aspect, 1999 / 1123)).toBe(true);
+    const setup = await rpcOk(teacher1.client, 'session_setup', { p_session: session.id });
+    expect(Object.is(setup.aspect, 1999 / 1123)).toBe(true);
     expect(session.image_id).toBe(image.id);
     expect(session.builtin_key).toBeNull();
     const { rows } = await sql(
-      "select last_used_at > now() - interval '1 minute' as fresh from public.images where id = $1",
+      "select last_used_at > now() - interval '1 minute' as fresh from jigsaw.images where id = $1",
       [image.id],
     );
     expect(rows[0].fresh).toBe(true);
@@ -192,7 +194,7 @@ describe('create_session', () => {
     const sessions = [];
     for (let i = 0; i < 15; i += 1) sessions.push(await openSession(teacher2, { p_group_count: 1 }));
     const { rows } = await sql(
-      "select code, count(*)::int as n from public.sessions where status <> 'ended' group by code having count(*) > 1",
+      "select code, count(*)::int as n from jigsaw.sessions where status <> 'ended' group by code having count(*) > 1",
     );
     expect(rows).toEqual([]);
     expect(new Set(sessions.map((s) => s.code)).size).toBe(sessions.length);
@@ -205,7 +207,7 @@ describe('create_session', () => {
     // Column defaults match too (rows made without create_session, e.g. by fixtures).
     const { rows } = await sql(
       `select column_name, column_default from information_schema.columns
-       where table_schema = 'public' and table_name = 'sessions' and column_name like 'hint\\_%'
+       where table_schema = 'jigsaw' and table_name = 'sessions' and column_name like 'hint\\_%'
        order by column_name`,
     );
     expect(Object.fromEntries(rows.map((r) => [r.column_name, r.column_default]))).toEqual({
@@ -226,7 +228,7 @@ describe('create_session', () => {
     });
     expect(hintsOf(flipped)).toEqual({ preview: true, outline: false, pictureButton: false, underlay: true });
     const { rows } = await sql(
-      'select hint_preview, hint_outline, hint_picture_button, hint_underlay from public.sessions where id = $1',
+      'select hint_preview, hint_outline, hint_picture_button, hint_underlay from jigsaw.sessions where id = $1',
       [flipped.id],
     );
     expect(rows[0]).toEqual({ hint_preview: true, hint_outline: false, hint_picture_button: false, hint_underlay: true });
@@ -262,7 +264,7 @@ describe('join_session', () => {
 
     const again = await rpcOk(student.client, 'join_session', { p_code: session.code });
     expect(again).toMatchObject({ ok: true, member_id: first.member_id, group_id: groupId, color: 0 });
-    const { rows } = await sql('select count(*)::int as n from public.members where user_id = $1', [
+    const { rows } = await sql('select count(*)::int as n from jigsaw.members where user_id = $1', [
       student.userId,
     ]);
     expect(rows[0].n).toBe(1);
@@ -291,7 +293,7 @@ describe('join_session', () => {
       const result = await rpcOk(student.client, 'join_session', { p_code: code });
       expect(result).toEqual({ ok: false, error: 'invalid_code' });
     }
-    const { rows } = await sql('select count(*)::int as n from public.members where user_id = $1', [
+    const { rows } = await sql('select count(*)::int as n from jigsaw.members where user_id = $1', [
       student.userId,
     ]);
     expect(rows[0].n).toBe(0);
@@ -316,7 +318,7 @@ describe('join_session', () => {
       error: 'too_many_attempts',
     });
     // The lockout ends once the failures are older than a minute.
-    await sql("update private.join_failures set failed_at = now() - interval '61 seconds' where user_id = $1", [
+    await sql("update jigsaw_private.join_failures set failed_at = now() - interval '61 seconds' where user_id = $1", [
       student.userId,
     ]);
     expect((await rpcOk(student.client, 'join_session', { p_code: session.code })).ok).toBe(true);
@@ -341,8 +343,8 @@ describe('assign_member · randomize_groups', () => {
     const session = await openSession();
     const [g1] = await groupIdsOf(session.id);
     const [a, b] = await joinStudents(session.code, 2);
-    const watcher = await subscribe(teacher1.client, `session:${session.id}`);
-    await warmUp(watcher, `session:${session.id}`);
+    const watcher = await subscribe(teacher1.client, `jigsaw:session:${session.id}`);
+    await warmUp(watcher, `jigsaw:session:${session.id}`);
 
     const first = await rpcOk(teacher1.client, 'assign_member', { p_member: a.memberId, p_group: g1 });
     const second = await rpcOk(teacher1.client, 'assign_member', { p_member: b.memberId, p_group: g1 });
@@ -377,7 +379,7 @@ describe('assign_member · randomize_groups', () => {
     });
     expect(wrongGroup.error).toMatchObject({ code: INVALID, message: 'invalid_group' });
 
-    const { rows } = await sql('select group_id from public.members where id = $1', [student.memberId]);
+    const { rows } = await sql('select group_id from jigsaw.members where id = $1', [student.memberId]);
     expect(rows[0].group_id).toBeNull();
   });
 
@@ -432,13 +434,14 @@ describe('start_session', () => {
     expect(Object.keys(counts).sort()).toEqual(students.map((s) => s.userId).sort());
 
     const { rows: pieces } = await sql(
-      `select col, "row", cluster_id, on_board from public.pieces where group_id = $1 order by "row", col`,
+      `select col, "row", cluster_id, on_board from jigsaw.pieces where group_id = $1 order by "row", col`,
       [g1],
     );
     expect(pieces.every((p) => p.on_board === false)).toBe(true);
     expect(new Set(pieces.map((p) => p.cluster_id)).size).toBe(24);
     // Same cells as the puzzle every device draws from the seed.
-    const puzzle = makePuzzle(layoutFor(session.cols, session.rows, session.aspect), session.seed);
+    const { aspect } = await rpcOk(teacher1.client, 'session_setup', { p_session: session.id });
+    const puzzle = makePuzzle(layoutFor(session.cols, session.rows, aspect), session.seed);
     expect(pieces.map((p) => [p.col, p.row])).toEqual(puzzle.pieces.map((p) => [p.col, p.row]));
   });
 
@@ -477,20 +480,20 @@ describe('start_session', () => {
     await rpcOk(teacher1.client, 'start_session', { p_session: session.id });
 
     const { rows } = await sql(
-      `select group_id, array_agg(color order by color) as colors from public.members
+      `select group_id, array_agg(color order by color) as colors from jigsaw.members
        where session_id = $1 group by group_id`,
       [session.id],
     );
     const colors = Object.fromEntries(rows.map((r) => [Number(r.group_id), r.colors]));
     expect(colors).toEqual({ [g1]: [0, 1, 2], [g3]: [0, 1] });
-    const { rows: empty } = await sql('select count(*)::int as n from public.pieces where group_id = $1', [g2]);
+    const { rows: empty } = await sql('select count(*)::int as n from jigsaw.pieces where group_id = $1', [g2]);
     expect(empty[0].n).toBe(0);
   });
 
   it('시작하면 session 채널의 학생에게 start 알림이 간다', async () => {
     const session = await openSession(teacher1, { p_group_count: 1 });
     const [student] = await joinStudents(session.code, 1);
-    const topic = `session:${session.id}`;
+    const topic = `jigsaw:session:${session.id}`;
     const sub = await subscribe(student.client, topic);
     expect(sub.status).toBe('SUBSCRIBED');
     await warmUp(sub, topic);
@@ -545,16 +548,16 @@ describe('시작 뒤 모둠 배정·이동', () => {
     const [mover, offline, ...online] = students.slice(0, 4);
 
     // offline: last signal over 15 seconds ago, so it does not receive pieces.
-    await sql("update public.members set last_seen = now() - interval '30 seconds' where id = $1", [
+    await sql("update jigsaw.members set last_seen = now() - interval '30 seconds' where id = $1", [
       offline.memberId,
     ]);
     const { rows: grabbed } = await sql(
-      `update public.clusters set grabbed_by = $1, grabbed_at = now()
-       where id = (select min(cluster_id) from public.pieces where group_id = $2) returning id`,
+      `update jigsaw.clusters set grabbed_by = $1, grabbed_at = now()
+       where id = (select min(cluster_id) from jigsaw.pieces where group_id = $2) returning id`,
       [mover.userId, g1],
     );
-    const watcher = await subscribe(teacher1.client, `group:${g1}`);
-    await warmUp(watcher, `group:${g1}`);
+    const watcher = await subscribe(teacher1.client, `jigsaw:group:${g1}`);
+    await warmUp(watcher, `jigsaw:group:${g1}`);
 
     const before = await trayCounts(g1);
     expect(sortedCounts(before)).toEqual([6, 6, 6, 6]);
@@ -567,7 +570,7 @@ describe('시작 뒤 모둠 배정·이동', () => {
     // The mover gets no tray in the new group either.
     expect((await trayCounts(g2))[mover.userId]).toBeUndefined();
 
-    const { rows: released } = await sql('select grabbed_by from public.clusters where id = $1', [
+    const { rows: released } = await sql('select grabbed_by from jigsaw.clusters where id = $1', [
       grabbed[0].id,
     ]);
     expect(released[0].grabbed_by).toBeNull();
@@ -587,7 +590,7 @@ describe('시작 뒤 모둠 배정·이동', () => {
     const [a, b] = await joinStudents(session.code, 2);
     await assign([a, b], g1);
     await rpcOk(teacher1.client, 'start_session', { p_session: session.id });
-    await sql("update public.members set last_seen = now() - interval '1 hour' where session_id = $1", [
+    await sql("update jigsaw.members set last_seen = now() - interval '1 hour' where session_id = $1", [
       session.id,
     ]);
 
@@ -622,20 +625,20 @@ describe('Realtime 권한 캐시 (모둠 이동)', () => {
     const [student] = await joinStudents(session.code, 1);
     await assign([student], g1);
 
-    const old = await subscribe(student.client, `group:${g1}`);
+    const old = await subscribe(student.client, `jigsaw:group:${g1}`);
     expect(old.status).toBe('SUBSCRIBED');
-    await warmUp(old, `group:${g1}`);
+    await warmUp(old, `jigsaw:group:${g1}`);
 
     await rpcOk(teacher1.client, 'assign_member', { p_member: student.memberId, p_group: g2 });
-    await sql("select realtime.send('{\"n\":1}'::jsonb, 'probe', $1, true)", [`group:${g1}`]);
+    await sql("select realtime.send('{\"n\":1}'::jsonb, 'probe', $1, true)", [`jigsaw:group:${g1}`]);
     // Realtime authorizes a channel when it is joined, not per message: the old channel still
-    // receives. Clients therefore leave group:<old> as soon as they get the 'groups' event.
+    // receives. Clients therefore leave jigsaw:group:<old> as soon as they get the 'groups' event.
     expect(await waitFor(() => old.received.some((m) => m.event === 'probe'))).toBe(true);
 
     await student.client.removeChannel(old.channel);
-    const rejoinOld = await subscribe(student.client, `group:${g1}`);
+    const rejoinOld = await subscribe(student.client, `jigsaw:group:${g1}`);
     expect(rejoinOld.status).toBe('CHANNEL_ERROR');
-    const joinNew = await subscribe(student.client, `group:${g2}`);
+    const joinNew = await subscribe(student.client, `jigsaw:group:${g2}`);
     expect(joinNew.status).toBe('SUBSCRIBED');
   });
 });
@@ -649,17 +652,17 @@ describe('end_session', () => {
     await assign(students.slice(2, 3), g2);
     await rpcOk(teacher1.client, 'start_session', { p_session: session.id });
 
-    const groupSub = await subscribe(students[0].client, `group:${g1}`);
-    const sessionSub = await subscribe(students[3].client, `session:${session.id}`);
+    const groupSub = await subscribe(students[0].client, `jigsaw:group:${g1}`);
+    const sessionSub = await subscribe(students[3].client, `jigsaw:session:${session.id}`);
     expect([groupSub.status, sessionSub.status]).toEqual(['SUBSCRIBED', 'SUBSCRIBED']);
-    await warmUp(groupSub, `group:${g1}`);
-    await warmUp(sessionSub, `session:${session.id}`);
+    await warmUp(groupSub, `jigsaw:group:${g1}`);
+    await warmUp(sessionSub, `jigsaw:session:${session.id}`);
 
     const ended = await rpcOk(teacher1.client, 'end_session', { p_session: session.id });
     expect(ended.status).toBe('ended');
     expect(ended.ended_at).toBeTruthy();
 
-    const { rows: members } = await sql('select count(*)::int as n from public.members where session_id = $1', [
+    const { rows: members } = await sql('select count(*)::int as n from jigsaw.members where session_id = $1', [
       session.id,
     ]);
     expect(members[0].n).toBe(0);
@@ -687,7 +690,7 @@ describe('end_session', () => {
     await rpcOk(teacher1.client, 'end_session', { p_session: first.id });
     const { rows } = await sql(
       `select (select count(*)::int from auth.users where id = $1) as users,
-              (select count(*)::int from public.members where user_id = $1) as members`,
+              (select count(*)::int from jigsaw.members where user_id = $1) as members`,
       [student.userId],
     );
     expect(rows[0]).toEqual({ users: 1, members: 1 });

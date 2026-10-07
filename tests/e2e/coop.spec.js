@@ -23,7 +23,7 @@ test.afterAll(async () => {
   if (createdSessions.length) {
     await sql(
       `delete from auth.users where is_anonymous and id in
-         (select user_id from public.members where session_id = any($1::bigint[]))`,
+         (select user_id from jigsaw.members where session_id = any($1::bigint[]))`,
       [createdSessions],
     );
   }
@@ -43,7 +43,7 @@ async function createClass(pieces, { key = 'sea', aspect = 1800 / 1200 } = {}) {
   });
   if (error) throw error;
   createdSessions.push(data.id);
-  const { rows } = await sql('select id from public.groups where session_id = $1 order by number', [data.id]);
+  const { rows } = await sql('select id from jigsaw.groups where session_id = $1 order by number', [data.id]);
   return { ...data, client, groupIds: rows.map((r) => Number(r.id)) };
 }
 
@@ -63,7 +63,7 @@ async function joinStudent(browser, testInfo, code, name, { reducedMotion } = {}
   await page.getByRole('button', { name: '다음' }).click();
   await expect(page.getByRole('heading', { level: 1, name: '선생님이 모둠을 정하고 있어요' })).toBeVisible();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('jigsaw-student')));
-  const { rows } = await sql('select user_id from public.members where id = $1', [saved.memberId]);
+  const { rows } = await sql('select user_id from jigsaw.members where id = $1', [saved.memberId]);
   return { name, context, page, errors, memberId: saved.memberId, userId: rows[0].user_id, input: makeInput(page, testInfo) };
 }
 
@@ -104,14 +104,14 @@ async function awayFromFrame(page, cluster, px) {
 }
 
 async function clusterRow(id) {
-  const { rows } = await sql('select x, y, locked, grabbed_by from public.clusters where id = $1', [id]);
+  const { rows } = await sql('select x, y, locked, grabbed_by from jigsaw.clusters where id = $1', [id]);
   return rows[0];
 }
 
 async function traysInDb(groupId) {
   const { rows } = await sql(
-    `select owner_id, array_agg(("row" * (select cols from public.sessions s join public.groups g on g.session_id = s.id where g.id = $1)) + col order by "row", col) as pieces
-       from public.pieces where group_id = $1 and not on_board and owner_id is not null group by owner_id`,
+    `select owner_id, array_agg(("row" * (select cols from jigsaw.sessions s join jigsaw.groups g on g.session_id = s.id where g.id = $1)) + col order by "row", col) as pieces
+       from jigsaw.pieces where group_id = $1 and not on_board and owner_id is not null group by owner_id`,
     [groupId],
   );
   return Object.fromEntries(rows.map((r) => [r.owner_id, r.pieces]));
@@ -269,7 +269,7 @@ test('D5~D10: a group of four plays one puzzle together to the end', async ({ br
   await pressCluster(D, held, await awayFromFrame(D.page, held, 10));
   await expect.poll(async () => (await clusterRow(held.id)).grabbed_by).toBe(D.userId);
   await D.context.close();
-  await sql("update public.members set last_seen = now() - interval '20 seconds' where id = $1", [D.memberId]);
+  await sql("update jigsaw.members set last_seen = now() - interval '20 seconds' where id = $1", [D.memberId]);
   for (const s of [A, B, C]) {
     await expect(s.page.locator('.pz-chips .chip', { hasText: D.name }).locator('em')).toHaveText('잠시 나감', { timeout: 15000 });
   }
@@ -284,7 +284,7 @@ test('D5~D10: a group of four plays one puzzle together to the end', async ({ br
   // D9: gone for over a minute: D's tray is dealt to A, B and C (as evenly as possible).
   const before = await traysInDb(groupId);
   expect(before[D.userId].length).toBeGreaterThan(0);
-  await sql("update public.members set last_seen = now() - interval '2 minutes' where id = $1", [D.memberId]);
+  await sql("update jigsaw.members set last_seen = now() - interval '2 minutes' where id = $1", [D.memberId]);
   await A.page.evaluate(() => window.__puzzle.redistribute());
   const after = await traysInDb(groupId);
   expect(after[D.userId]).toBeUndefined();
@@ -321,7 +321,7 @@ test('D5~D10: a group of four plays one puzzle together to the end', async ({ br
   }
   // No ranks: nothing about other groups.
   await expect(A.page.locator('main')).not.toContainText('등');
-  const { rows } = await sql('select completed_at from public.groups where id = $1', [groupId]);
+  const { rows } = await sql('select completed_at from jigsaw.groups where id = $1', [groupId]);
   expect(rows[0].completed_at).not.toBeNull();
   await A.page.waitForTimeout(1500); // confetti and heading settle
   await A.page.screenshot({ path: testInfo.outputPath('coop-5-complete.png'), fullPage: true });
@@ -345,7 +345,7 @@ test("the teacher's own picture (private bucket) and the session's help settings
   if (rowError) throw rowError;
   try {
     const bytes = readFileSync(new URL('../../public/images/builtin/sea.webp', import.meta.url));
-    const { error: uploadError } = await client.storage.from('images').upload(image.path, bytes, { contentType: 'image/webp' });
+    const { error: uploadError } = await client.storage.from('jigsaw-images').upload(image.path, bytes, { contentType: 'image/webp' });
     if (uploadError) throw uploadError;
     const { data, error } = await client.rpc('create_session', {
       p_piece_count: 12,
@@ -358,7 +358,7 @@ test("the teacher's own picture (private bucket) and the session's help settings
     });
     if (error) throw error;
     createdSessions.push(data.id);
-    const { rows } = await sql('select id from public.groups where session_id = $1', [data.id]);
+    const { rows } = await sql('select id from jigsaw.groups where session_id = $1', [data.id]);
     const session = { ...data, client, groupIds: rows.map((r) => Number(r.id)) };
     const s = await joinStudent(browser, testInfo, session.code, '나린');
     await startInOneGroup(session, [s]);
@@ -372,8 +372,8 @@ test("the teacher's own picture (private bucket) and the session's help settings
     expect(s.errors).toEqual([]);
     await s.context.close();
   } finally {
-    await client.storage.from('images').remove([image.path]);
-    await sql('delete from public.sessions where image_id = $1', [image.id]);
+    await client.storage.from('jigsaw-images').remove([image.path]);
+    await sql('delete from jigsaw.sessions where image_id = $1', [image.id]);
     await client.from('images').delete().eq('id', image.id);
   }
 });
@@ -384,9 +384,9 @@ test('a class closed by the 24-hour cleanup (no broadcast) is noticed by the puz
   const session = await createClass(12);
   const s = await joinStudent(browser, testInfo, session.code, '태오');
   await startInOneGroup(session, [s]);
-  // What private.cleanup_expired() does to an expired class, for this class only: no 'end' broadcast.
-  await sql("update public.sessions set status = 'ended', ended_at = now() where id = $1", [session.id]);
-  await sql('delete from public.members where session_id = $1', [session.id]);
+  // What jigsaw_private.cleanup_expired() does to an expired class, for this class only: no 'end' broadcast.
+  await sql("update jigsaw.sessions set status = 'ended', ended_at = now() where id = $1", [session.id]);
+  await sql('delete from jigsaw.members where session_id = $1', [session.id]);
   // The next heartbeat (5 s) finds no members row and the class is read again.
   await expect(s.page.getByRole('heading', { level: 1, name: '수업이 끝났어요' })).toBeVisible({ timeout: 20000 });
   expect(await s.page.evaluate(() => localStorage.getItem('jigsaw-student'))).toBeNull();
@@ -417,7 +417,7 @@ test('leaving the page while holding a piece lets it go; coming back signals fir
   await expect.poll(async () => (await clusterRow(cl.id)).grabbed_by).toBeNull();
   await release();
   // Back after a long time: heartbeat before anything else, so this tray is not dealt away.
-  await sql("update public.members set last_seen = now() - interval '2 minutes' where id = $1", [s.memberId]);
+  await sql("update jigsaw.members set last_seen = now() - interval '2 minutes' where id = $1", [s.memberId]);
   const calls = [];
   s.page.on('request', (r) => r.url().includes('/rest/v1/rpc/') && calls.push(r.url().split('/rpc/')[1]));
   await setVisibility('visible');

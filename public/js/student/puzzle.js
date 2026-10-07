@@ -13,12 +13,10 @@ import { openRemoteStore } from '../store/remote-store.js';
 import { createSupabaseApi } from '../store/supabase-api.js';
 import { renderCelebration } from './celebrate.js';
 import { exposeTestHook } from '../test-hooks.js';
+import { IMAGE_BUCKET } from '../supabase-names.js';
 
 export const REDISTRIBUTE_MS = 20_000;
 const BUILTIN_INDEX = '/images/builtin/index.json';
-const SESSION_FIELDS =
-  'cols, rows, aspect, seed, piece_count, builtin_key, image_id, started_at, ' +
-  'hint_preview, hint_outline, hint_picture_button, hint_underlay';
 
 // Members for the store from the live class state. A friend who left keeps the name this
 // screen saw while they were here (`seen`: uid -> name, updated here); never seen: '친구'.
@@ -48,7 +46,7 @@ async function loadPictureInfo(client, session) {
   const { data: image, error } = await client.from('images').select('path, width, height').eq('id', session.image_id).maybeSingle();
   if (error) throw error;
   if (!image) throw new Error('the picture is not readable');
-  const { data: blob, error: downloadError } = await client.storage.from('images').download(image.path);
+  const { data: blob, error: downloadError } = await client.storage.from(IMAGE_BUCKET).download(image.path);
   if (downloadError) throw downloadError;
   const src = URL.createObjectURL(blob);
   return { src, width: image.width, height: image.height, revoke: () => URL.revokeObjectURL(src) };
@@ -75,7 +73,8 @@ export async function openPuzzle({ client, main, sessionId, group, userId, mates
   let redistributeTimer = 0;
   const seenNames = new Map();
 
-  const { data: session, error } = await client.from('sessions').select(SESSION_FIELDS).eq('id', sessionId).maybeSingle();
+  // session_setup: the session row with the exact picture aspect (a plain select rounds it).
+  const { data: session, error } = await client.rpc('session_setup', { p_session: sessionId });
   if (error) throw error;
   if (!session) throw new Error('the session is not readable');
   const picture = await loadPictureInfo(client, session);

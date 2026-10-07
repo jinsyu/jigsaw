@@ -3,7 +3,7 @@
 // 모둠 편성 panel: students appear by name as they join, the teacher drags them into groups
 // (or picks and places them with the keyboard), shuffles them, and starts the puzzles.
 //
-// Names come only from Presence on session:<id> and stay in this page's memory (spec D14).
+// Names come only from Presence on jigsaw:session:<id> and stay in this page's memory (spec D14).
 // Presence keys and payloads are set by the student's browser, so a name is shown only for
 // a members row of this session read from the database (student/presence.js).
 import { assignMember, endSession, getSession, listMembers, randomizeGroups, startSession } from './data.js';
@@ -17,6 +17,7 @@ import { joinUrl, qrSvg } from './qr.js';
 import { applyGroupChanges, buildRoster } from './roster.js';
 import { presenceNames } from '../student/presence.js';
 import { hintsFromSession } from '../store/puzzle-store.js';
+import { sessionTopic } from '../supabase-names.js';
 
 const NETWORK_ERROR = /fetch|network|load failed/i;
 
@@ -292,8 +293,8 @@ function showLobby(main, ctx, session, picture, initialMembers, { onPlaying }) {
     redraw();
   }
 
-  // Live updates on session:<id>. The teacher listens only; students track their names.
-  const channel = ctx.client.channel(`session:${session.id}`, { config: { private: true } });
+  // Live updates on jigsaw:session:<id>. The teacher listens only; students track their names.
+  const channel = ctx.client.channel(sessionTopic(session.id), { config: { private: true } });
   channel
     .on('presence', { event: 'sync' }, () => {
       presence = channel.presenceState();

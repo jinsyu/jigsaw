@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { expect, test } from '@playwright/test';
 import { pickConfig } from '../../public/js/config.js';
+import { DB_SCHEMA } from '../../public/js/supabase-names.js';
 import { closeSql, deleteSessions, signInPage, sql, teacherSession } from './support/teacher.js';
 import { dragFromTray, expectNoHorizontalOverflow, frameOrigin, makeInput, placeAll, puzzleState, showFrame } from './support/puzzle.js';
 
@@ -10,7 +11,10 @@ import { dragFromTray, expectNoHorizontalOverflow, frameOrigin, makeInput, place
 // performance checks have Node students (anonymous accounts that join and track Presence).
 
 const LOCAL = pickConfig('localhost');
-const NODE_CLIENT = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } };
+const NODE_CLIENT = {
+  db: { schema: DB_SCHEMA },
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+};
 const createdSessions = [];
 const nodeClients = [];
 
@@ -19,7 +23,7 @@ test.afterAll(async () => {
   if (createdSessions.length) {
     await sql(
       `delete from auth.users where is_anonymous and id in
-         (select user_id from public.members where session_id = any($1::bigint[]))`,
+         (select user_id from jigsaw.members where session_id = any($1::bigint[]))`,
       [createdSessions],
     );
   }
@@ -38,7 +42,7 @@ async function createClass({ pieces = 12, groups = 2, key = 'sea', aspect = 1800
   });
   if (error) throw error;
   createdSessions.push(data.id);
-  const { rows } = await sql('select id from public.groups where session_id = $1 order by number', [data.id]);
+  const { rows } = await sql('select id from jigsaw.groups where session_id = $1 order by number', [data.id]);
   return { ...data, client, groupIds: rows.map((r) => Number(r.id)) };
 }
 
@@ -73,7 +77,7 @@ async function joinStudent(browser, testInfo, code, name) {
   await page.getByRole('button', { name: '다음' }).click();
   await expect(page.getByRole('heading', { level: 1, name: '선생님이 모둠을 정하고 있어요' })).toBeVisible();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('jigsaw-student')));
-  const { rows } = await sql('select user_id from public.members where id = $1', [saved.memberId]);
+  const { rows } = await sql('select user_id from jigsaw.members where id = $1', [saved.memberId]);
   return { name, context, page, errors, memberId: saved.memberId, userId: rows[0].user_id, input: makeInput(page, testInfo) };
 }
 
@@ -93,7 +97,7 @@ async function nodeStudent(code, name, { present = true } = {}) {
     sessionId: joined.session_id,
     channel: null,
     async enter() {
-      const channel = client.channel(`session:${joined.session_id}`, { config: { private: true, presence: { key: data.user.id } } });
+      const channel = client.channel(`jigsaw:session:${joined.session_id}`, { config: { private: true, presence: { key: data.user.id } } });
       await new Promise((resolve) => {
         channel.subscribe((status) => {
           if (status === 'SUBSCRIBED') channel.track({ member: joined.member_id, name }).then(resolve);
@@ -160,11 +164,11 @@ async function seedBoard(groupId, { cols, rows, aspect }, { locked, loose, seed 
   const ph = height / rows;
   let s = seed;
   const rand = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  const { rows: pieces } = await sql('select col, "row", cluster_id from public.pieces where group_id = $1 order by "row", col', [groupId]);
+  const { rows: pieces } = await sql('select col, "row", cluster_id from jigsaw.pieces where group_id = $1 order by "row", col', [groupId]);
   const order = pieces.map((p, i) => ({ ...p, k: (i * 7919 + seed * 31) % pieces.length })).sort((a, b) => a.k - b.k);
   for (const [i, p] of order.entries()) {
     if (i < locked) {
-      await sql('update public.clusters set x = $2, y = $3, locked = true where id = $1', [p.cluster_id, ox, oy]);
+      await sql('update jigsaw.clusters set x = $2, y = $3, locked = true where id = $1', [p.cluster_id, ox, oy]);
     } else if (i < locked + loose) {
       // Somewhere on the board outside the frame, picture origin so the piece cell lands there.
       let cx;
@@ -173,9 +177,9 @@ async function seedBoard(groupId, { cols, rows, aspect }, { locked, loose, seed 
         cx = 20 + rand() * (boardW - 140);
         cy = 20 + rand() * (boardH - ph - 40);
       } while (cx > ox - 110 && cx < ox + width + 10 && cy > oy - ph - 10 && cy < oy + height + 10);
-      await sql('update public.clusters set x = $2, y = $3, z = $4 where id = $1', [p.cluster_id, cx - p.col * 100, cy - p.row * ph, i]);
+      await sql('update jigsaw.clusters set x = $2, y = $3, z = $4 where id = $1', [p.cluster_id, cx - p.col * 100, cy - p.row * ph, i]);
     } else continue;
-    await sql('update public.pieces set on_board = true, owner_id = null where group_id = $1 and col = $2 and "row" = $3', [groupId, p.col, p.row]);
+    await sql('update jigsaw.pieces set on_board = true, owner_id = null where group_id = $1 and col = $2 and "row" = $3', [groupId, p.col, p.row]);
   }
 }
 
@@ -250,7 +254,7 @@ test('D10·D11·D14: overview refreshes about every 3 s, shows 완성, big view,
   const { ox, oy } = await frameOrigin(A.page);
   const piece = (await puzzleState(A.page)).tray[0];
   await dragFromTray(A.page, A.input, piece, ox, oy);
-  await expect.poll(async () => (await sql('select count(*)::int as n from public.clusters where group_id = $1 and locked', [g1])).rows[0].n).toBe(1);
+  await expect.poll(async () => (await sql('select count(*)::int as n from jigsaw.clusters where group_id = $1 and locked', [g1])).rows[0].n).toBe(1);
   const lockedAt = Date.now();
   await expect(progress(page, 1)).toHaveAttribute('aria-valuetext', '12조각 중 1조각 (8%)', { timeout: 5_000 });
   const seenAfter = Date.now() - lockedAt;
@@ -320,7 +324,7 @@ test('D10·D11·D14: overview refreshes about every 3 s, shows 완성, big view,
 
   // A student who left: 잠시 나감 with the time away.
   await B.context.close();
-  await sql("update public.members set last_seen = now() - interval '42 seconds' where id = $1", [B.memberId]);
+  await sql("update jigsaw.members set last_seen = now() - interval '42 seconds' where id = $1", [B.memberId]);
   await expect(card(page, 1).locator('.chip.off', { hasText: '서연' }).locator('em')).toHaveText(/^잠시 나감 0:4\d$/, { timeout: 8_000 });
   await expectNoHorizontalOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('overview-6-away.png'), fullPage: true });
@@ -330,18 +334,18 @@ test('D10·D11·D14: overview refreshes about every 3 s, shows 완성, big view,
   const endDialog = page.getByRole('dialog', { name: '수업을 끝낼까요?' });
   await expect(endDialog).toBeVisible();
   await endDialog.getByRole('button', { name: '취소' }).click();
-  expect((await sql('select status from public.sessions where id = $1', [session.id])).rows[0].status).toBe('playing');
+  expect((await sql('select status from jigsaw.sessions where id = $1', [session.id])).rows[0].status).toBe('playing');
   await page.getByRole('button', { name: '수업 끝내기' }).click();
   await endDialog.getByRole('button', { name: '수업 끝내기' }).click();
   await expect(page.getByRole('heading', { level: 1, name: '수업을 끝냈어요' })).toBeVisible();
   await expect(page.locator('.t-empty .sub')).toContainText('완성한 모둠은 1 / 2모둠이에요.');
   for (const s of [A, C, D]) await expect(s.page.getByRole('heading', { level: 1, name: '수업이 끝났어요' })).toBeVisible();
-  expect((await sql('select status from public.sessions where id = $1', [session.id])).rows[0].status).toBe('ended');
-  expect((await sql('select count(*)::int as n from public.members where session_id = $1', [session.id])).rows[0].n).toBe(0);
+  expect((await sql('select status from jigsaw.sessions where id = $1', [session.id])).rows[0].status).toBe('ended');
+  expect((await sql('select count(*)::int as n from jigsaw.members where session_id = $1', [session.id])).rows[0].n).toBe(0);
   const uids = [A, B, C, D].map((s) => s.userId);
   expect((await sql('select count(*)::int as n from auth.users where id = any($1::uuid[])', [uids])).rows[0].n).toBe(0);
   // No student name anywhere in the database.
-  const { rows: tables } = await sql("select 'public.' || relname as t from pg_stat_user_tables where schemaname = 'public'");
+  const { rows: tables } = await sql("select schemaname || '.' || relname as t from pg_stat_user_tables where schemaname in ('jigsaw', 'jigsaw_private')");
   for (const table of [...tables.map((r) => r.t), 'auth.users', 'realtime.messages']) {
     const { rows } = await sql(`select coalesce(string_agg(row_to_json(t)::text, ' '), '') as dump from ${table} t`);
     for (const s of [A, B, C, D]) expect(rows[0].dump, `${table} has ${s.name}`).not.toContain(s.name);
@@ -381,13 +385,13 @@ async function fullClass({ pieces, perGroup, progress }) {
     }
   }
   await rpc(session.client, 'start_session', { p_session: session.id });
-  const { rows } = await sql('select cols, rows, aspect from public.sessions where id = $1', [session.id]);
+  const { rows } = await sql('select cols, rows, aspect from jigsaw.sessions where id = $1', [session.id]);
   for (const [g, groupId] of session.groupIds.entries()) await seedBoard(groupId, rows[0], { ...progress[g], seed: g + 3 });
   const total = rows[0].cols * rows[0].rows;
   const done = progress.findIndex((p) => p.locked === total);
-  if (done >= 0) await sql('update public.groups set completed_at = now() where id = $1', [session.groupIds[done]]);
+  if (done >= 0) await sql('update jigsaw.groups set completed_at = now() where id = $1', [session.groupIds[done]]);
   for (const s of students.filter((x) => x.away)) {
-    await sql("update public.members set last_seen = now() - interval '42 seconds' where id = $1", [s.memberId]);
+    await sql("update jigsaw.members set last_seen = now() - interval '42 seconds' where id = $1", [s.memberId]);
   }
   return { session, students, grid: rows[0] };
 }
@@ -408,8 +412,8 @@ test('the overview looks like the mockup: 6 groups on a 1920 x 1080 whiteboard a
     ],
   });
   const away = students.find((x) => x.away);
-  await sql("update public.sessions set started_at = now() - interval '12 minutes 34 seconds' where id = $1", [session.id]);
-  await sql("update public.groups set completed_at = now() - interval '3 minutes 22 seconds' where session_id = $1 and number = 3", [session.id]);
+  await sql("update jigsaw.sessions set started_at = now() - interval '12 minutes 34 seconds' where id = $1", [session.id]);
+  await sql("update jigsaw.groups set completed_at = now() - interval '3 minutes 22 seconds' where session_id = $1 and number = 3", [session.id]);
   const sizes = [
     { name: 'whiteboard-1920', viewport: { width: 1920, height: 1080 } },
     { name: 'desktop-1440', viewport: { width: 1440, height: 900 } },
@@ -430,7 +434,7 @@ test('the overview looks like the mockup: 6 groups on a 1920 x 1080 whiteboard a
     await away.enter();
     await expect(card(page, 2).locator('.chip:not(.off)', { hasText: '도윤' })).toBeVisible();
     await away.leave();
-    await sql("update public.members set last_seen = now() - interval '42 seconds' where id = $1", [away.memberId]);
+    await sql("update jigsaw.members set last_seen = now() - interval '42 seconds' where id = $1", [away.memberId]);
     await expect(card(page, 2).locator('.chip.off', { hasText: '도윤' })).toContainText(/잠시 나감 0:4\d/, { timeout: 8_000 });
     await expect(card(page, 1).locator('.chip', { hasText: '민준' })).toBeVisible();
     await expect(page.locator('.t-ov-clock')).toHaveText(/^1[23]:\d\d$/);
@@ -512,7 +516,7 @@ test("a class with the teacher's own picture: the boards cut it from the private
   if (rowError) throw rowError;
   try {
     const bytes = readFileSync(new URL('../../public/images/builtin/sea.webp', import.meta.url));
-    const { error: uploadError } = await client.storage.from('images').upload(image.path, bytes, { contentType: 'image/webp' });
+    const { error: uploadError } = await client.storage.from('jigsaw-images').upload(image.path, bytes, { contentType: 'image/webp' });
     if (uploadError) throw uploadError;
     const session = await createClass({ pieces: 12, groups: 2, key: null, aspect: null, hints: { p_image_id: image.id, p_hint_underlay: true } });
     for (const [g, groupId] of session.groupIds.entries()) {
@@ -520,7 +524,7 @@ test("a class with the teacher's own picture: the boards cut it from the private
       await rpc(session.client, 'assign_member', { p_member: s.memberId, p_group: groupId });
     }
     await rpc(session.client, 'start_session', { p_session: session.id });
-    const grid = (await sql('select cols, rows, aspect from public.sessions where id = $1', [session.id])).rows[0];
+    const grid = (await sql('select cols, rows, aspect from jigsaw.sessions where id = $1', [session.id])).rows[0];
     await seedBoard(session.groupIds[0], grid, { locked: 5, loose: 4 });
 
     const context = await browser.newContext({ ...testInfo.project.use });
@@ -529,7 +533,7 @@ test("a class with the teacher's own picture: the boards cut it from the private
     const page = await context.newPage();
     const errors = watch(page, 'teacher', testInfo);
     const downloads = [];
-    page.on('request', (r) => r.url().includes(`/storage/v1/object/images/${image.path}`) && downloads.push(r.url()));
+    page.on('request', (r) => r.url().includes(`/storage/v1/object/jigsaw-images/${image.path}`) && downloads.push(r.url()));
     await page.goto(`/teacher/sessions/${session.id}`);
     await expect(page.locator('.t-ov-card')).toHaveCount(2);
     await expect(page.locator('.pill.t-summary')).toHaveText('내 그림 · 12조각');
@@ -541,8 +545,8 @@ test("a class with the teacher's own picture: the boards cut it from the private
     expect(errors).toEqual([]);
     await context.close();
   } finally {
-    await client.storage.from('images').remove([image.path]);
-    await sql('delete from public.sessions where image_id = $1', [image.id]);
+    await client.storage.from('jigsaw-images').remove([image.path]);
+    await sql('delete from jigsaw.sessions where image_id = $1', [image.id]);
     await client.from('images').delete().eq('id', image.id);
   }
 });
@@ -578,15 +582,15 @@ test('6 groups x 70 pieces: refreshing the small boards has no long task on a 4x
   for (let round = 0; round < 4; round++) {
     for (const groupId of session.groupIds) {
       await sql(
-        `update public.clusters c set x = c.x + 37 * sin(c.id + $2), y = c.y + 23 * cos(c.id + $2)
+        `update jigsaw.clusters c set x = c.x + 37 * sin(c.id + $2), y = c.y + 23 * cos(c.id + $2)
            where c.group_id = $1 and not c.locked
-             and exists (select 1 from public.pieces p where p.cluster_id = c.id and p.on_board)`,
+             and exists (select 1 from jigsaw.pieces p where p.cluster_id = c.id and p.on_board)`,
         [groupId, round],
       );
       await sql(
-        `update public.clusters c set locked = true,
+        `update jigsaw.clusters c set locked = true,
               x = ($2::float8 * sqrt(3::float8) - $2) / 2, y = ($2::float8 / $3 * sqrt(3::float8) - $2::float8 / $3) / 2
-           where c.id in (select p.cluster_id from public.pieces p join public.clusters k on k.id = p.cluster_id
+           where c.id in (select p.cluster_id from jigsaw.pieces p join jigsaw.clusters k on k.id = p.cluster_id
                           where p.group_id = $1 and p.on_board and not k.locked order by p.cluster_id limit 2)`,
         [groupId, width, grid.aspect],
       );

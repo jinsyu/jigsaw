@@ -16,7 +16,9 @@ const directives = Object.fromEntries(
 );
 
 // The only outside hosts the site may load from or talk to.
-const ALLOWED_HOSTS = ['cdn.jsdelivr.net', '*.supabase.co'];
+// Supabase: only the shared gyosil project (public/js/config.js), no wildcard.
+const SUPABASE = 'ozfzpyumnaaggrlevygz.supabase.co';
+const ALLOWED_HOSTS = ['cdn.jsdelivr.net', SUPABASE];
 
 function filesUnder(dir) {
   return readdirSync(dir).flatMap((name) => {
@@ -33,28 +35,28 @@ describe('Content-Security-Policy (vercel.json)', () => {
     }
   });
 
-  it('allows only this site, the CDN for supabase-js and Pretendard, and Supabase', () => {
+  it('allows only this site, the CDN for supabase-js and Pretendard, and the gyosil Supabase project', () => {
     expect(directives['default-src']).toEqual(["'self'"]);
     // 'wasm-unsafe-eval' lets Safari compile the WebP encoder (WebAssembly only, no JS eval).
     expect(directives['script-src']).toEqual(["'self'", "'wasm-unsafe-eval'", 'https://cdn.jsdelivr.net']);
     expect(directives['style-src']).toEqual(["'self'", 'https://cdn.jsdelivr.net']);
     expect(directives['font-src']).toEqual(["'self'", 'https://cdn.jsdelivr.net']);
     // The WebP encoder and its .wasm are served from this site (js/vendor), not the CDN.
-    expect(directives['connect-src']).toEqual(["'self'", 'https://*.supabase.co', 'wss://*.supabase.co']);
-    expect(directives['img-src']).toEqual(["'self'", 'data:', 'blob:', 'https://*.supabase.co']);
+    expect(directives['connect-src']).toEqual(["'self'", `https://${SUPABASE}`, `wss://${SUPABASE}`]);
+    expect(directives['img-src']).toEqual(["'self'", 'data:', 'blob:', `https://${SUPABASE}`]);
     expect(directives['object-src']).toEqual(["'none'"]);
     expect(directives['frame-ancestors']).toEqual(["'none'"]);
     expect(directives['base-uri']).toEqual(["'self'"]);
   });
 
   it('has no inline or eval escape hatches', () => {
-    expect(csp).not.toMatch(/unsafe-inline|(?<!wasm-)unsafe-eval|unsafe-hashes|\*(?!\.supabase\.co)/);
+    expect(csp).not.toMatch(/unsafe-inline|(?<!wasm-)unsafe-eval|unsafe-hashes|\*/);
   });
 
   it('the local server adds only the local Supabase stack, for connections and images', () => {
     const local = withLocalSupabase(csp, 'localhost:4173');
-    expect(local).toContain("connect-src 'self' https://*.supabase.co wss://*.supabase.co http://127.0.0.1:56321 ws://127.0.0.1:56321");
-    expect(local).toContain("img-src 'self' data: blob: https://*.supabase.co http://127.0.0.1:56321 ws://127.0.0.1:56321");
+    expect(local).toContain(`connect-src 'self' https://${SUPABASE} wss://${SUPABASE} http://127.0.0.1:56321 ws://127.0.0.1:56321`);
+    expect(local).toContain(`img-src 'self' data: blob: https://${SUPABASE} http://127.0.0.1:56321 ws://127.0.0.1:56321`);
     expect(local.replace(/ (http|ws):\/\/127\.0\.0\.1:56321/g, '')).toBe(csp);
     // A tablet on the same Wi-Fi uses the LAN address for the stack as well.
     expect(withLocalSupabase(csp, '192.168.0.12:4173')).toContain('http://192.168.0.12:56321 ws://192.168.0.12:56321');
@@ -92,7 +94,7 @@ describe('no ads or outside analytics (public/)', () => {
     }
     // Canonical links of this site, and the SVG namespace name (never fetched).
     const notLoaded = ['jigsaw.gyosil.app', 'www.w3.org'];
-    const unexpected = [...outside].filter((h) => !notLoaded.includes(h) && !ALLOWED_HOSTS.some((a) => (a.startsWith('*.') ? h.endsWith(a.slice(1)) : h === a)));
+    const unexpected = [...outside].filter((h) => !notLoaded.includes(h) && !ALLOWED_HOSTS.includes(h));
     expect(unexpected).toEqual([]);
   });
 });

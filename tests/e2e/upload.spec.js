@@ -66,7 +66,7 @@ test('내 그림: delete removes the file and the row, but not while an open cla
   await card.getByRole('button', { name: '지우기', exact: true }).click();
   await expect(card.getByRole('alert')).toHaveText('열려 있는 수업에서 쓰고 있어 지울 수 없어요. 수업을 끝낸 뒤 지워 주세요.');
   expect(await storedFile(image.path)).not.toBeNull();
-  expect((await sql('select 1 from public.images where id = $1', [image.id])).rowCount).toBe(1);
+  expect((await sql('select 1 from jigsaw.images where id = $1', [image.id])).rowCount).toBe(1);
 
   // After the class ends it can go: the Storage file and the row are both gone.
   const { error: endError } = await client.rpc('end_session', { p_session: session.id });
@@ -85,7 +85,7 @@ test('내 그림: delete removes the file and the row, but not while an open cla
   await expect.poll(focused).toBe(nextId ?? 'upload');
   await expect(card).toHaveCount(0);
   expect(await storedFile(image.path)).toBeNull();
-  expect((await sql('select 1 from public.images where id = $1', [image.id])).rowCount).toBe(0);
+  expect((await sql('select 1 from jigsaw.images where id = $1', [image.id])).rowCount).toBe(0);
   expect(errors).toEqual([]);
 });
 

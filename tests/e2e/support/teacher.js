@@ -17,7 +17,8 @@ function localDbUrl() {
 }
 
 export async function sql(text, params = []) {
-  pool ??= new pg.Pool({ connectionString: localDbUrl(), max: 2 });
+  // extra_float_digits = 1: read float8 exactly (the image default 0 rounds to 15 digits).
+  pool ??= new pg.Pool({ connectionString: localDbUrl(), max: 2, options: '-c extra_float_digits=1' });
   return pool.query(text, params);
 }
 
@@ -39,5 +40,5 @@ export async function signInPage(context) {
 }
 
 export async function deleteSessions(ids) {
-  if (ids.length) await sql('delete from public.sessions where id = any($1::bigint[])', [ids]);
+  if (ids.length) await sql('delete from jigsaw.sessions where id = any($1::bigint[])', [ids]);
 }

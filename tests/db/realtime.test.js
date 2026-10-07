@@ -58,9 +58,9 @@ afterAll(async () => {
   await cleanup();
 });
 
-describe('group:<id> 채널', () => {
+describe('jigsaw:group:<id> 채널', () => {
   it('그 모둠 학생과 담당 교사는 구독하고 realtime.send 방송을 받는다', async () => {
-    const topic = `group:${a1.id}`;
+    const topic = `jigsaw:group:${a1.id}`;
     const student = await subscribe(s1.client, topic);
     const teacher = await subscribe(teacher1.client, topic);
     expect([student.status, teacher.status]).toEqual(['SUBSCRIBED', 'SUBSCRIBED']);
@@ -80,20 +80,28 @@ describe('group:<id> 채널', () => {
   });
 
   it('다른 모둠 학생의 구독은 거부된다', async () => {
-    expectRefused(await subscribe(s2.client, `group:${a1.id}`));
+    expectRefused(await subscribe(s2.client, `jigsaw:group:${a1.id}`));
+  });
+
+  it('jigsaw: 접두가 없는 토픽(공용 프로젝트의 다른 이름)은 그 모둠 학생도 구독할 수 없다', async () => {
+    const refused = await Promise.all([
+      subscribe(s1.client, `group:${a1.id}`),
+      subscribe(s5.client, `other:jigsaw:group:${a1.id}`),
+    ]);
+    expectRefused(...refused);
   });
 
   it('다른 수업 학생·다른 교사의 구독은 거부된다', async () => {
     // Realtime answers a refused join after about 5 seconds, so try both at once.
     const refused = await Promise.all([
-      subscribe(s3.client, `group:${a1.id}`),
-      subscribe(teacher2.client, `group:${a1.id}`),
+      subscribe(s3.client, `jigsaw:group:${a1.id}`),
+      subscribe(teacher2.client, `jigsaw:group:${a1.id}`),
     ]);
     expectRefused(...refused);
   });
 
   it('같은 이름의 공개 채널로는 비공개 방송을 받지 못한다', async () => {
-    const topic = `group:${a1.id}`;
+    const topic = `jigsaw:group:${a1.id}`;
     const eavesdrop = await subscribe(s3.client, topic, { isPrivate: false });
     const member = await subscribe(s5.client, topic);
     expect(member.status).toBe('SUBSCRIBED');
@@ -104,7 +112,7 @@ describe('group:<id> 채널', () => {
   });
 
   it('학생이 모둠 채널에 직접 보낸 방송은 아무도 받지 못한다 (방송은 RPC 만)', async () => {
-    const topic = `group:${a1.id}`;
+    const topic = `jigsaw:group:${a1.id}`;
     const listener = await subscribe(teacher1.client, topic);
     const sender = await subscribe(s1.client, topic);
     expect([listener.status, sender.status]).toEqual(['SUBSCRIBED', 'SUBSCRIBED']);
@@ -114,9 +122,9 @@ describe('group:<id> 채널', () => {
   });
 });
 
-describe('session:<id> 채널 (Presence)', () => {
+describe('jigsaw:session:<id> 채널 (Presence)', () => {
   it('수업 참가자와 교사는 구독하고, 교사는 학생 Presence 를 본다', async () => {
-    const topic = `session:${sessionA.id}`;
+    const topic = `jigsaw:session:${sessionA.id}`;
     const teacher = await subscribe(teacher1.client, topic, { presenceKey: teacher1.userId });
     const student = await subscribe(s2.client, topic, { presenceKey: s2.userId });
     expect([teacher.status, student.status]).toEqual(['SUBSCRIBED', 'SUBSCRIBED']);
@@ -128,7 +136,7 @@ describe('session:<id> 채널 (Presence)', () => {
   });
 
   it('다른 수업 학생·다른 교사의 구독은 거부된다', async () => {
-    const topic = `session:${sessionA.id}`;
+    const topic = `jigsaw:session:${sessionA.id}`;
     const refused = await Promise.all([
       subscribe(s3.client, topic, { presenceKey: s3.userId }),
       subscribe(teacher2.client, topic, { presenceKey: teacher2.userId }),

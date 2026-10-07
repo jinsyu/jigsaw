@@ -1,5 +1,6 @@
 // Pictures a session can use: built-in pictures (static files) and the teacher's
 // own pictures (private Storage bucket, read through short-lived signed URLs).
+import { IMAGE_BUCKET } from '../supabase-names.js';
 
 const BUILTIN_INDEX = '/images/builtin/index.json';
 const SIGNED_URL_SECONDS = 60 * 60;
@@ -28,7 +29,7 @@ export async function loadMyImages(client) {
   if (error) throw error;
   if (!rows.length) return [];
   const { data: signed, error: signError } = await client.storage
-    .from('images')
+    .from(IMAGE_BUCKET)
     .createSignedUrls(rows.map((r) => r.path), SIGNED_URL_SECONDS);
   if (signError) throw signError;
   const urlByPath = new Map(signed.map((s) => [s.path, s.signedUrl]));

@@ -1,5 +1,5 @@
 // Teachers' own pictures (T8, spec D2): shrink in the browser, store as WebP in the
-// private "images" bucket, and delete again (file and row).
+// private "jigsaw-images" bucket, and delete again (file and row).
 //
 // - Redrawing on a canvas keeps only the pixels: EXIF (camera, place, time) is dropped.
 //   <img> applies the EXIF orientation before drawing, so photos stay upright.
@@ -15,8 +15,9 @@ import {
   isHeic,
   newImageId,
 } from './upload-rules.js';
+import { IMAGE_BUCKET } from '../supabase-names.js';
 
-const BUCKET = 'images';
+const BUCKET = IMAGE_BUCKET;
 const SIGNED_URL_SECONDS = 60 * 60;
 // Relative to this module, so it works on any host. The .wasm sits next to its loader.
 const WASM_ENCODER = new URL('../vendor/jsquash-webp-1.5.0/encode.js', import.meta.url).href;

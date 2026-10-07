@@ -5,16 +5,16 @@
 // Student names come only from Presence (student/presence.js) and the page's memory (D14);
 // the server sends member rows without names.
 import { buildRoster } from './roster.js';
+import { IMAGE_BUCKET } from '../supabase-names.js';
 
 export const POLL_MS = 3000;
 // A student out of Presence for this long has had the tray dealt to the others (T6: 1 minute).
 export const TRAY_DEALT_MS = 60_000;
 
-const SETUP_FIELDS = 'cols, rows, aspect, seed';
-
-// Grid, picture aspect and shape seed: the same on every device (geometry.js).
+// Grid, picture aspect and shape seed: the same on every device (geometry.js). session_setup
+// returns the aspect exactly (a plain select would round it to 15 digits).
 export async function getPuzzleSetup(client, sessionId) {
-  const { data, error } = await client.from('sessions').select(SETUP_FIELDS).eq('id', sessionId).maybeSingle();
+  const { data, error } = await client.rpc('session_setup', { p_session: sessionId });
   if (error) throw error;
   if (!data) throw new Error(`session ${sessionId} is not readable`);
   return { cols: data.cols, rows: data.rows, aspect: data.aspect, seed: Number(data.seed) };
@@ -38,7 +38,7 @@ export async function pictureSource(client, session, builtins) {
   const { data: image, error } = await client.from('images').select('path').eq('id', session.image_id).maybeSingle();
   if (error) throw error;
   if (!image) throw new Error('the picture is not readable');
-  const { data: blob, error: downloadError } = await client.storage.from('images').download(image.path);
+  const { data: blob, error: downloadError } = await client.storage.from(IMAGE_BUCKET).download(image.path);
   if (downloadError) throw downloadError;
   const src = URL.createObjectURL(blob);
   return { src, revoke: () => URL.revokeObjectURL(src) };

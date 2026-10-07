@@ -1,5 +1,5 @@
 // Supabase PuzzleStore (see puzzle-store.js): the same contract as local-store.js, backed by
-// the puzzle RPCs (take_from_tray, grab, drop, T5) and the group:<id> broadcasts.
+// the puzzle RPCs (take_from_tray, grab, drop, T5) and the jigsaw:group:<id> broadcasts.
 //
 // It talks to the server only through `api` (supabase-api.js makes one from a supabase-js
 // client; unit tests pass a fake), so all the logic here runs without a network:

@@ -1,4 +1,4 @@
-// Keeps a joined student in step with the class on session:<id> (private channel):
+// Keeps a joined student in step with the class on jigsaw:session:<id> (private channel):
 // - Presence: tracks { member, name } under the student's user id. The name goes nowhere else.
 // - 'groups' / 'start': read my members row, my group and my groupmates again. start_session
 //   renumbers colours without a 'groups' broadcast, so 'start' re-reads too (T4 review).
@@ -6,11 +6,12 @@
 // - Every REFRESH_MS the same read again, in case a broadcast was missed.
 // heartbeat() every 5 seconds keeps members.last_seen fresh while waiting, so trays dealt at
 // the start are not taken for a student who was simply waiting (T6: gone after 1 minute).
-// This module joins no group:<id> channel; the puzzle (student/puzzle.js) does, and leaves the
+// This module joins no jigsaw:group:<id> channel; the puzzle (student/puzzle.js) does, and leaves the
 // old group's channel for the new one when a 'groups' broadcast moves this student.
 // beat() lets the puzzle send a heartbeat first when the page comes back (before
 // redistribute_stale, T6 review); onBeat hears the server time of every answer.
 import { presenceNames } from './presence.js';
+import { sessionTopic } from '../supabase-names.js';
 
 const HEARTBEAT_MS = 5000;
 // Broadcasts can be missed (a reconnect at the wrong moment): read the class again this often.
@@ -23,7 +24,7 @@ export function connectClass({ client, sessionId, memberId, userId, name, onChan
   let connection = 'connecting';
   let presence = {};
   let snapshot = null; // { code, status, group, myColor, mateRows }
-  const channel = client.channel(`session:${sessionId}`, {
+  const channel = client.channel(sessionTopic(sessionId), {
     config: { private: true, presence: { key: userId } },
   });
 

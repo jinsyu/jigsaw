@@ -170,8 +170,8 @@ test('D1: a teacher picks a picture, piece count and groups, opens the class, an
 
   const { rows } = await sql(
     `select s.code, s.status, s.builtin_key, s.piece_count, s.cols, s.rows, s.aspect,
-            (select count(*)::int from public.groups g where g.session_id = s.id) as groups
-     from public.sessions s where s.id = $1`,
+            (select count(*)::int from jigsaw.groups g where g.session_id = s.id) as groups
+     from jigsaw.sessions s where s.id = $1`,
     [id],
   );
   expect(rows[0]).toMatchObject({
@@ -205,7 +205,7 @@ test('D1: a teacher picks a picture, piece count and groups, opens the class, an
   await page.getByRole('button', { name: '수업 닫기' }).click();
   await dialog.getByRole('button', { name: '수업 닫기' }).click();
   await expect(page.getByRole('heading', { level: 1, name: '내 수업' })).toBeVisible();
-  expect((await sql('select status from public.sessions where id = $1', [id])).rows[0].status).toBe('ended');
+  expect((await sql('select status from jigsaw.sessions where id = $1', [id])).rows[0].status).toBe('ended');
   await page.goto(`/teacher/sessions/${id}`);
   await expect(page.getByRole('heading', { level: 1, name: '이미 끝난 수업이에요' })).toBeVisible();
   expect(errors).toEqual([]);
@@ -267,7 +267,7 @@ test('help settings: four switches with defaults, the frame preview follows them
   const id = Number(new URL(page.url()).pathname.split('/').pop());
   createdSessions.push(id);
   const { rows } = await sql(
-    'select hint_preview, hint_outline, hint_picture_button, hint_underlay from public.sessions where id = $1',
+    'select hint_preview, hint_outline, hint_picture_button, hint_underlay from jigsaw.sessions where id = $1',
     [id],
   );
   expect(rows[0]).toEqual({ hint_preview: true, hint_outline: false, hint_picture_button: false, hint_underlay: true });
@@ -356,7 +356,7 @@ test('a picture from 내 그림 can be chosen for a class', async ({ page, conte
   const file = readFileSync(new URL('../../public/images/builtin/garden-thumb.webp', import.meta.url));
   const { error: rowError } = await client.from('images').insert({ id: imageId, width: 720, height: 480 });
   if (rowError) throw rowError;
-  const { error: upError } = await client.storage.from('images').upload(path, file, { contentType: 'image/webp' });
+  const { error: upError } = await client.storage.from('jigsaw-images').upload(path, file, { contentType: 'image/webp' });
   if (upError) throw upError;
 
   try {
@@ -369,38 +369,42 @@ test('a picture from 내 그림 can be chosen for a class', async ({ page, conte
     await mine.locator('xpath=..').click();
     await expect(mine).toBeChecked();
     await expect(page.locator('.t-preview-title')).toHaveText('내 그림');
-    await expect(page.locator('.t-preview image')).toHaveAttribute('href', /\/storage\/v1\/object\/sign\/images\//);
+    await expect(page.locator('.t-preview image')).toHaveAttribute('href', /\/storage\/v1\/object\/sign\/jigsaw-images\//);
     await page.getByRole('button', { name: '수업 열기' }).click();
     await expect(page).toHaveURL(/\/teacher\/sessions\/\d+$/);
     const id = Number(new URL(page.url()).pathname.split('/').pop());
     createdSessions.push(id);
-    const { rows } = await sql('select image_id, builtin_key, aspect from public.sessions where id = $1', [id]);
+    const { rows } = await sql('select image_id, builtin_key, aspect from jigsaw.sessions where id = $1', [id]);
     expect(rows[0]).toMatchObject({ image_id: imageId, builtin_key: null, aspect: 1.5 });
     await expect(page.locator('.t-summary')).toHaveText('내 그림 · 24조각 · 6모둠');
   } finally {
     await deleteSessions(createdSessions.splice(0));
-    await client.storage.from('images').remove([path]);
+    await client.storage.from('jigsaw-images').remove([path]);
     await client.from('images').delete().eq('id', imageId);
   }
 });
 
-test('on a host without Supabase settings, teacher screens say 준비 중 and load nothing remote', async ({
+test('on the hosted address, the teacher screen signs in with Google on the gyosil project, never the local stack', async ({
   page,
   baseURL,
 }, testInfo) => {
   const host = 'http://jigsaw-preview.example.test';
+  const remote = 'https://ozfzpyumnaaggrlevygz.supabase.co';
   const requested = [];
   page.on('request', (r) => requested.push(r.url()));
   await page.route(`${host}/**`, async (route) => {
     const response = await route.fetch({ url: route.request().url().replace(host, baseURL) });
     await route.fulfill({ response });
   });
+  // Never talk to the real project from tests.
+  await page.route(`${remote}/**`, (route) => route.abort('blockedbyclient'));
   const errors = trackErrors(page);
   await page.goto(`${host}/teacher/new`);
-  await expect(page.getByRole('heading', { level: 1, name: '선생님 화면은 준비 중이에요' })).toBeVisible();
-  await expect(page.getByRole('link', { name: '처음 화면으로' })).toHaveAttribute('href', '/');
-  expect(requested.filter((u) => u.includes('supabase-js@') || u.includes(':56321'))).toEqual([]);
+  await expect(page.getByRole('heading', { level: 1, name: '선생님 로그인' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '구글 계정으로 계속하기' })).toBeVisible();
+  expect(requested.filter((u) => u.includes(':56321'))).toEqual([]);
+  expect(requested.filter((u) => u.includes('.supabase.co') && !u.startsWith(remote))).toEqual([]);
   await expectNoHorizontalOverflow(page);
-  await page.screenshot({ path: testInfo.outputPath('teacher-not-ready.png'), fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath('teacher-hosted-login.png'), fullPage: true });
   expect(errors).toEqual([]);
 });

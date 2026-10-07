@@ -1,19 +1,18 @@
--- T5: puzzle RPCs (take_from_tray, grab, drop) with the SQL snap check, frame lock and
--- completion. Also the T4 review follow-ups (deal_tray race, join_session account_gone,
--- assign_member comment) and one lock order for assign_member / end_session.
+-- Puzzle RPCs (take_from_tray, grab, drop) with the SQL snap check, frame lock and
+-- completion.
 --
 -- Snap rules
--- private.resolve_drop() is a pure function that implements public/js/puzzle/snap.js
+-- jigsaw_private.resolve_drop() is a pure function that implements public/js/puzzle/snap.js
 -- resolveDrop() step by step (clamp -> neighbour merges -> snap into the frame) in float8
--- with the same operation order, and private.held_by_other() is snap.js isHeldByOther().
+-- with the same operation order, and jigsaw_private.held_by_other() is snap.js isHeldByOther().
 -- tests/db/snap-parity.test.js runs every case of tests/fixtures/snap-cases.json through
 -- both, and through the drop / take_from_tray RPCs, and requires identical results.
--- The tolerance lives in private.snap_tolerance() (= snap.js SNAP_TOLERANCE = fixture
--- defaultTolerance = 40), the hold time in private.held_by_other() (= HOLD_MS = 10 s).
+-- The tolerance lives in jigsaw_private.snap_tolerance() (= snap.js SNAP_TOLERANCE = fixture
+-- defaultTolerance = 40), the hold time in jigsaw_private.held_by_other() (= HOLD_MS = 10 s).
 --
 -- Holds: a cluster is "held by another student" for the caller when grabbed_by is set, is
 -- not the caller, was grabbed less than 10 seconds ago and the holder is connected
--- (members row in that group with last_seen in the last 15 seconds, private.online_since).
+-- (members row in that group with last_seen in the last 15 seconds, jigsaw_private.online_since).
 -- Such clusters cannot be grabbed and are left out of merges (they stay on the board and
 -- count for progress). Locked clusters (in the frame) can never be grabbed.
 --
@@ -43,7 +42,7 @@
 --   progress = { placed (locked pieces), total, complete (all locked) }, completed_at =
 --   groups.completed_at (set by the drop that locked the last piece, completed_now = true).
 --
--- Broadcasts on group:<id> (realtime.send, private). No names, uids only.
+-- Broadcasts on jigsaw:group:<id> (realtime.send, private). No names, uids only.
 --   'take'  the take_from_tray result fields (without ok) + by
 --   'grab'  { by, cluster_id, z, grabbed_at }
 --   'drop'  the drop result fields (without ok) + by
@@ -59,23 +58,15 @@
 -- - deal_tray (teacher moves, T6 redistribution) only moves pieces that are still in the
 --   expected tray, so it cannot give an owner back to a piece a student just took.
 -- - Lock order everywhere: session row -> group rows (id order) -> their clusters (id order)
---   -> pieces. assign_member and end_session (below) take the boards with lock_board before
+--   -> pieces. assign_member and end_session (jigsaw_session_flow) take the boards with lock_board before
 --   they release grabs or delete accounts (grabbed_by is "on delete set null"), so they
 --   never hold a cluster that a drop is waiting for while waiting for one the drop holds.
-
--- ---------------------------------------------------------------------------
--- Schema
--- ---------------------------------------------------------------------------
-
-alter table public.clusters add column locked boolean not null default false;
-comment on column public.clusters.locked is
-  'Snapped into the frame (completed picture position): fixed for good, cannot be grabbed.';
 
 -- ---------------------------------------------------------------------------
 -- Pure snap rules (shared with public/js/puzzle/snap.js)
 -- ---------------------------------------------------------------------------
 
-create function private.snap_tolerance()
+create function jigsaw_private.snap_tolerance()
 returns double precision
 language sql immutable set search_path = ''
 as $$
@@ -83,7 +74,7 @@ as $$
 $$;
 
 -- snap.js isHeldByOther(): p_now - p_grabbed_at < 10 s, holder set, not me, holder connected.
-create function private.held_by_other(p_holder uuid, p_grabbed_at timestamptz,
+create function jigsaw_private.held_by_other(p_holder uuid, p_grabbed_at timestamptz,
                                       p_holder_online boolean, p_me uuid, p_now timestamptz)
 returns boolean
 language sql immutable set search_path = ''
@@ -100,7 +91,10 @@ $$;
 -- held = held by another student: kept on the board but never a merge candidate.
 -- Returns snap.js resolveDrop()'s shape:
 -- { id, x, y, locked, absorbed, clusters: [{ id, x, y, locked, pieces }], placed, total, complete }.
-create function private.resolve_drop(
+-- The board is three times the picture area: each side sqrt(3) times the picture side
+-- (= geometry.js layoutFor(), BOARD_SIDE_RATIO = Math.sqrt(3); sqrt() is correctly rounded
+-- on both sides, so the sizes are bit-identical).
+create function jigsaw_private.resolve_drop(
   p_cols integer,
   p_rows integer,
   p_aspect double precision,
@@ -121,8 +115,8 @@ declare
   height constant double precision := width / p_aspect;
   pw constant double precision := 100;
   ph constant double precision := height / p_rows::double precision;
-  board_w constant double precision := width * sqrt(2::double precision);
-  board_h constant double precision := height * sqrt(2::double precision);
+  board_w constant double precision := width * sqrt(3::double precision);
+  board_h constant double precision := height * sqrt(3::double precision);
   frame_x constant double precision := (board_w - width) / 2;
   frame_y constant double precision := (board_h - height) / 2;
   tol2 constant double precision := p_tol * p_tol;
@@ -300,7 +294,7 @@ $$;
 -- Helpers for the RPCs
 -- ---------------------------------------------------------------------------
 
-create function private.require_student()
+create function jigsaw_private.require_student()
 returns uuid
 language plpgsql stable security definer set search_path = ''
 as $$
@@ -312,7 +306,7 @@ begin
 end;
 $$;
 
-create function private.refuse(p_reason text, p_extra jsonb default '{}'::jsonb)
+create function jigsaw_private.refuse(p_reason text, p_extra jsonb default '{}'::jsonb)
 returns jsonb
 language sql immutable set search_path = ''
 as $$
@@ -320,7 +314,7 @@ as $$
 $$;
 
 -- NaN compares greater than every number in Postgres, so "< Infinity" also rejects NaN.
-create function private.is_finite_point(p_x double precision, p_y double precision)
+create function jigsaw_private.is_finite_point(p_x double precision, p_y double precision)
 returns boolean
 language sql immutable set search_path = ''
 as $$
@@ -331,29 +325,34 @@ as $$
 $$;
 
 -- The holder still belongs to the group and sent a signal in the last 15 seconds.
-create function private.is_online(p_user uuid, p_group bigint)
+create function jigsaw_private.is_online(p_user uuid, p_group bigint)
 returns boolean
 language sql stable security definer set search_path = ''
 as $$
   select exists (
-    select 1 from public.members m
-    where m.user_id = p_user and m.group_id = p_group and m.last_seen >= private.online_since()
+    select 1 from jigsaw.members m
+    where m.user_id = p_user and m.group_id = p_group and m.last_seen >= jigsaw_private.online_since()
   );
 $$;
 
 -- Locks the group row, then every cluster of the group (id order), and returns the session.
-create function private.lock_board(p_group bigint)
-returns public.sessions
+-- The session row is read in a separate statement after the locks are granted, so it sees
+-- every commit made before (a drop, take_from_tray or redistribute_stale that waited for
+-- end_session sees 'ended' and answers not_playing). Under READ COMMITTED a statement that
+-- waited for the group row would not re-read a joined session row that was not changed.
+-- The session row itself is not locked.
+create function jigsaw_private.lock_board(p_group bigint)
+returns jigsaw.sessions
 language plpgsql volatile security definer set search_path = ''
 as $$
 declare
-  s public.sessions;
+  s jigsaw.sessions;
 begin
+  perform 1 from jigsaw.groups gr where gr.id = p_group for update;
+  perform 1 from jigsaw.clusters c where c.group_id = p_group order by c.id for update;
   select se.* into s
-  from public.groups gr join public.sessions se on se.id = gr.session_id
-  where gr.id = p_group
-  for update of gr;
-  perform 1 from public.clusters c where c.group_id = p_group order by c.id for update;
+  from jigsaw.groups gr join jigsaw.sessions se on se.id = gr.session_id
+  where gr.id = p_group;
   return s;
 end;
 $$;
@@ -361,7 +360,7 @@ $$;
 -- Resolves a drop of p_cluster at (p_x, p_y) on the locked board and writes the result:
 -- absorbed clusters are deleted (their pieces move to the survivor), the survivor gets
 -- its position and lock and is released, and the group is marked complete once.
-create function private.settle_drop(p_session public.sessions, p_group bigint, p_uid uuid,
+create function jigsaw_private.settle_drop(p_session jigsaw.sessions, p_group bigint, p_uid uuid,
                                     p_cluster bigint, p_x double precision, p_y double precision)
 returns jsonb
 language plpgsql volatile security definer
@@ -370,38 +369,38 @@ as $$
 declare
   board jsonb;
   r jsonb;
-  survivor public.clusters;
+  survivor jigsaw.clusters;
   absorbed bigint[];
   dropped_z integer;
   completed timestamptz;
   completed_now boolean := false;
 begin
-  select c.z into dropped_z from public.clusters c where c.id = p_cluster;
+  select c.z into dropped_z from jigsaw.clusters c where c.id = p_cluster;
 
   select coalesce(jsonb_agg(jsonb_build_object(
            'id', c.id, 'x', c.x, 'y', c.y, 'locked', c.locked, 'pieces', pc.cells,
-           'held', c.id <> p_cluster and private.held_by_other(
-             c.grabbed_by, c.grabbed_at, private.is_online(c.grabbed_by, p_group), p_uid, now()))),
+           'held', c.id <> p_cluster and jigsaw_private.held_by_other(
+             c.grabbed_by, c.grabbed_at, jigsaw_private.is_online(c.grabbed_by, p_group), p_uid, now()))),
          '[]'::jsonb)
   into board
-  from public.clusters c
+  from jigsaw.clusters c
   cross join lateral (
     select jsonb_agg(jsonb_build_array(p.col, p."row")) as cells
-    from public.pieces p
+    from jigsaw.pieces p
     where p.cluster_id = c.id and p.on_board
   ) pc
   where c.group_id = p_group and pc.cells is not null;
 
-  r := private.resolve_drop(p_session.cols, p_session.rows, p_session.aspect, board,
-                            p_cluster, p_x, p_y, private.snap_tolerance());
+  r := jigsaw_private.resolve_drop(p_session.cols, p_session.rows, p_session.aspect, board,
+                            p_cluster, p_x, p_y, jigsaw_private.snap_tolerance());
 
   absorbed := array(select e::bigint from jsonb_array_elements_text(r -> 'absorbed') e);
   if cardinality(absorbed) > 0 then
-    update public.pieces set cluster_id = (r ->> 'id')::bigint where cluster_id = any (absorbed);
-    delete from public.clusters where id = any (absorbed);
+    update jigsaw.pieces set cluster_id = (r ->> 'id')::bigint where cluster_id = any (absorbed);
+    delete from jigsaw.clusters where id = any (absorbed);
   end if;
 
-  update public.clusters
+  update jigsaw.clusters
   set x = (r ->> 'x')::double precision,
       y = (r ->> 'y')::double precision,
       locked = (r ->> 'locked')::boolean,
@@ -412,11 +411,11 @@ begin
   returning * into survivor;
 
   if (r ->> 'complete')::boolean then
-    update public.groups set completed_at = now()
+    update jigsaw.groups set completed_at = now()
     where id = p_group and completed_at is null;
     completed_now := found;
   end if;
-  select g.completed_at into completed from public.groups g where g.id = p_group;
+  select g.completed_at into completed from jigsaw.groups g where g.id = p_group;
 
   return jsonb_build_object(
     'id', survivor.id,
@@ -438,34 +437,34 @@ $$;
 
 -- A student puts one of their tray pieces on the board at (p_x, p_y) (picture origin).
 -- It is resolved like a drop of that one-piece cluster and ends up released.
-create function public.take_from_tray(p_group bigint, p_piece integer,
+create function jigsaw.take_from_tray(p_group bigint, p_piece integer,
                                       p_x double precision, p_y double precision)
 returns jsonb
 language plpgsql volatile security definer
 set search_path = '' set extra_float_digits = 1
 as $$
 declare
-  uid uuid := private.require_student();
-  s public.sessions;
+  uid uuid := jigsaw_private.require_student();
+  s jigsaw.sessions;
   taken bigint;
   result jsonb;
 begin
-  if not private.is_finite_point(p_x, p_y) then
-    return private.refuse('bad_position');
+  if not jigsaw_private.is_finite_point(p_x, p_y) then
+    return jigsaw_private.refuse('bad_position');
   end if;
-  if p_group is null or not private.is_group_member(p_group) then
-    return private.refuse('not_found');
+  if p_group is null or not jigsaw_private.is_group_member(p_group) then
+    return jigsaw_private.refuse('not_found');
   end if;
-  s := private.lock_board(p_group);
+  s := jigsaw_private.lock_board(p_group);
   if s.status <> 'playing' then
-    return private.refuse('not_playing');
+    return jigsaw_private.refuse('not_playing');
   end if;
   if p_piece is null or p_piece < 0 or p_piece >= s.cols * s.rows then
-    return private.refuse('not_in_tray');
+    return jigsaw_private.refuse('not_in_tray');
   end if;
 
   -- Conditional: a concurrent deal_tray may have given the piece to someone else.
-  update public.pieces p
+  update jigsaw.pieces p
   set on_board = true, owner_id = null
   where p.group_id = p_group
     and p.col = p_piece % s.cols
@@ -474,361 +473,117 @@ begin
     and not p.on_board
   returning p.cluster_id into taken;
   if not found then
-    return private.refuse('not_in_tray');
+    return jigsaw_private.refuse('not_in_tray');
   end if;
 
-  update public.clusters
-  set z = (select coalesce(max(x.z), 0) + 1 from public.clusters x where x.group_id = p_group)
+  update jigsaw.clusters
+  set z = (select coalesce(max(x.z), 0) + 1 from jigsaw.clusters x where x.group_id = p_group)
   where id = taken;
 
   result := jsonb_build_object('cluster_id', taken, 'piece', p_piece)
-            || private.settle_drop(s, p_group, uid, taken, p_x, p_y);
-  perform realtime.send(result || jsonb_build_object('by', uid), 'take', 'group:' || p_group, true);
+            || jigsaw_private.settle_drop(s, p_group, uid, taken, p_x, p_y);
+  perform realtime.send(result || jsonb_build_object('by', uid), 'take', 'jigsaw:group:' || p_group, true);
   return jsonb_build_object('ok', true) || result;
 end;
 $$;
 
 -- A student picks up a cluster on the board. One conditional update: the first caller wins.
-create function public.grab(p_cluster bigint)
+create function jigsaw.grab(p_cluster bigint)
 returns jsonb
 language plpgsql volatile security definer set search_path = ''
 as $$
 declare
-  uid uuid := private.require_student();
+  uid uuid := jigsaw_private.require_student();
   g bigint;
   session_status text;
-  grabbed public.clusters;
+  grabbed jigsaw.clusters;
 begin
-  select c.group_id into g from public.clusters c where c.id = p_cluster;
-  if not found or not private.is_group_member(g) then
-    return private.refuse('not_found');
+  select c.group_id into g from jigsaw.clusters c where c.id = p_cluster;
+  if not found or not jigsaw_private.is_group_member(g) then
+    return jigsaw_private.refuse('not_found');
   end if;
   select se.status into session_status
-  from public.groups gr join public.sessions se on se.id = gr.session_id
+  from jigsaw.groups gr join jigsaw.sessions se on se.id = gr.session_id
   where gr.id = g;
   if session_status <> 'playing' then
-    return private.refuse('not_playing');
+    return jigsaw_private.refuse('not_playing');
   end if;
 
-  update public.clusters c
+  update jigsaw.clusters c
   set grabbed_by = uid,
       grabbed_at = now(),
-      z = (select coalesce(max(x.z), 0) + 1 from public.clusters x where x.group_id = g)
+      z = (select coalesce(max(x.z), 0) + 1 from jigsaw.clusters x where x.group_id = g)
   where c.id = p_cluster
     and not c.locked
-    and exists (select 1 from public.pieces p where p.cluster_id = c.id and p.on_board)
-    and not private.held_by_other(c.grabbed_by, c.grabbed_at, private.is_online(c.grabbed_by, g),
+    and exists (select 1 from jigsaw.pieces p where p.cluster_id = c.id and p.on_board)
+    and not jigsaw_private.held_by_other(c.grabbed_by, c.grabbed_at, jigsaw_private.is_online(c.grabbed_by, g),
                                   uid, now())
   returning c.* into grabbed;
 
   if not found then
-    select c.* into grabbed from public.clusters c where c.id = p_cluster;
+    select c.* into grabbed from jigsaw.clusters c where c.id = p_cluster;
     if not found or not exists (
-      select 1 from public.pieces p where p.cluster_id = p_cluster and p.on_board
+      select 1 from jigsaw.pieces p where p.cluster_id = p_cluster and p.on_board
     ) then
-      return private.refuse('not_found');
+      return jigsaw_private.refuse('not_found');
     end if;
     if grabbed.locked then
-      return private.refuse('locked');
+      return jigsaw_private.refuse('locked');
     end if;
-    return private.refuse('held', jsonb_build_object('held_by', grabbed.grabbed_by));
+    return jigsaw_private.refuse('held', jsonb_build_object('held_by', grabbed.grabbed_by));
   end if;
 
   perform realtime.send(
     jsonb_build_object('by', uid, 'cluster_id', grabbed.id, 'z', grabbed.z, 'grabbed_at', grabbed.grabbed_at),
-    'grab', 'group:' || g, true);
+    'grab', 'jigsaw:group:' || g, true);
   return jsonb_build_object('ok', true, 'cluster_id', grabbed.id, 'z', grabbed.z,
                             'grabbed_at', grabbed.grabbed_at);
 end;
 $$;
 
 -- The holder drops a cluster at (p_x, p_y): clamp, merges, frame, completion, broadcast.
-create function public.drop(p_cluster bigint, p_x double precision, p_y double precision)
+create function jigsaw.drop(p_cluster bigint, p_x double precision, p_y double precision)
 returns jsonb
 language plpgsql volatile security definer
 set search_path = '' set extra_float_digits = 1
 as $$
 declare
-  uid uuid := private.require_student();
+  uid uuid := jigsaw_private.require_student();
   g bigint;
-  s public.sessions;
-  dropped public.clusters;
+  s jigsaw.sessions;
+  dropped jigsaw.clusters;
   result jsonb;
 begin
-  if not private.is_finite_point(p_x, p_y) then
-    return private.refuse('bad_position');
+  if not jigsaw_private.is_finite_point(p_x, p_y) then
+    return jigsaw_private.refuse('bad_position');
   end if;
-  select c.group_id into g from public.clusters c where c.id = p_cluster;
-  if not found or not private.is_group_member(g) then
-    return private.refuse('not_found');
+  select c.group_id into g from jigsaw.clusters c where c.id = p_cluster;
+  if not found or not jigsaw_private.is_group_member(g) then
+    return jigsaw_private.refuse('not_found');
   end if;
-  s := private.lock_board(g);
+  s := jigsaw_private.lock_board(g);
   if s.status <> 'playing' then
-    return private.refuse('not_playing');
+    return jigsaw_private.refuse('not_playing');
   end if;
 
   -- Re-read under the locks: an earlier drop may have absorbed or locked it.
-  select c.* into dropped from public.clusters c where c.id = p_cluster;
+  select c.* into dropped from jigsaw.clusters c where c.id = p_cluster;
   if not found or not exists (
-    select 1 from public.pieces p where p.cluster_id = p_cluster and p.on_board
+    select 1 from jigsaw.pieces p where p.cluster_id = p_cluster and p.on_board
   ) then
-    return private.refuse('not_found');
+    return jigsaw_private.refuse('not_found');
   end if;
   if dropped.locked then
-    return private.refuse('locked');
+    return jigsaw_private.refuse('locked');
   end if;
   if dropped.grabbed_by is distinct from uid then
-    return private.refuse('not_held');
+    return jigsaw_private.refuse('not_held');
   end if;
 
   result := jsonb_build_object('cluster_id', p_cluster)
-            || private.settle_drop(s, g, uid, p_cluster, p_x, p_y);
-  perform realtime.send(result || jsonb_build_object('by', uid), 'drop', 'group:' || g, true);
+            || jigsaw_private.settle_drop(s, g, uid, p_cluster, p_x, p_y);
+  perform realtime.send(result || jsonb_build_object('by', uid), 'drop', 'jigsaw:group:' || g, true);
   return jsonb_build_object('ok', true) || result;
-end;
-$$;
-
--- ---------------------------------------------------------------------------
--- T4 review follow-ups
--- ---------------------------------------------------------------------------
-
--- 1. deal_tray: the update re-checks "still in the expected tray and not on the board".
---    Under READ COMMITTED a piece taken by a concurrent take_from_tray is re-read after the
---    taker commits, and the re-check skips it instead of giving it an owner again.
-create or replace function private.deal_tray(p_group bigint, p_from uuid[], p_to uuid[])
-returns jsonb
-language plpgsql volatile security definer set search_path = ''
-as $$
-declare
-  dealt jsonb;
-begin
-  with tray as (
-    select p.col, p."row", row_number() over (order by random()) - 1 as i
-    from public.pieces p
-    where p.group_id = p_group
-      and not p.on_board
-      and (case when p_from is null then p.owner_id is null else p.owner_id = any (p_from) end)
-  ),
-  takers as (
-    select t.uid,
-           row_number() over (order by (
-             select count(*) from public.pieces x
-             where x.group_id = p_group and x.owner_id = t.uid and not x.on_board
-           ), random()) - 1 as j,
-           count(*) over () as n
-    from (select distinct unnest(p_to) as uid) t
-  ),
-  plan as (
-    select tray.col, tray."row", takers.uid
-    from tray left join takers on tray.i % takers.n = takers.j
-    where takers.uid is not null or not exists (select 1 from takers)
-  ),
-  moved as (
-    update public.pieces p
-    set owner_id = plan.uid
-    from plan
-    where p.group_id = p_group and p.col = plan.col and p."row" = plan."row"
-      and not p.on_board
-      and (case when p_from is null then p.owner_id is null else p.owner_id = any (p_from) end)
-    returning p.col, p."row", p.owner_id
-  )
-  select coalesce(
-    jsonb_agg(jsonb_build_object('col', col, 'row', "row", 'owner', owner_id) order by "row", col),
-    '[]'::jsonb
-  ) into dealt
-  from moved;
-  return dealt;
-end;
-$$;
-
--- 2. join_session: an account deleted by end_session or cleanup can still hold a valid JWT.
---    It now gets { ok: false, error: 'account_gone' } (sign in anonymously again) instead of
---    a raw foreign key error.
-create or replace function public.join_session(p_code text)
-returns jsonb
-language plpgsql volatile security definer set search_path = ''
-as $$
-declare
-  uid uuid := auth.uid();
-  s public.sessions;
-  m public.members;
-begin
-  if uid is null or coalesce(auth.jwt() ->> 'is_anonymous', 'false') <> 'true' then
-    raise exception 'forbidden' using errcode = '42501';
-  end if;
-
-  if not exists (select 1 from auth.users u where u.id = uid) then
-    return jsonb_build_object('ok', false, 'error', 'account_gone');
-  end if;
-
-  if (select count(*) from private.join_failures f
-      where f.user_id = uid and f.failed_at > now() - interval '1 minute') >= 10 then
-    return jsonb_build_object('ok', false, 'error', 'too_many_attempts');
-  end if;
-
-  -- for share: wait for a concurrent end_session and then see it as ended.
-  select * into s from public.sessions
-  where code = p_code and status <> 'ended'
-  for share;
-  if not found then
-    insert into private.join_failures (user_id) values (uid);
-    return jsonb_build_object('ok', false, 'error', 'invalid_code');
-  end if;
-
-  insert into public.members (session_id, user_id)
-  values (s.id, uid)
-  on conflict (session_id, user_id) do update set last_seen = now()
-  returning * into m;
-
-  return jsonb_build_object(
-    'ok', true,
-    'session_id', s.id,
-    'member_id', m.id,
-    'group_id', m.group_id,
-    'color', m.color,
-    'status', s.status
-  );
-end;
-$$;
-
--- 3. assign_member: the comment now matches the answers. While playing it also locks the
---    old and new boards (lock_board, group id order) before releasing grabs or dealing.
-create or replace function public.assign_member(p_member bigint, p_group bigint)
-returns public.members
-language plpgsql volatile security definer set search_path = ''
-as $$
-declare
-  m public.members;
-  s public.sessions;
-  old_group bigint;
-  receivers uuid[];
-  dealt jsonb;
-  released jsonb;
-  board bigint;
-begin
-  select * into m from public.members where id = p_member;
-  if not found then
-    -- Missing member: member_not_found for a teacher, forbidden for anyone else.
-    -- A member of another teacher's session gets forbidden from lock_own_session below.
-    if private.is_teacher() then
-      raise exception 'member_not_found' using errcode = '22023';
-    end if;
-    raise exception 'forbidden' using errcode = '42501';
-  end if;
-  s := private.lock_own_session(m.session_id);
-  if s.status = 'ended' then
-    raise exception 'session_ended' using errcode = '55000';
-  end if;
-  if p_group is not null and not exists (
-    select 1 from public.groups g where g.id = p_group and g.session_id = s.id
-  ) then
-    raise exception 'invalid_group' using errcode = '22023';
-  end if;
-
-  -- Re-read under the session lock.
-  select * into m from public.members where id = p_member;
-  old_group := m.group_id;
-  if old_group is not distinct from p_group then
-    return m;
-  end if;
-
-  if s.status = 'playing' then
-    -- Same lock order as drop / take_from_tray: group rows, then their clusters.
-    for board in
-      select gid from unnest(array[old_group, p_group]) gid where gid is not null order by gid
-    loop
-      perform private.lock_board(board);
-    end loop;
-  end if;
-
-  update public.members
-  set group_id = p_group,
-      color = case when p_group is null then null else private.free_color(p_group, id) end
-  where id = p_member
-  returning * into m;
-
-  if s.status = 'playing' then
-    if old_group is not null then
-      with freed as (
-        update public.clusters set grabbed_by = null, grabbed_at = null
-        where group_id = old_group and grabbed_by = m.user_id
-        returning id
-      )
-      select jsonb_agg(id order by id) into released from freed;
-      if released is not null then
-        perform realtime.send(jsonb_build_object('clusters', released), 'release',
-                              'group:' || old_group, true);
-      end if;
-
-      select coalesce(
-        nullif(array_agg(o.user_id) filter (where o.last_seen >= private.online_since()), '{}'),
-        array_agg(o.user_id)
-      ) into receivers
-      from public.members o where o.group_id = old_group;
-      dealt := private.deal_tray(old_group, array[m.user_id], receivers);
-      if dealt <> '[]'::jsonb then
-        perform realtime.send(jsonb_build_object('pieces', dealt), 'tray', 'group:' || old_group, true);
-      end if;
-    end if;
-
-    if p_group is not null then
-      if not exists (select 1 from public.pieces where group_id = p_group) then
-        perform private.create_puzzle(p_group, s.cols, s.rows);
-      end if;
-      dealt := private.deal_tray(p_group, null, array[m.user_id]);
-      if dealt <> '[]'::jsonb then
-        perform realtime.send(jsonb_build_object('pieces', dealt), 'tray', 'group:' || p_group, true);
-      end if;
-    end if;
-  end if;
-
-  perform realtime.send(
-    jsonb_build_object('members', jsonb_build_array(
-      jsonb_build_object('member_id', m.id, 'group_id', m.group_id, 'color', m.color))),
-    'groups', 'session:' || s.id, true);
-  return m;
-end;
-$$;
-
--- 4. end_session: locks every board of the session (group id order) before deleting the
---    accounts, whose "on delete set null" on clusters.grabbed_by updates cluster rows, and
---    before releasing grabs. Otherwise unchanged.
-create or replace function public.end_session(p_session bigint)
-returns public.sessions
-language plpgsql volatile security definer set search_path = ''
-as $$
-declare
-  s public.sessions;
-  students uuid[];
-  g record;
-begin
-  s := private.lock_own_session(p_session);
-  if s.status = 'ended' then
-    return s;
-  end if;
-
-  for g in select gr.id from public.groups gr where gr.session_id = s.id order by gr.id loop
-    perform private.lock_board(g.id);
-  end loop;
-
-  update public.sessions set status = 'ended', ended_at = now()
-  where id = s.id returning * into s;
-
-  with gone as (
-    delete from public.members m where m.session_id = s.id returning m.user_id
-  )
-  select array_agg(user_id) into students from gone;
-  perform private.delete_orphan_students(coalesce(students, '{}'));
-
-  update public.clusters c set grabbed_by = null, grabbed_at = null
-  from public.groups gr
-  where gr.session_id = s.id and c.group_id = gr.id and c.grabbed_by is not null;
-
-  for g in select gr.id from public.groups gr where gr.session_id = s.id order by gr.number loop
-    perform realtime.send(jsonb_build_object('session_id', s.id), 'end', 'group:' || g.id, true);
-  end loop;
-  perform realtime.send(jsonb_build_object('session_id', s.id), 'end', 'session:' || s.id, true);
-  return s;
 end;
 $$;
 
@@ -837,27 +592,27 @@ $$;
 -- ---------------------------------------------------------------------------
 
 revoke all on function
-  private.snap_tolerance(),
-  private.held_by_other(uuid, timestamptz, boolean, uuid, timestamptz),
-  private.resolve_drop(integer, integer, double precision, jsonb, bigint, double precision,
+  jigsaw_private.snap_tolerance(),
+  jigsaw_private.held_by_other(uuid, timestamptz, boolean, uuid, timestamptz),
+  jigsaw_private.resolve_drop(integer, integer, double precision, jsonb, bigint, double precision,
                        double precision, double precision),
-  private.require_student(),
-  private.refuse(text, jsonb),
-  private.is_finite_point(double precision, double precision),
-  private.is_online(uuid, bigint),
-  private.lock_board(bigint),
-  private.settle_drop(public.sessions, bigint, uuid, bigint, double precision, double precision)
+  jigsaw_private.require_student(),
+  jigsaw_private.refuse(text, jsonb),
+  jigsaw_private.is_finite_point(double precision, double precision),
+  jigsaw_private.is_online(uuid, bigint),
+  jigsaw_private.lock_board(bigint),
+  jigsaw_private.settle_drop(jigsaw.sessions, bigint, uuid, bigint, double precision, double precision)
   from public, anon, authenticated;
 
 revoke all on function
-  public.take_from_tray(bigint, integer, double precision, double precision),
-  public.grab(bigint),
-  public.drop(bigint, double precision, double precision)
+  jigsaw.take_from_tray(bigint, integer, double precision, double precision),
+  jigsaw.grab(bigint),
+  jigsaw.drop(bigint, double precision, double precision)
   from public, anon;
 grant execute on function
-  public.take_from_tray(bigint, integer, double precision, double precision),
-  public.grab(bigint),
-  public.drop(bigint, double precision, double precision)
+  jigsaw.take_from_tray(bigint, integer, double precision, double precision),
+  jigsaw.grab(bigint),
+  jigsaw.drop(bigint, double precision, double precision)
   to authenticated, service_role;
 
 notify pgrst, 'reload schema';

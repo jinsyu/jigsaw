@@ -46,7 +46,7 @@ async function openSession({ pieceCount = 12, groups = 1 } = {}) {
     p_aspect: 4 / 3,
   });
   sessionIds.push(session.id);
-  const { rows } = await sql('select id from public.groups where session_id = $1 order by number', [session.id]);
+  const { rows } = await sql('select id from jigsaw.groups where session_id = $1 order by number', [session.id]);
   return { session, groupIds: rows.map((r) => Number(r.id)) };
 }
 
@@ -69,7 +69,7 @@ async function playing({ count = 2, groups = 1, pieceCount = 12, start = true } 
 
 // Last signal `seconds` ago (0 = now).
 async function lastSeen(student, seconds) {
-  await sql(`update public.members set last_seen = now() - make_interval(secs => $2) where user_id = $1`, [
+  await sql(`update jigsaw.members set last_seen = now() - make_interval(secs => $2) where user_id = $1`, [
     student.userId,
     seconds,
   ]);
@@ -77,7 +77,7 @@ async function lastSeen(student, seconds) {
 
 async function lastSeenOf(student) {
   const { rows } = await sql(
-    'select extract(epoch from now() - last_seen)::float8 as age from public.members where user_id = $1',
+    'select extract(epoch from now() - last_seen)::float8 as age from jigsaw.members where user_id = $1',
     [student.userId],
   );
   return rows[0].age;
@@ -85,7 +85,7 @@ async function lastSeenOf(student) {
 
 async function trayCounts(groupId) {
   const { rows } = await sql(
-    `select owner_id, count(*)::int as n from public.pieces
+    `select owner_id, count(*)::int as n from jigsaw.pieces
      where group_id = $1 and not on_board group by owner_id`,
     [groupId],
   );
@@ -94,7 +94,7 @@ async function trayCounts(groupId) {
 
 async function trayOf(groupId, student) {
   const { rows } = await sql(
-    `select col, "row" from public.pieces where group_id = $1 and owner_id = $2 and not on_board
+    `select col, "row" from jigsaw.pieces where group_id = $1 and owner_id = $2 and not on_board
      order by "row", col`,
     [groupId, student.userId],
   );
@@ -104,7 +104,7 @@ async function trayOf(groupId, student) {
 // Puts one of the student's tray pieces on the board, far apart from the others.
 async function placeOne(groupId, student, offset = 0) {
   const { rows } = await sql(
-    `select "row" * 4 + col as piece from public.pieces
+    `select "row" * 4 + col as piece from jigsaw.pieces
      where group_id = $1 and owner_id = $2 and not on_board order by "row", col limit 1`,
     [groupId, student.userId],
   );
@@ -149,7 +149,7 @@ describe('heartbeat', () => {
     await rpcOk(teacher.client, 'end_session', { p_session: session.id });
     // The account is gone but the JWT still works until it expires.
     expect(await heartbeat(b)).toEqual({ ok: false, reason: 'not_found' });
-    const { rows } = await sql('select count(*)::int as n from public.members where session_id = $1', [session.id]);
+    const { rows } = await sql('select count(*)::int as n from jigsaw.members where session_id = $1', [session.id]);
     expect(rows[0].n).toBe(0);
   });
 
@@ -183,7 +183,7 @@ describe('heartbeat', () => {
     const [a, b] = students;
     const id = await placeOne(groupId, a);
     const grabbedAgo = (seconds) =>
-      sql('update public.clusters set grabbed_at = now() - make_interval(secs => $2) where id = $1', [id, seconds]);
+      sql('update jigsaw.clusters set grabbed_at = now() - make_interval(secs => $2) where id = $1', [id, seconds]);
 
     await heartbeat(a);
     await heartbeat(b);
@@ -218,9 +218,9 @@ describe('redistribute_stale', () => {
     const goneTray = await trayOf(groupId, gone);
     expect(goneTray).toHaveLength(7);
 
-    const watcher = await subscribe(late.client, `group:${groupId}`);
+    const watcher = await subscribe(late.client, `jigsaw:group:${groupId}`);
     expect(watcher.status).toBe('SUBSCRIBED');
-    await warmUp(watcher, `group:${groupId}`);
+    await warmUp(watcher, `jigsaw:group:${groupId}`);
 
     await lastSeen(gone, 120);
     await lastSeen(away, 30); // not connected, but not gone for a minute: keeps the tray, gets nothing
@@ -240,7 +240,7 @@ describe('redistribute_stale', () => {
     expect(after[online.userId]).toBe(8 + dealt[online.userId]);
     expect(after[late.userId]).toBe(dealt[late.userId]);
     const { rows: board } = await sql(
-      'select count(*)::int as n from public.pieces where group_id = $1 and on_board and owner_id is null',
+      'select count(*)::int as n from jigsaw.pieces where group_id = $1 and on_board and owner_id is null',
       [groupId],
     );
     expect(board[0].n).toBe(1);
@@ -259,8 +259,8 @@ describe('redistribute_stale', () => {
   it('여러 화면이 동시에·거듭 불러도 한 번만 나눈다(멱등)', async () => {
     const { groupId, students } = await playing({ count: 3 });
     const [gone, b, c] = students;
-    const watcher = await subscribe(teacher.client, `group:${groupId}`);
-    await warmUp(watcher, `group:${groupId}`);
+    const watcher = await subscribe(teacher.client, `jigsaw:group:${groupId}`);
+    await warmUp(watcher, `jigsaw:group:${groupId}`);
     await lastSeen(gone, 90);
     await heartbeat(b);
     await heartbeat(c);
@@ -307,8 +307,8 @@ describe('redistribute_stale', () => {
   it('접속자가 아무도 없으면 나누지 않고 방송도 없다', async () => {
     const { groupId, students } = await playing({ count: 2 });
     const [gone, caller] = students;
-    const watcher = await subscribe(teacher.client, `group:${groupId}`);
-    await warmUp(watcher, `group:${groupId}`);
+    const watcher = await subscribe(teacher.client, `jigsaw:group:${groupId}`);
+    await warmUp(watcher, `jigsaw:group:${groupId}`);
     await lastSeen(gone, 300);
     await lastSeen(caller, 30); // the caller's own screen missed its heartbeats too
     const before = await trayCounts(groupId);
@@ -349,7 +349,7 @@ describe('동시성: 잠금 순서와 경쟁', () => {
 
     const holder = await dbClient();
     await holder.query('begin');
-    await holder.query('select 1 from public.groups where id = $1 for update', [groupId]);
+    await holder.query('select 1 from jigsaw.groups where id = $1 for update', [groupId]);
     let finished = false;
     const pending = redistribute(b, groupId).then((value) => {
       finished = true;
@@ -361,10 +361,10 @@ describe('동시성: 잠금 순서와 경쟁', () => {
     const probe = await dbClient();
     await probe.query('begin');
     const nowait = (text, params) => probe.query(text, params).then(() => true, (error) => error.code);
-    expect(await nowait('select 1 from public.clusters where id = $1 for update nowait', [clusterId])).toBe(true);
-    expect(await nowait('select 1 from public.members where user_id = $1 for update nowait', [gone.userId])).toBe(true);
+    expect(await nowait('select 1 from jigsaw.clusters where id = $1 for update nowait', [clusterId])).toBe(true);
+    expect(await nowait('select 1 from jigsaw.members where user_id = $1 for update nowait', [gone.userId])).toBe(true);
     expect(
-      await nowait('select 1 from public.pieces where owner_id = $1 for update nowait', [gone.userId]),
+      await nowait('select 1 from jigsaw.pieces where owner_id = $1 for update nowait', [gone.userId]),
     ).toBe(true);
     await probe.query('rollback');
     await holder.query('commit');
@@ -381,7 +381,7 @@ describe('동시성: 잠금 순서와 경쟁', () => {
     // a's heartbeat is in flight (transaction open) when b's screen asks to redistribute.
     const conn = await dbClient();
     await beginAsStudent(conn, a.userId);
-    const { rows } = await conn.query('select public.heartbeat() as r');
+    const { rows } = await conn.query('select jigsaw.heartbeat() as r');
     expect(rows[0].r.ok).toBe(true);
     let finished = false;
     const pending = redistribute(b, groupId).then((value) => {
@@ -403,7 +403,7 @@ describe('동시성: 잠금 순서와 경쟁', () => {
 
     const conn = await dbClient();
     await beginAsStudent(conn, b.userId);
-    const { rows } = await conn.query('select public.redistribute_stale($1) as r', [groupId]);
+    const { rows } = await conn.query('select jigsaw.redistribute_stale($1) as r', [groupId]);
     expect(rows[0].r.pieces).toHaveLength(6);
     let finished = false;
     const pending = heartbeat(a).then((value) => {
@@ -421,7 +421,7 @@ describe('동시성: 잠금 순서와 경쟁', () => {
 
 });
 
-// private.lock_board fix: a call that waited for end_session's locks must see the session as
+// jigsaw_private.lock_board fix: a call that waited for end_session's locks must see the session as
 // ended. Before the fix it saw 'playing' from the snapshot taken before the wait and was
 // refused for a side effect of end_session instead (drop: not_held, take: not_in_tray).
 describe('수업 끝내기를 기다린 호출은 not_playing (lock_board 가 잠금 뒤 상태를 다시 읽음)', () => {
@@ -434,7 +434,7 @@ describe('수업 끝내기를 기다린 호출은 not_playing (lock_board 가 �
     await conn.query("select set_config('request.jwt.claims', $1, true)", [
       JSON.stringify({ sub: TEACHERS.one.id, role: 'authenticated', is_anonymous: false }),
     ]);
-    await conn.query('select public.end_session($1)', [sessionId]);
+    await conn.query('select jigsaw.end_session($1)', [sessionId]);
     let finished = false;
     const pending = call().then((value) => {
       finished = true;
@@ -478,7 +478,7 @@ describe('수업 끝내기를 기다린 호출은 not_playing (lock_board 가 �
         .then((r) => r.data),
     );
     expect(result).toEqual({ ok: false, reason: 'not_playing' });
-    const { rows } = await sql('select on_board from public.pieces where group_id = $1 and col = $2 and "row" = $3', [
+    const { rows } = await sql('select on_board from jigsaw.pieces where group_id = $1 and col = $2 and "row" = $3', [
       groupId,
       cell[0],
       cell[1],
@@ -501,7 +501,7 @@ describe('동시성: 여러 호출', () => {
       await rpcOk(a.client, 'grab', { p_cluster: held });
       await rpcOk(mover.client, 'grab', { p_cluster: moverHeld });
       const { rows } = await sql(
-        `select "row" * 4 + col as piece from public.pieces
+        `select "row" * 4 + col as piece from jigsaw.pieces
          where group_id = $1 and owner_id = $2 and not on_board limit 1`,
         [g1, b.userId],
       );
@@ -524,7 +524,7 @@ describe('동시성: 여러 호출', () => {
       const { rows: check } = await sql(
         `select count(*) filter (where on_board and owner_id is not null)::int as board_owned,
                 count(*) filter (where not on_board and owner_id is null)::int as orphaned
-         from public.pieces where group_id = $1`,
+         from jigsaw.pieces where group_id = $1`,
         [g1],
       );
       expect(check[0]).toEqual({ board_owned: 0, orphaned: 0 });
@@ -533,13 +533,13 @@ describe('동시성: 여러 호출', () => {
 });
 
 describe('권한', () => {
-  it('anon 은 heartbeat·redistribute_stale 를 실행할 수 없고, private.stale_since 는 API 역할에 닫혀 있다', async () => {
+  it('anon 은 heartbeat·redistribute_stale 를 실행할 수 없고, jigsaw_private.stale_since 는 API 역할에 닫혀 있다', async () => {
     const { rows } = await sql(
-      `select has_function_privilege('anon', 'public.heartbeat()', 'execute') as anon_hb,
-              has_function_privilege('anon', 'public.redistribute_stale(bigint)', 'execute') as anon_rs,
-              has_function_privilege('authenticated', 'public.heartbeat()', 'execute') as auth_hb,
-              has_function_privilege('authenticated', 'public.redistribute_stale(bigint)', 'execute') as auth_rs,
-              has_function_privilege('authenticated', 'private.stale_since()', 'execute') as auth_stale`,
+      `select has_function_privilege('anon', 'jigsaw.heartbeat()', 'execute') as anon_hb,
+              has_function_privilege('anon', 'jigsaw.redistribute_stale(bigint)', 'execute') as anon_rs,
+              has_function_privilege('authenticated', 'jigsaw.heartbeat()', 'execute') as auth_hb,
+              has_function_privilege('authenticated', 'jigsaw.redistribute_stale(bigint)', 'execute') as auth_rs,
+              has_function_privilege('authenticated', 'jigsaw_private.stale_since()', 'execute') as auth_stale`,
     );
     expect(rows[0]).toEqual({ anon_hb: false, anon_rs: false, auth_hb: true, auth_rs: true, auth_stale: false });
   });

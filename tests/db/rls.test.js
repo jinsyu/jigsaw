@@ -53,7 +53,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await deleteSessions([sessionA?.id, sessionB?.id].filter(Boolean));
-  if (imageA) await sql('delete from public.images where id = $1', [imageA.id]);
+  if (imageA) await sql('delete from jigsaw.images where id = $1', [imageA.id]);
   await cleanup();
 });
 
@@ -164,10 +164,10 @@ describe('교사 읽기', () => {
 describe('직접 쓰기 거부 (RPC 만 허용)', () => {
   it('학생이 자기 모둠 덩어리를 직접 update 하면 거부되고 값이 그대로다', async () => {
     const clusterId = a1.pieces[0].clusterId;
-    const before = await sql('select x, y, grabbed_by from public.clusters where id = $1', [clusterId]);
+    const before = await sql('select x, y, grabbed_by from jigsaw.clusters where id = $1', [clusterId]);
     const { error } = await s1.client.from('clusters').update({ x: 999, grabbed_by: s1.userId }).eq('id', clusterId);
     expect(error?.code).toBe(PERMISSION_DENIED);
-    const after = await sql('select x, y, grabbed_by from public.clusters where id = $1', [clusterId]);
+    const after = await sql('select x, y, grabbed_by from jigsaw.clusters where id = $1', [clusterId]);
     expect(after.rows).toEqual(before.rows);
   });
 
@@ -178,7 +178,7 @@ describe('직접 쓰기 거부 (RPC 만 허용)', () => {
       .eq('group_id', a1.id);
     expect(error?.code).toBe(PERMISSION_DENIED);
     const { rows } = await sql(
-      'select count(*)::int as n from public.pieces where group_id = $1 and (owner_id is not null or on_board)',
+      'select count(*)::int as n from jigsaw.pieces where group_id = $1 and (owner_id is not null or on_board)',
       [a1.id],
     );
     expect(rows[0].n).toBe(0);
@@ -193,7 +193,7 @@ describe('직접 쓰기 거부 (RPC 만 허용)', () => {
       PERMISSION_DENIED,
       PERMISSION_DENIED,
     ]);
-    const { rows } = await sql('select count(*)::int as n from public.pieces where group_id = $1', [a2.id]);
+    const { rows } = await sql('select count(*)::int as n from jigsaw.pieces where group_id = $1', [a2.id]);
     expect(rows[0].n).toBe(a2.pieces.length);
   });
 
@@ -201,7 +201,7 @@ describe('직접 쓰기 거부 (RPC 만 허용)', () => {
     const move = await s1.client.from('members').update({ group_id: a2.id }).eq('user_id', s1.userId);
     const join = await s3.client.from('members').insert({ session_id: sessionA.id, user_id: s3.userId });
     expect([move.error?.code, join.error?.code]).toEqual([PERMISSION_DENIED, PERMISSION_DENIED]);
-    const { rows } = await sql('select group_id from public.members where user_id = $1', [s1.userId]);
+    const { rows } = await sql('select group_id from jigsaw.members where user_id = $1', [s1.userId]);
     expect(rows.map((r) => Number(r.group_id))).toEqual([a1.id]);
   });
 
@@ -215,7 +215,7 @@ describe('직접 쓰기 거부 (RPC 만 허용)', () => {
     const session = await teacher1.client.from('sessions').update({ status: 'ended' }).eq('id', sessionA.id);
     const clusters = await teacher1.client.from('clusters').delete().eq('group_id', a1.id);
     expect([session.error?.code, clusters.error?.code]).toEqual([PERMISSION_DENIED, PERMISSION_DENIED]);
-    const { rows } = await sql('select status from public.sessions where id = $1', [sessionA.id]);
+    const { rows } = await sql('select status from jigsaw.sessions where id = $1', [sessionA.id]);
     expect(rows[0].status).toBe('waiting');
   });
 });
@@ -252,7 +252,7 @@ describe('images 행', () => {
     expect(data).toEqual([]);
     const removed = await teacher2.client.from('images').delete().eq('id', imageA.id).select('id');
     expect(removed.data ?? []).toEqual([]);
-    const { rows } = await sql('select count(*)::int as n from public.images where id = $1', [imageA.id]);
+    const { rows } = await sql('select count(*)::int as n from jigsaw.images where id = $1', [imageA.id]);
     expect(rows[0].n).toBe(1);
   });
 

@@ -51,7 +51,7 @@ export async function endSession(client, id) {
   if (error) throw error;
 }
 
-// Students of a session (no names: those come from Presence on session:<id>).
+// Students of a session (no names: those come from Presence on jigsaw:session:<id>).
 export async function listMembers(client, sessionId) {
   const { data, error } = await client
     .from('members')

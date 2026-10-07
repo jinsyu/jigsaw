@@ -1,9 +1,9 @@
 // T5 (D7): the SQL snap check gives exactly the JS result for every case of
 // tests/fixtures/snap-cases.json.
-// 1. Pure: private.resolve_drop + private.held_by_other vs snap.js resolveDropWithHolds,
+// 1. Pure: jigsaw_private.resolve_drop + jigsaw_private.held_by_other vs snap.js resolveDropWithHolds,
 //    bit for bit (Object.is on every coordinate), and within 1e-9 of the fixture.
-// 2. RPC: the same case laid out in a real group and played through public.drop (and
-//    public.take_from_tray when the dropped cluster is one piece), compared with JS.
+// 2. RPC: the same case laid out in a real group and played through jigsaw.drop (and
+//    jigsaw.take_from_tray when the dropped cluster is one piece), compared with JS.
 import { randomInt } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HOLD_MS, SNAP_TOLERANCE } from '../../public/js/puzzle/snap.js';
@@ -37,11 +37,11 @@ async function sqlResolve(input) {
     holderOnline: c.heldBy ? online.includes(c.heldBy) : false,
   }));
   const { rows } = await sql(
-    `select private.resolve_drop($1, $2, $3,
+    `select jigsaw_private.resolve_drop($1, $2, $3,
        coalesce((
          select jsonb_agg(jsonb_build_object(
            'id', c -> 'id', 'x', c -> 'x', 'y', c -> 'y', 'locked', c -> 'locked', 'pieces', c -> 'pieces',
-           'held', (c ->> 'id')::bigint <> $5 and private.held_by_other(
+           'held', (c ->> 'id')::bigint <> $5 and jigsaw_private.held_by_other(
              (c ->> 'holder')::uuid,
              $9::timestamptz - (c ->> 'heldMsAgo')::integer * interval '1 millisecond',
              (c ->> 'holderOnline')::boolean,
@@ -80,15 +80,15 @@ describe('pure SQL resolve_drop = snap.js resolveDropWithHolds', () => {
   afterAll(cleanup);
 
   it('shares the tolerance with snap.js and the fixture', async () => {
-    const { rows } = await sql('select private.snap_tolerance() as tol');
+    const { rows } = await sql('select jigsaw_private.snap_tolerance() as tol');
     expect(rows[0].tol).toBe(SNAP_TOLERANCE);
     expect(rows[0].tol).toBe(table.defaultTolerance);
   });
 
   it('uses the same 10 second hold boundary as snap.js', async () => {
     const { rows } = await sql(
-      `select private.held_by_other($1, $3::timestamptz - $4::integer * interval '1 ms', true, $2, $3) as before,
-              private.held_by_other($1, $3::timestamptz - $5::integer * interval '1 ms', true, $2, $3) as at`,
+      `select jigsaw_private.held_by_other($1, $3::timestamptz - $4::integer * interval '1 ms', true, $2, $3) as before,
+              jigsaw_private.held_by_other($1, $3::timestamptz - $5::integer * interval '1 ms', true, $2, $3) as at`,
       [PURE_UIDS.amy, PURE_UIDS.me, new Date(NOW).toISOString(), HOLD_MS - 1, HOLD_MS],
     );
     expect(rows[0]).toEqual({ before: true, at: false });
@@ -97,7 +97,7 @@ describe('pure SQL resolve_drop = snap.js resolveDropWithHolds', () => {
   it('refuses a locked dropped cluster like snap.js does', async () => {
     const clusters = JSON.stringify([{ id: 1, x: 0, y: 0, locked: true, pieces: [[0, 0]] }]);
     await expect(
-      sql('select private.resolve_drop(4, 3, $1, $2::jsonb, 1, 10, 10, 40)', [4 / 3, clusters]),
+      sql('select jigsaw_private.resolve_drop(4, 3, $1, $2::jsonb, 1, 10, 10, 40)', [4 / 3, clusters]),
     ).rejects.toMatchObject({ code: '22023', message: 'dropped_cluster_locked' });
   });
 
@@ -132,7 +132,7 @@ describe('drop / take_from_tray RPCs = snap.js for every case', () => {
     for (let attempt = 0; attempt < 5; attempt += 1) {
       try {
         const { rows: inserted } = await sql(
-          `insert into public.sessions
+          `insert into jigsaw.sessions
              (teacher_id, code, builtin_key, piece_count, cols, rows, aspect, seed, status, started_at)
            values ($1, $2, 'test-scene', $3, $4, $5, $6, $7, 'playing', now()) returning id`,
           [
@@ -161,7 +161,7 @@ describe('drop / take_from_tray RPCs = snap.js for every case', () => {
     const { cols, rows, aspect } = input.grid;
     const sessionId = await insertPlayingSession({ cols, rows, aspect });
     const { rows: group } = await sql(
-      'insert into public.groups (session_id, number) values ($1, 1) returning id',
+      'insert into jigsaw.groups (session_id, number) values ($1, 1) returning id',
       [sessionId],
     );
     const groupId = Number(group[0].id);
@@ -172,7 +172,7 @@ describe('drop / take_from_tray RPCs = snap.js for every case', () => {
     for (const label of labels) {
       await addMember(sessionId, students[label].userId, groupId, color++);
       const seen = label === byOf(input) || online.includes(label) ? 'now()' : "now() - interval '1 minute'";
-      await sql(`update public.members set last_seen = ${seen} where session_id = $1 and user_id = $2`, [
+      await sql(`update jigsaw.members set last_seen = ${seen} where session_id = $1 and user_id = $2`, [
         sessionId,
         students[label].userId,
       ]);
@@ -185,7 +185,7 @@ describe('drop / take_from_tray RPCs = snap.js for every case', () => {
     }
     const ordered = [...input.clusters].sort((a, b) => a.id - b.id);
     const { rows: seq } = await sql(
-      `select nextval(pg_get_serial_sequence('public.clusters', 'id')) as id
+      `select nextval(pg_get_serial_sequence('jigsaw.clusters', 'id')) as id
        from generate_series(1, $1) order by 1`,
       [ordered.length + spare.length],
     );
@@ -202,7 +202,7 @@ describe('drop / take_from_tray RPCs = snap.js for every case', () => {
       const heldAt = locksForJs ? "now() - interval '2 seconds'" : `now() - interval '${c.heldMsAgo ?? 0} milliseconds'`;
       const holder = dropped ? me : c.heldBy ? students[c.heldBy].userId : null;
       await sql(
-        `insert into public.clusters (id, group_id, x, y, locked, grabbed_by, grabbed_at, z)
+        `insert into jigsaw.clusters (id, group_id, x, y, locked, grabbed_by, grabbed_at, z)
          overriding system value
          values ($1, $2, $3, $4, $5, $6, case when $6::uuid is null then null else ${dropped ? 'now()' : heldAt} end, $7)`,
         [realIds[i], groupId, c.x, c.y, c.locked === true, mode === 'take' && dropped ? null : holder, i + 1],
@@ -210,7 +210,7 @@ describe('drop / take_from_tray RPCs = snap.js for every case', () => {
       const inTray = mode === 'take' && dropped;
       for (const [col, row] of c.pieces) {
         await sql(
-          `insert into public.pieces (group_id, col, "row", cluster_id, owner_id, on_board)
+          `insert into jigsaw.pieces (group_id, col, "row", cluster_id, owner_id, on_board)
            values ($1, $2, $3, $4, $5, $6)`,
           [groupId, col, row, realIds[i], inTray ? me : null, !inTray],
         );
@@ -218,9 +218,9 @@ describe('drop / take_from_tray RPCs = snap.js for every case', () => {
     }
     for (const [j, [col, row]] of spare.entries()) {
       const id = realIds[ordered.length + j];
-      await sql('insert into public.clusters (id, group_id) overriding system value values ($1, $2)', [id, groupId]);
+      await sql('insert into jigsaw.clusters (id, group_id) overriding system value values ($1, $2)', [id, groupId]);
       await sql(
-        'insert into public.pieces (group_id, col, "row", cluster_id) values ($1, $2, $3, $4)',
+        'insert into jigsaw.pieces (group_id, col, "row", cluster_id) values ($1, $2, $3, $4)',
         [groupId, col, row, id],
       );
     }
@@ -231,7 +231,7 @@ describe('drop / take_from_tray RPCs = snap.js for every case', () => {
     const { rows } = await sql(
       `select c.id, c.x, c.y, c.locked, c.grabbed_by,
               json_agg(json_build_array(p.col, p."row") order by p."row", p.col) as pieces
-       from public.clusters c join public.pieces p on p.cluster_id = c.id and p.on_board
+       from jigsaw.clusters c join jigsaw.pieces p on p.cluster_id = c.id and p.on_board
        where c.group_id = $1 group by c.id order by c.id`,
       [groupId],
     );
@@ -286,11 +286,11 @@ describe('drop / take_from_tray RPCs = snap.js for every case', () => {
     for (const c of stillHeld) {
       expect(board.find((k) => k.id === c.id).grabbedBy).toBe(students[c.heldBy].userId);
     }
-    const { rows } = await sql('select completed_at is not null as done from public.groups where id = $1', [groupId]);
+    const { rows } = await sql('select completed_at is not null as done from jigsaw.groups where id = $1', [groupId]);
     expect(rows[0].done).toBe(js.complete);
   }
 
-  // The RPCs always use private.snap_tolerance(); cases with another tolerance are
+  // The RPCs always use jigsaw_private.snap_tolerance(); cases with another tolerance are
   // covered by the pure check only.
   const rpcCases = table.cases.filter((c) => c.input.tolerance === table.defaultTolerance);
 

@@ -19,11 +19,13 @@ describe('pickConfig', () => {
     },
   );
 
-  it('any other host uses the hosted project, empty until T14', () => {
+  it('any other host uses the shared gyosil project with its publishable key', () => {
     const config = pickConfig('jigsaw.gyosil.app');
     expect(config.env).toBe('remote');
+    expect(config.supabaseUrl).toBe('https://ozfzpyumnaaggrlevygz.supabase.co');
+    expect(config.publishableKey).toMatch(/^sb_publishable_/);
     expect(config.googleSignIn).toBe(true);
-    expect(isConfigured(config)).toBe(false);
+    expect(isConfigured(config)).toBe(true);
   });
 
   it('never ships a secret or service key', () => {

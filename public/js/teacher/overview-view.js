@@ -4,7 +4,7 @@
 //   progress (pieces locked in the frame / all), its students (online or 잠시 나감), and
 //   '완성' with the time taken once done. A clock shows how long the class has been playing.
 // - Refreshed by one session_overview read every POLL_MS; nothing is read while the page is
-//   hidden. Names come from Presence on session:<id> only (D14), like the lobby.
+//   hidden. Names come from Presence on jigsaw:session:<id> only (D14), like the lobby.
 // - A group card opens the big view of that group (same data). 모둠 편성 opens the lobby's
 //   grouping panel (drag, or pick and place with the keyboard) for late students and moves.
 // - 수업 끝내기 asks first, then end_session: students see '수업이 끝났어요', members and
@@ -34,6 +34,7 @@ import { loadPicture } from '../play/picture.js';
 import { layoutFor } from '../puzzle/geometry.js';
 import { hintsFromSession } from '../store/puzzle-store.js';
 import { exposeTestHook } from '../test-hooks.js';
+import { sessionTopic } from '../supabase-names.js';
 
 // After this many failed reads in a row the screen says the data may be old.
 const FAILS_BEFORE_WARNING = 2;
@@ -654,12 +655,12 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
   // The lobby has just left the same topic; supabase-js hands back a channel that is still
   // leaving, so wait until it is gone before joining again.
   let channel = null;
-  topicFree(ctx.client, `session:${session.id}`)
+  topicFree(ctx.client, sessionTopic(session.id))
     .then(() => ctx.client.realtime.setAuth())
     .catch((error) => console.error(error))
     .then(() => {
       if (!alive) return;
-      channel = ctx.client.channel(`session:${session.id}`, { config: { private: true } });
+      channel = ctx.client.channel(sessionTopic(session.id), { config: { private: true } });
       channel
         .on('presence', { event: 'sync' }, () => {
           presence = channel.presenceState();

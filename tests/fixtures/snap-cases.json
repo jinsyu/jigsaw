@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "description": "놓기(drop)·꺼내기(take) 맞춤 판정 공용 사례 표. JS(public/js/puzzle/snap.js resolveDropWithHolds)와 SQL(private.resolve_drop + private.held_by_other, public.drop·public.take_from_tray RPC)이 모든 사례에서 같은 결과를 내야 한다.",
+  "description": "놓기(drop)·꺼내기(take) 맞춤 판정 공용 사례 표. JS(public/js/puzzle/snap.js resolveDropWithHolds)와 SQL(jigsaw_private.resolve_drop + jigsaw_private.held_by_other, jigsaw.drop·jigsaw.take_from_tray RPC)이 모든 사례에서 같은 결과를 내야 한다.",
   "defaultTolerance": 40,
   "rules": [
     "좌표: 완성 그림 너비 = cols x 100, 높이 = (cols x 100) / aspect (aspect = 그림 가로/세로, float8). 조각 칸 pw = 100, ph = 높이 / rows.",

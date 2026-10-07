@@ -13,7 +13,7 @@
 
 export const PIECE_UNIT = 100;
 export const PIECE_COUNTS = [12, 24, 48, 70];
-// Board side / picture side (spec rule 5). SQL private.resolve_drop uses sqrt(3::float8):
+// Board side / picture side (spec rule 5). SQL jigsaw_private.resolve_drop uses sqrt(3::float8):
 // both are the correctly rounded square root, so the board size is bit-identical.
 export const BOARD_SIDE_RATIO = Math.sqrt(3);
 

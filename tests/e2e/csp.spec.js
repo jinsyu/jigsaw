@@ -10,7 +10,7 @@ test.afterAll(async () => {
   if (createdSessions.length) {
     await sql(
       `delete from auth.users where is_anonymous and id in
-         (select user_id from public.members where session_id = any($1::bigint[]))`,
+         (select user_id from jigsaw.members where session_id = any($1::bigint[]))`,
       [createdSessions],
     );
   }
