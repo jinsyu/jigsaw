@@ -10,11 +10,31 @@ export function h(tag, props = {}, ...children) {
     if (key === 'class') node.className = value;
     else if (key === 'text') node.textContent = value;
     else if (key === 'html') node.innerHTML = value;
+    else if (key === 'style') setStyle(node, value);
     else if (key.startsWith('on')) node.addEventListener(key.slice(2), value);
     else node.setAttribute(key, value === true ? '' : String(value));
   }
   node.append(...nodes(children));
   return node;
+}
+
+// Inline styles through the CSSOM, never a style attribute: the Content-Security-Policy
+// (vercel.json, no 'unsafe-inline') blocks style attributes but not element.style.
+// value: 'a: 1; --x: 2' or { 'a': 1, '--x': 2 } (CSS property names, custom properties too).
+export function setStyle(node, value) {
+  const declarations =
+    typeof value === 'string'
+      ? value
+          .split(';')
+          .map((part) => part.trim())
+          .filter(Boolean)
+          .map((part) => {
+            const colon = part.indexOf(':');
+            if (colon < 1) throw new Error(`bad style declaration: ${part}`);
+            return [part.slice(0, colon).trim(), part.slice(colon + 1).trim()];
+          })
+      : Object.entries(value);
+  for (const [property, v] of declarations) node.style.setProperty(property, String(v));
 }
 
 // Children for append/replaceChildren without the optional ones: the DOM would turn null,
