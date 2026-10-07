@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { layoutFor } from '../../public/js/puzzle/geometry.js';
 import { frameRect } from '../../public/js/play/frame.js';
-import { freeSpot } from '../../public/js/play/placement.js';
+import { freeSpot, sideOf } from '../../public/js/play/placement.js';
 import { SNAP_TOLERANCE } from '../../public/js/puzzle/snap.js';
 
 const layout = layoutFor(6, 4, 1.5); // pw = ph = 100, board ~849 x 566
@@ -111,10 +111,17 @@ describe('freeSpot', () => {
       expect(rect.top).toBeGreaterThanOrEqual(0);
       expect(rect.bottom).toBeLessThanOrEqual(layout.boardHeight);
     }
-    // Spots in view come first; the board sides (off a phone screen) are used before stacking.
+    // On screen first, shared evenly by the sides in view (above and below the frame);
+    // the sides beside the screen only once no clear spot is left on it.
     const inView = (r) => r.left >= phoneView.x0 && r.right <= phoneView.x1;
     const firstOff = rects.findIndex((r) => !inView(r));
-    expect(firstOff).toBeGreaterThanOrEqual(6);
+    expect(firstOff).toBeGreaterThanOrEqual(4);
+    const shown = rects.slice(0, firstOff).map((r) => sideOf(r.left + 50, r.top + 50, frame));
+    const top = shown.filter((side) => side === 'top').length;
+    const bottom = shown.filter((side) => side === 'bottom').length;
+    expect(top + bottom).toBe(firstOff);
+    expect(Math.abs(top - bottom)).toBeLessThanOrEqual(1);
+    expect(new Set(rects.map((r) => sideOf(r.left + 50, r.top + 50, frame))).size).toBe(4);
   });
 
   it('never drops a piece where it would snap by accident', () => {
@@ -143,4 +150,75 @@ describe('freeSpot', () => {
       expect(Math.hypot(cx - (col + 0.5) * 100, cy - (row + 0.5) * 100)).toBeGreaterThanOrEqual(150);
     }
   });
+
+  describe('spreads pieces evenly around the four sides', () => {
+    const allCells = (lay) => {
+      const cells = [];
+      for (let row = 0; row < lay.rows; row++) for (let col = 0; col < lay.cols; col++) cells.push([col, row]);
+      // A shuffled but fixed order, like a tray.
+      return cells.sort((a, b) => ((a[0] * 7 + a[1] * 13) % 11) - ((b[0] * 7 + b[1] * 13) % 11));
+    };
+    const countSides = (lay, fr, origins) => {
+      const count = { top: 0, right: 0, bottom: 0, left: 0 };
+      for (const { o, cell } of origins) {
+        count[sideOf(o.x + (cell[0] + 0.5) * lay.pw, o.y + (cell[1] + 0.5) * lay.ph, fr)] += 1;
+      }
+      return count;
+    };
+    const place = (lay, fr, view, cells) => {
+      const clusters = [];
+      const origins = [];
+      for (const cell of cells) {
+        const o = freeSpot(lay, view, clusters, cell, fr);
+        clusters.push({ x: o.x, y: o.y, pieces: [cell] });
+        origins.push({ o, cell });
+      }
+      return origins;
+    };
+    // The board size comes from the layout: the same rule for a 2x and a 3x board.
+    const boardOf = (lay, k) => ({ ...lay, boardWidth: lay.width * Math.sqrt(k), boardHeight: lay.height * Math.sqrt(k) });
+
+    for (const k of [2, 3]) {
+      it(`${k}x board: the four sides take turns while there is room`, () => {
+        const lay = boardOf(layoutFor(6, 4, 1.5), k);
+        const fr = frameRect(lay);
+        const view = { x0: -50, y0: -50, x1: lay.boardWidth + 50, y1: lay.boardHeight + 50 };
+        const origins = place(lay, fr, view, allCells(lay).slice(0, 8));
+        const count = Object.values(countSides(lay, fr, origins));
+        // 3x: exact turns. 2x: the side bands are barely a piece wide, so off by one at most.
+        if (k === 3) expect(count).toEqual([2, 2, 2, 2]);
+        else expect(Math.max(...count) - Math.min(...count)).toBeLessThanOrEqual(2);
+        expect(Math.min(...count)).toBeGreaterThanOrEqual(1);
+        for (const { o, cell } of origins) {
+          const left = o.x + cell[0] * lay.pw;
+          const top = o.y + cell[1] * lay.ph;
+          expect(left).toBeGreaterThanOrEqual(0);
+          expect(top).toBeGreaterThanOrEqual(0);
+          expect(left + lay.pw).toBeLessThanOrEqual(lay.boardWidth);
+          expect(top + lay.ph).toBeLessThanOrEqual(lay.boardHeight);
+        }
+      });
+    }
+
+    it('3x board: all 24 pieces evenly (no side more than 2 ahead), none on the frame', () => {
+      const lay = boardOf(layoutFor(6, 4, 1.5), 3);
+      const fr = frameRect(lay);
+      const view = { x0: -50, y0: -50, x1: lay.boardWidth + 50, y1: lay.boardHeight + 50 };
+      const origins = place(lay, fr, view, allCells(lay));
+      const count = Object.values(countSides(lay, fr, origins));
+      expect(count.reduce((a, b) => a + b, 0)).toBe(24);
+      expect(Math.max(...count) - Math.min(...count)).toBeLessThanOrEqual(2);
+    });
+
+    it('classifies points by the side of the frame they are beside', () => {
+      const fr = { x0: 100, y0: 100, x1: 300, y1: 200 };
+      expect(sideOf(200, 50, fr)).toBe('top');
+      expect(sideOf(350, 150, fr)).toBe('right');
+      expect(sideOf(200, 260, fr)).toBe('bottom');
+      expect(sideOf(20, 150, fr)).toBe('left');
+      expect(sideOf(90, 20, fr)).toBe('top'); // corner: farther out from the top
+      expect(sideOf(200, 150, fr)).toBeNull();
+    });
+  });
 });
+

@@ -22,3 +22,27 @@ describe('demo piece count (/play?demo=1&pieces=...)', () => {
     }
   });
 });
+
+describe('demo help settings (&preview=1&outline=0&picture=0&underlay=1)', () => {
+  it('reads only 1 and 0, the rest stays default', async () => {
+    const { demoHints } = await import('../../public/js/play/demo.js');
+    expect(demoHints('?demo=1')).toEqual({});
+    expect(demoHints('?demo=1&preview=1&outline=0&picture=0&underlay=1')).toEqual({
+      preview: true,
+      outline: false,
+      pictureButton: false,
+      underlay: true,
+    });
+    expect(demoHints('?preview=yes&outline=true&picture=&underlay=2')).toEqual({});
+  });
+
+  it('puts the settings in the store state, with defaults filled in', () => {
+    expect(createDemoStore(24).getState().hints).toEqual({ preview: false, outline: true, pictureButton: true, underlay: false });
+    expect(createDemoStore(24, { preview: true, underlay: true }).getState().hints).toEqual({
+      preview: true,
+      outline: true,
+      pictureButton: true,
+      underlay: true,
+    });
+  });
+});

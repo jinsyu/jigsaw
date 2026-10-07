@@ -14,7 +14,7 @@ const keyOf = ([col, row]) => `${col},${row}`;
 
 /**
  * resolveDropWithHolds on a store snapshot, with the store's heldAt (grab time, ms).
- * The server never clears a hold: private.held_by_other() only compares the grab
+ * The server never clears a hold on a timer: private.held_by_other() only compares the grab
  * time with now (10 s) and checks the holder is online. A snapshot without heldAt
  * cannot be dated, so its hold counts as fresh (left out of merges), which can only
  * differ from the server for a hold older than 10 s. Stores should pass heldAt

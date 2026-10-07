@@ -92,6 +92,9 @@ html.is-play, html.is-play body { height: 100%; overflow: hidden; overscroll-beh
 
 .pz-ghost { position: fixed; left: 0; top: 0; z-index: 20; pointer-events: none; will-change: transform; }
 .pz-ghost canvas { display: block; transition: transform .14s ease-out; filter: drop-shadow(0 10px 12px rgba(60, 40, 20, .28)); }
+@media (prefers-reduced-motion: reduce) {
+  .pz-bar i, .pz-tile, .pz-ghost canvas { transition: none; }
+}
 
 .pz-dialog {
   width: min(92vw, 720px); max-height: 92dvh; border: 0; border-radius: 20px; padding: 18px;

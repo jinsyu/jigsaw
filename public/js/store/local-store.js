@@ -2,7 +2,7 @@
 // reference behaviour for the Supabase store: the same snap.js rules decide drops.
 import { clampPosition, progress as progressOf, resolveDrop } from '../puzzle/snap.js';
 import { rng } from '../puzzle/geometry.js';
-import { cellOfPiece } from './puzzle-store.js';
+import { cellOfPiece, normalizeHints } from './puzzle-store.js';
 
 const freezeCluster = (c) =>
   Object.freeze({
@@ -36,6 +36,7 @@ export function shuffledPieces(count, seed) {
  * @param {Array<{ uid: string, name: string, color: number, online?: boolean }>} options.members
  * @param {Record<string, number[]>} options.trays   piece indexes per uid
  * @param {Array<{ id: number, x: number, y: number, pieces: number[][], heldBy?: string|null }>} [options.clusters]
+ * @param {Partial<import('./puzzle-store.js').Hints>} [options.hints]  help settings (defaults: DEFAULT_HINTS)
  * @param {() => number} [options.now]
  * @returns {import('./puzzle-store.js').PuzzleStore}
  */
@@ -48,8 +49,10 @@ export function createLocalStore({
   members,
   trays,
   clusters: initialClusters = [],
+  hints: hintOptions,
   now = () => Date.now(),
 }) {
+  const hints = normalizeHints(hintOptions);
   const total = layout.cols * layout.rows;
   const trayOf = new Map(Object.entries(trays).map(([uid, list]) => [uid, [...list]]));
   let clusters = initialClusters.map((c, i) => ({
@@ -78,6 +81,7 @@ export function createLocalStore({
       seed,
       picture,
       groupName,
+      hints,
       me,
       members: memberList,
       tray: Object.freeze([...(trayOf.get(me) ?? [])]),

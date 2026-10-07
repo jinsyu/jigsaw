@@ -142,10 +142,16 @@ export async function mountPlayScreen(main, store) {
   const { layout } = state;
   ui.title.textContent = state.groupName;
   ui.bar.setAttribute('aria-valuemax', String(state.progress.total));
-  ui.dialogImg.src = state.picture.src;
-  ui.dialogImg.width = state.picture.width;
-  ui.dialogImg.height = state.picture.height;
-  setupDialog(ui);
+  const { hints } = state;
+  if (hints.pictureButton) {
+    ui.dialogImg.src = state.picture.src;
+    ui.dialogImg.width = state.picture.width;
+    ui.dialogImg.height = state.picture.height;
+    setupDialog(ui);
+  } else {
+    ui.pictureBtn.remove();
+    ui.dialog.remove();
+  }
 
   let picture;
   try {
@@ -248,8 +254,10 @@ export async function mountPlayScreen(main, store) {
       if (!result.ok && result.reason === 'locked') showToast(LOCKED_TEXT);
       return result.ok;
     },
-    predict: previewDrop,
-    predictTray: previewTray,
+    // Help setting: the preview (and the tug toward the snap place) only when allowed.
+    predict: hints.preview ? previewDrop : null,
+    predictTray: hints.preview ? previewTray : null,
+    frameLook: { outline: hints.outline, underlay: hints.underlay ? picture : null },
     onLockedPress: () => showToast(LOCKED_TEXT),
     onDrop: (clusterId, x, y) => settleAction(dropCluster(clusterId, x, y, pendingGrab)),
     onZoom() {
@@ -319,9 +327,15 @@ export async function mountPlayScreen(main, store) {
       const spot = freeSpot(layout, board.viewRect(), store.getState().clusters, cell, frameRect(layout));
       const left = spot.x + cell[0] * layout.pw;
       const top = spot.y + cell[1] * layout.ph;
-      const tabX = REVEAL_TAB * layout.ph;
-      const tabY = REVEAL_TAB * layout.pw;
-      board.reveal({ x0: left - tabX, y0: top - tabY, x1: left + layout.pw + tabX, y1: top + layout.ph + tabY });
+      // Pan only when the piece itself is off screen (tabs past the edge do not count),
+      // then bring its tabs in too.
+      const view = board.viewRect();
+      const cellOnScreen = left >= view.x0 && top >= view.y0 && left + layout.pw <= view.x1 && top + layout.ph <= view.y1;
+      if (!cellOnScreen) {
+        const tabX = REVEAL_TAB * layout.ph;
+        const tabY = REVEAL_TAB * layout.pw;
+        board.reveal({ x0: left - tabX, y0: top - tabY, x1: left + layout.pw + tabX, y1: top + layout.ph + tabY });
+      }
       settleAction(placeFromTray(index, spot.x, spot.y));
     },
   });

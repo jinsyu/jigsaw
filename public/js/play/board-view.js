@@ -64,7 +64,7 @@ function calm() {
 
 export function createBoardView(
   host,
-  { layout, puzzle, sprites, onGrab, onDrop, onZoom, predict, predictTray, onLockedPress },
+  { layout, puzzle, sprites, onGrab, onDrop, onZoom, predict, predictTray, onLockedPress, frameLook = {} },
 ) {
   const canvas = document.createElement('canvas');
   canvas.className = 'pz-canvas';
@@ -73,7 +73,8 @@ export function createBoardView(
   const layer = document.createElement('canvas'); // everything but the dragged cluster and the preview
   const layerCtx = layer.getContext('2d');
   const hitCtx = document.createElement('canvas').getContext('2d');
-  const frameLayer = createFrameLayer(layout, puzzle);
+  // predict / predictTray are optional: without them there is no drag preview or tug.
+  const frameLayer = createFrameLayer(layout, puzzle, frameLook);
   const sidePaths = new Map(); // `${index}:${side}` -> Path2D
 
   const dpr = () => Math.min(MAX_DPR, window.devicePixelRatio || 1);

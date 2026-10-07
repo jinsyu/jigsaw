@@ -1,13 +1,17 @@
 import { expect, test } from '@playwright/test';
 
 // Student puzzle screen, solo demo (/play?demo=1): in-memory store, 24 pieces (6 x 4)
-// unless &pieces= asks for 12, 48 or 70.
+// unless &pieces= asks for 12, 48 or 70. Help settings (spec rule 10) by address too:
+// &preview=1 &outline=0 &picture=0 &underlay=1.
 // Touch projects drive real touch input through CDP; the desktop project uses the mouse.
 
-async function openDemo(page, pieces = null) {
+// options: extra address parameters, e.g. { pieces: 70, preview: 1 }.
+async function openDemo(page, options = {}) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto(pieces ? `/play?demo=1&pieces=${pieces}` : '/play?demo=1');
+  const params = new URLSearchParams({ demo: '1' });
+  for (const [key, value] of Object.entries(options)) params.set(key, String(value));
+  await page.goto(`/play?${params}`);
   await expect(page.locator('main[data-ready="true"]')).toBeVisible();
   return errors;
 }
@@ -539,8 +543,8 @@ test('a piece dropped near its drawn place in the frame snaps onto it and locks'
   expect(errors).toEqual([]);
 });
 
-test('dragging shows where a piece will snap, and it snaps right there', async ({ page }, testInfo) => {
-  const errors = await openDemo(page);
+test('dragging shows where a piece will snap, and it snaps right there (preview on)', async ({ page }, testInfo) => {
+  const errors = await openDemo(page, { preview: 1 });
   const hasTouch = testInfo.project.use.hasTouch === true;
   const input = makeInput(page, hasTouch);
   const { layout, ox, oy } = await framePlace(page);
@@ -634,7 +638,7 @@ test('a piece locked in the frame stays put, wiggles and says so', async ({ page
 });
 
 async function tapOutEverything(page, testInfo, pieces, shot) {
-  const errors = await openDemo(page, pieces);
+  const errors = await openDemo(page, { pieces });
   const { layout, ox, oy } = await framePlace(page);
   for (let left = pieces; left > 0; left--) {
     await page.locator('.pz-tile').first().click();
@@ -675,7 +679,7 @@ test('70 pieces: tapping out all of them never covers the frame (piles on the bo
 
 for (const pieces of [48, 70]) {
   test(`${pieces} pieces: first view, frame and tray`, async ({ page }, testInfo) => {
-    const errors = await openDemo(page, pieces);
+    const errors = await openDemo(page, { pieces });
     await expect(page.locator('.pz-count')).toHaveText(`0 / ${pieces}`);
     await expect(page.locator('.pz-tile')).toHaveCount(pieces);
     const { layout, ox, oy } = await framePlace(page);
@@ -721,17 +725,168 @@ test('reduced motion: pieces and the view jump instead of sliding', async ({ pag
   await expect(page.locator('.pz-count')).toHaveText('1 / 24');
   expect(await animating()).toEqual({ slides: 0, panning: false });
 
-  // Tapping pieces out: when one goes beside the screen, the view jumps there.
-  let before = await camera(page);
-  for (let k = 0; k < 23; k++) {
+  // Tapping pieces out: no slides on any screen.
+  for (let k = 0; k < 4; k++) {
     await page.locator('.pz-tile').first().click();
-    const now = await animating();
-    expect(now).toEqual({ slides: 0, panning: false });
-    const cam = await camera(page);
-    if (cam.x !== before.x || cam.y !== before.y) break;
-    before = cam;
+    expect(await animating()).toEqual({ slides: 0, panning: false });
   }
   await page.screenshot({ path: testInfo.outputPath('play-reduced-motion.png') });
+  expect(errors).toEqual([]);
+});
+
+test('reduced motion: the view jumps (no pan animation) to a piece put beside the screen', async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith('phone'), 'the whole board is on screen here: nothing goes beside the screen');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openDemo(page);
+  const animating = () => demo(page, () => window.__puzzleDemo.animating());
+  const start = await camera(page);
+  let moved = false;
+  for (let k = 0; k < 23 && !moved; k++) {
+    await page.locator('.pz-tile').first().click();
+    expect(await animating()).toEqual({ slides: 0, panning: false });
+    const cam = await camera(page);
+    moved = cam.x !== start.x || cam.y !== start.y;
+  }
+  expect(moved).toBe(true); // the view did move, in one jump
+  // The view really shows the last piece.
+  const { clusters, layout } = await state(page);
+  const last = clusters.at(-1);
+  const centre = await pieceCentre(page, last);
+  const box = await boardBox(page);
+  expect(centre.x).toBeGreaterThan(box.x);
+  expect(centre.x).toBeLessThan(box.x + box.width);
+  expect(centre.y).toBeGreaterThan(box.y);
+  expect(centre.y).toBeLessThan(box.y + box.height);
+  expect(layout.pw).toBeGreaterThan(0);
+});
+
+test('help off by default: no preview while dragging, but pieces still snap into place', async ({ page }, testInfo) => {
+  const errors = await openDemo(page);
+  const hasTouch = testInfo.project.use.hasTouch === true;
+  const input = makeInput(page, hasTouch);
+  const { layout, ox, oy } = await framePlace(page);
+  const { tray, hints } = await state(page);
+  expect(hints).toEqual({ preview: false, outline: true, pictureButton: true, underlay: false });
+  const first = tray[0];
+  const [c0, r0] = [first % layout.cols, Math.floor(first / layout.cols)];
+  const release = await holdFromTray(page, input, first, ox + 22, oy - 18);
+  await page.waitForTimeout(150);
+  expect(await preview(page)).toBeNull();
+  const [r, g] = await canvasRgb(page, ox + (c0 + 0.5) * layout.pw, oy + (r0 + 0.5) * layout.ph);
+  expect(g - r).toBeLessThanOrEqual(3); // no green tint
+  await release();
+  await expect(page.locator('.pz-count')).toHaveText('1 / 24');
+  expect((await state(page)).clusters[0]).toMatchObject({ x: ox, y: oy, locked: true });
+  expect(errors).toEqual([]);
+});
+
+test('help settings change the screen: outline, picture button, underlay', async ({ page }, testInfo) => {
+  // Defaults: piece outlines, picture button, plain frame.
+  await openDemo(page);
+  const plain = await framePixels(page);
+  await expect(page.getByRole('button', { name: '완성 그림 보기' })).toHaveCount(1);
+  const { layout, ox, oy } = await framePlace(page);
+  const fillAt = [ox + 0.5 * layout.pw, oy + 0.5 * layout.ph];
+  const plainFill = await canvasRgb(page, ...fillAt);
+
+  // Everything flipped.
+  const errors = await openDemo(page, { outline: 0, picture: 0, underlay: 1 });
+  expect((await state(page)).hints).toEqual({ preview: false, outline: false, pictureButton: false, underlay: true });
+  await expect(page.getByRole('button', { name: '완성 그림 보기' })).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.waitForTimeout(100);
+  const flipped = await framePixels(page);
+  // Border only: the seam spot looks like its surroundings, the border is still dark.
+  expect(plain.fill.max - plain.seam.min).toBeGreaterThanOrEqual(25);
+  expect(flipped.fill.max - flipped.seam.min).toBeLessThan(12);
+  expect(flipped.edge.min).toBeLessThan(flipped.fill.min - 40);
+  // Underlay: the picture shows faintly (colour shifts) but stays light, unlike a piece.
+  const under = await canvasRgb(page, ...fillAt);
+  const shift = Math.max(...under.map((v, i) => Math.abs(v - plainFill[i])));
+  expect(shift).toBeGreaterThan(8);
+  expect(0.299 * under[0] + 0.587 * under[1] + 0.114 * under[2]).toBeGreaterThan(190);
+  await expectNoHorizontalOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath('play-hints-flipped.png') });
+  expect(errors).toEqual([]);
+});
+
+// Which side of the frame each board piece is beside (by its cell centre).
+async function sidesOfPieces(page) {
+  const { layout, ox, oy } = await framePlace(page);
+  return (await state(page)).clusters.map((c) => {
+    const [col, row] = c.pieces[0];
+    const x = c.x + (col + 0.5) * layout.pw;
+    const y = c.y + (row + 0.5) * layout.ph;
+    const out = { top: oy - y, right: x - (ox + layout.width), bottom: y - (oy + layout.height), left: ox - x };
+    const side = Object.keys(out).reduce((a, b) => (out[b] > out[a] ? b : a));
+    expect(out[side]).toBeGreaterThan(0); // outside the frame
+    return side;
+  });
+}
+
+// The first view may be fitted once more when the page layout settles (fonts):
+// wait until the camera stays put, so later moves are the screen's own.
+async function settledCamera(page) {
+  let last = await camera(page);
+  for (let k = 0; k < 20; k++) {
+    await page.waitForTimeout(150);
+    const now = await camera(page);
+    if (now.x === last.x && now.y === last.y && now.scale === last.scale) return now;
+    last = now;
+  }
+  return last;
+}
+
+const countOf = (sides) => {
+  const count = { top: 0, right: 0, bottom: 0, left: 0 };
+  for (const side of sides) count[side] += 1;
+  return count;
+};
+
+test('tapped pieces go around all four sides of the frame (whole board on screen)', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.startsWith('phone'), 'phones: see the next test');
+  const errors = await openDemo(page);
+  await settledCamera(page);
+  for (let k = 0; k < 8; k++) {
+    await page.locator('.pz-tile').first().click();
+    await expect(page.locator('.pz-tile')).toHaveCount(23 - k);
+  }
+  const count = countOf(await sidesOfPieces(page));
+  testInfo.annotations.push({ type: 'sides', description: JSON.stringify(count) });
+  expect(count).toEqual({ top: 2, right: 2, bottom: 2, left: 2 });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: testInfo.outputPath('play-four-sides.png') });
+  expect(errors).toEqual([]);
+});
+
+test('phone: tapped pieces fill the sides in view evenly first, then the view moves on', async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith('phone'), 'phones only');
+  const errors = await openDemo(page);
+  const start = await settledCamera(page);
+  let shown = 0;
+  for (let k = 0; k < 16; k++) {
+    await page.locator('.pz-tile').first().click();
+    await expect(page.locator('.pz-tile')).toHaveCount(23 - k);
+    const cam = await camera(page);
+    if (Math.abs(cam.x - start.x) > 2 || Math.abs(cam.y - start.y) > 2) break;
+    shown = k + 1;
+  }
+  // Before the view moved: only the sides above and below the frame (in view), shared evenly.
+  const sides = await sidesOfPieces(page);
+  const before = countOf(sides.slice(0, shown));
+  testInfo.annotations.push({ type: 'sides before the view moved', description: JSON.stringify(before) });
+  expect(shown).toBeGreaterThanOrEqual(4);
+  expect(before.left + before.right).toBe(0);
+  expect(Math.abs(before.top - before.bottom)).toBeLessThanOrEqual(1);
+  // Then a spot beside the screen (any side), brought into view.
+  expect(shown).toBeLessThan(16);
+  const { clusters } = await state(page);
+  const centre = await pieceCentre(page, clusters.at(-1));
+  const box = await boardBox(page);
+  expect(centre.x).toBeGreaterThan(box.x);
+  expect(centre.x).toBeLessThan(box.x + box.width);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: testInfo.outputPath('play-four-sides.png') });
   expect(errors).toEqual([]);
 });
 
@@ -777,7 +932,7 @@ test('tapping a tray piece puts it on a visible free spot next to the frame', as
 for (const pieces of [24, 70]) {
   test(`gestures stay smooth on a 4x slower CPU (no long tasks), ${pieces} pieces`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.use.hasTouch !== true, 'touch gestures only');
-    await openDemo(page, pieces);
+    await openDemo(page, { pieces, preview: 1 }); // preview on: the heaviest drags
     const input = makeInput(page, true);
     // Put a few pieces on the board first so drags and pans have something to draw.
     for (let k = 0; k < 6; k++) await page.locator('.pz-tile').first().click();

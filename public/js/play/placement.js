@@ -1,10 +1,15 @@
 // Where a tapped tray piece goes. In order of importance:
 // 1. never where it would snap by accident (next to its neighbour, or onto its place);
 // 2. never on the frame (pieces there would hide the picture's places);
-// 3. clear of other pieces, on screen if possible, else beside the screen (the
-//    board view then pans to it), and only when the board edge is full, on top
-//    of other pieces;
-// 4. as close to the middle of the view as that allows (the frame sits there).
+// 3. clear of other pieces where there is still room, on top of others only when
+//    the board edge is full;
+// 4. on screen if possible, so a child does not lose the place they were looking at;
+//    beside the screen (the board view then pans there) only when no clear spot is left on it;
+// 5. spread evenly around the sides of the frame (the side with the fewest pieces first),
+//    off the board corners (a piece there crowds two sides);
+// 6. poking into the frame as little as possible, then with its tabs on screen;
+// 7. as close to the middle of the view as that allows (the frame sits there).
+// Board and frame sizes come from the layout, whatever the board size is.
 import { SNAP_TOLERANCE } from '../puzzle/snap.js';
 
 const GRID_STEPS_PER_PIECE = 2;
@@ -25,14 +30,25 @@ function positions(lo, hi, step, extra) {
   return out;
 }
 
-function overlapRatio(left, top, pw, ph, frame) {
-  if (!frame) return 0;
-  const w = Math.max(0, Math.min(left + pw, frame.x1) - Math.max(left, frame.x0));
-  const h = Math.max(0, Math.min(top + ph, frame.y1) - Math.max(top, frame.y0));
-  return (w * h) / (pw * ph);
+function overlapParts(left, top, pw, ph, frame) {
+  if (!frame) return { w: 0, h: 0 };
+  return {
+    w: Math.max(0, Math.min(left + pw, frame.x1) - Math.max(left, frame.x0)) / pw,
+    h: Math.max(0, Math.min(top + ph, frame.y1) - Math.max(top, frame.y0)) / ph,
+  };
 }
 
-const RANK = ['risky', 'covers', 'crowded', 'hidden', 'touches'];
+const RANK = ['risky', 'covers', 'crowded', 'hidden', 'load', 'corner', 'touches', 'tabsCut'];
+const SIDES = ['top', 'right', 'bottom', 'left'];
+
+// Which side of the frame a point is beside (the one it is farthest out from), or
+// null inside the frame.
+export function sideOf(x, y, frame) {
+  const out = { top: frame.y0 - y, right: x - frame.x1, bottom: y - frame.y1, left: frame.x0 - x };
+  let side = null;
+  for (const key of SIDES) if (out[key] > 0 && (side === null || out[key] > out[side])) side = key;
+  return side;
+}
 
 function better(a, b) {
   for (const key of RANK) if (a[key] !== b[key]) return a[key] < b[key];
@@ -66,11 +82,18 @@ export function freeSpot(layout, view, clusters, cell, frame = null) {
   const snapPlaces = clusters
     .filter((c) => c.pieces.some(([cc, rr]) => Math.abs(cc - col) + Math.abs(rr - row) === 1))
     .map((c) => [c.x, c.y]);
-  if (frame) {
-    snapPlaces.push([frame.x0, frame.y0]);
-    centres.push([frame.x0 + (col + 0.5) * pw, frame.y0 + (row + 0.5) * ph]); // its own place
-  }
+  // Its own place in the frame: never within snapping distance (it would lock at once).
+  if (frame) snapPlaces.push([frame.x0, frame.y0]);
   const enough = CLEARANCE * Math.max(pw, ph);
+  const load = { top: 0, right: 0, bottom: 0, left: 0 };
+  if (frame) {
+    for (const c of clusters) {
+      for (const [cc, rr] of c.pieces) {
+        const side = sideOf(c.x + (cc + 0.5) * pw, c.y + (rr + 0.5) * ph, frame);
+        if (side) load[side] += 1;
+      }
+    }
+  }
   const besideX = frame ? [frame.x0 - pw - TAB_INSET * ph, frame.x1 + TAB_INSET * ph] : [];
   const besideY = frame ? [frame.y0 - ph - TAB_INSET * pw, frame.y1 + TAB_INSET * pw] : [];
   const lefts = positions(0, xMax, pw / GRID_STEPS_PER_PIECE, [...besideX, sx0, sx1]);
@@ -87,19 +110,29 @@ export function freeSpot(layout, view, clusters, cell, frame = null) {
       const oy = top - row * ph;
       let near = Infinity;
       for (const [x, y] of centres) near = Math.min(near, Math.hypot(x - cx, y - cy));
-      const overlap = overlapRatio(left, top, pw, ph, frame);
-      const hidden = left >= sx0 - 1e-9 && left <= sx1 + 1e-9 && top >= sy0 - 1e-9 && top <= sy1 + 1e-9 ? 0 : 1;
+      const parts = overlapParts(left, top, pw, ph, frame);
+      const overlap = parts.w * parts.h; // share of the cell on the frame
+      const depth = Math.min(parts.w, parts.h); // how far it pokes in across the frame edge
+      const within = (x0, y0, x1, y1) => left >= x0 - 1e-9 && left <= x1 + 1e-9 && top >= y0 - 1e-9 && top <= y1 + 1e-9;
+      // Off screen (the view must pan) weighs more than the side balance; tabs cut by the
+      // screen edge (the cell itself in view) only less.
+      const hidden = within(view.x0, view.y0, view.x1 - pw, view.y1 - ph) ? 0 : 1;
+      const tabsCut = within(sx0, sy0, sx1, sy1) ? 0 : 1;
       const spot = {
         left,
         top,
         risky: snapPlaces.some(([x, y]) => Math.hypot(x - ox, y - oy) <= SNAP_MARGIN * SNAP_TOLERANCE) ? 1 : 0,
         covers: overlap <= FRAME_SLACK ? 0 : Math.round(10 * overlap),
         crowded: near >= enough ? 0 : 1,
+        load: frame ? (load[sideOf(cx, cy, frame)] ?? 0) : 0,
+        // Corners (beside the frame on two sides) last: a piece there would crowd two sides.
+        corner: frame && (cx < frame.x0 || cx > frame.x1) && (cy < frame.y0 || cy > frame.y1) ? 1 : 0,
         hidden,
-        // Among spots on screen, one clear of the frame beats one poking into it (in tenths,
-        // so a slightly smaller overlap does not beat a spot nearer the middle). Off screen,
-        // the nearest spot wins: the view pans there.
-        touches: hidden ? 0 : Math.round(10 * overlap),
+        tabsCut,
+        // Among spots on screen, one clear of the frame beats one poking into it, by depth
+        // (in tenths) so a band's corners do not win over its middle. Off screen, the
+        // nearest spot wins: the view pans there.
+        touches: hidden ? 0 : Math.round(10 * depth),
         clear: Math.min(near, enough),
         far: Math.hypot(cx - midX, cy - midY),
       };

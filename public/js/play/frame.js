@@ -20,17 +20,27 @@ const STYLE = {
   edge: 'rgba(96, 78, 52, 0.45)',
   edgePx: 2,
 };
+// The completed picture under the frame (help setting): faint enough that pieces stand out.
+const UNDERLAY_ALPHA = 0.2;
 // Above this the frame is stroked directly instead of kept as a bitmap (deep zoom on big puzzles).
 const MAX_BITMAP_PIXELS = 4e6;
 
 // Draws the frame with its top-left at (0, 0) in the current transform, `scale` = CSS px per unit.
-function paint(c, outlines, layout, scale) {
+// outlines: Path2D of every piece, or null (border only); underlay: picture or null.
+function paint(c, { outlines, underlay }, layout, scale) {
   c.fillStyle = STYLE.fill;
   c.fillRect(0, 0, layout.width, layout.height);
+  if (underlay) {
+    c.globalAlpha = UNDERLAY_ALPHA;
+    c.drawImage(underlay, 0, 0, layout.width, layout.height);
+    c.globalAlpha = 1;
+  }
   c.lineJoin = 'round';
-  c.strokeStyle = STYLE.seam;
-  c.lineWidth = STYLE.seamPx / scale;
-  c.stroke(outlines);
+  if (outlines) {
+    c.strokeStyle = STYLE.seam;
+    c.lineWidth = STYLE.seamPx / scale;
+    c.stroke(outlines);
+  }
   c.strokeStyle = STYLE.edge;
   c.lineWidth = STYLE.edgePx / scale;
   c.strokeRect(0, 0, layout.width, layout.height);
@@ -40,11 +50,18 @@ function paint(c, outlines, layout, scale) {
  * Frame drawn once into a bitmap for the settled zoom and blitted every frame.
  * @param {object} layout  geometry.layoutFor() result
  * @param {{ pieces: object[] }} puzzle  geometry.makePuzzle() result
+ * @param {{ outline?: boolean, underlay?: CanvasImageSource | null }} [options]
+ *   outline: piece outlines inside the frame (else the border only);
+ *   underlay: the completed picture to show faintly inside the frame.
  */
-export function createFrameLayer(layout, puzzle) {
+export function createFrameLayer(layout, puzzle, { outline = true, underlay = null } = {}) {
   const origin = frameOrigin(layout);
-  const outlines = new Path2D();
-  for (const piece of puzzle.pieces) traceOutline(outlines, piece);
+  let outlines = null;
+  if (outline) {
+    outlines = new Path2D();
+    for (const piece of puzzle.pieces) traceOutline(outlines, piece);
+  }
+  const look = { outlines, underlay };
   const canvas = document.createElement('canvas');
   let bitmap = null; // { px, margin } once `canvas` holds the frame at px device pixels per unit
 
@@ -65,7 +82,7 @@ export function createFrameLayer(layout, puzzle) {
       canvas.height = h;
       const c = canvas.getContext('2d');
       c.setTransform(px, 0, 0, px, margin, margin);
-      paint(c, outlines, layout, scale);
+      paint(c, look, layout, scale);
       bitmap = { px, margin };
     },
 
@@ -77,7 +94,7 @@ export function createFrameLayer(layout, puzzle) {
       const sy = dpr * cam.y + origin.y * px;
       if (!bitmap) {
         ctx.setTransform(px, 0, 0, px, sx, sy);
-        paint(ctx, outlines, layout, cam.scale);
+        paint(ctx, look, layout, cam.scale);
         return;
       }
       ctx.setTransform(1, 0, 0, 1, 0, 0);
