@@ -23,17 +23,18 @@ describe('demo piece count (/play?demo=1&pieces=...)', () => {
   });
 });
 
-describe('demo help settings (&preview=1&outline=0&picture=0&underlay=1)', () => {
+describe('demo help settings (&preview=1&outline=0&button=0&underlay=1)', () => {
   it('reads only 1 and 0, the rest stays default', async () => {
     const { demoHints } = await import('../../public/js/play/demo.js');
     expect(demoHints('?demo=1')).toEqual({});
-    expect(demoHints('?demo=1&preview=1&outline=0&picture=0&underlay=1')).toEqual({
+    expect(demoHints('?demo=1&preview=1&outline=0&button=0&underlay=1')).toEqual({
       preview: true,
       outline: false,
       pictureButton: false,
       underlay: true,
     });
-    expect(demoHints('?preview=yes&outline=true&picture=&underlay=2')).toEqual({});
+    expect(demoHints('?preview=yes&outline=true&button=&underlay=2')).toEqual({});
+    expect(demoHints('?picture=0')).toEqual({}); // picture is the picture key, not the button
   });
 
   it('puts the settings in the store state, with defaults filled in', () => {
@@ -44,5 +45,22 @@ describe('demo help settings (&preview=1&outline=0&picture=0&underlay=1)', () =>
       pictureButton: true,
       underlay: true,
     });
+  });
+});
+
+describe('demo picture (&picture=<key>)', () => {
+  it('reads a built-in key, anything malformed gives sea', async () => {
+    const { demoPictureKey } = await import('../../public/js/play/demo.js');
+    expect(demoPictureKey('?demo=1')).toBe('sea');
+    expect(demoPictureKey('?demo=1&picture=giraffe')).toBe('giraffe');
+    expect(demoPictureKey('?demo=1&picture=')).toBe('sea');
+    expect(demoPictureKey('?demo=1&picture=Giraffe')).toBe('sea');
+    expect(demoPictureKey('?demo=1&picture=../x')).toBe('sea');
+  });
+
+  it('lays a portrait picture out as a portrait puzzle', () => {
+    const state = createDemoStore(24, {}, { src: '/images/builtin/giraffe.webp', width: 1200, height: 1800 }).getState();
+    expect(state.layout.cols).toBeLessThan(state.layout.rows);
+    expect(state.picture.src).toBe('/images/builtin/giraffe.webp');
   });
 });

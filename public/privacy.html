@@ -32,8 +32,103 @@
 <main class="page doc">
   <a class="brand" href="/"><img class="ic" src="/icon.svg" alt="" width="26" height="26">함께 퍼즐</a>
   <h1>개인정보 처리방침</h1>
-  <!-- Full policy is written in T13. -->
-  <p class="sub">처리방침 내용을 준비하고 있어요.</p>
+  <p class="doc-lead">함께 퍼즐은 모둠이 함께 맞추는 교실용 직소 퍼즐입니다. 수업에 꼭 필요한 정보만 다루고, <strong>학생 이름은 서버에 저장하지 않습니다.</strong> 광고와 외부 분석 도구는 쓰지 않습니다.</p>
+
+  <section aria-labelledby="summary">
+    <h2 id="summary">한눈에 보기</h2>
+    <div class="doc-table">
+      <table>
+        <caption>학습지원 소프트웨어 선정 기준에서 주로 살피는 항목과 함께 퍼즐의 처리</caption>
+        <thead><tr><th scope="col">살피는 항목</th><th scope="col">함께 퍼즐</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">학생 개인정보 수집</th><td data-label="함께 퍼즐">저장하지 않습니다. 학생은 로그인하지 않고 코드와 이름(별명)만 입력합니다. 이름은 같은 모둠 화면에 보여 줄 때만 전달되고 서버에 기록되지 않습니다.</td></tr>
+          <tr><th scope="row">학생 회원 가입</th><td data-label="함께 퍼즐">없습니다. 수업 동안만 쓰는 익명 접속 번호를 자동으로 만들고, 수업이 끝나면 지웁니다.</td></tr>
+          <tr><th scope="row">교사 개인정보 수집</th><td data-label="함께 퍼즐">구글 로그인 정보(이메일 등)와 교사가 올린 그림만 보관합니다.</td></tr>
+          <tr><th scope="row">보관 기간</th><td data-label="함께 퍼즐">수업 기록은 수업이 끝나고 30일 뒤, 학생 접속 정보는 수업이 끝나면(늦어도 24시간 뒤) 지웁니다. 아래 표를 보세요.</td></tr>
+          <tr><th scope="row">광고·외부 분석</th><td data-label="함께 퍼즐">없습니다. 화면에 광고가 없고, 방문 기록을 모으는 외부 분석 도구를 쓰지 않습니다.</td></tr>
+          <tr><th scope="row">제3자 제공</th><td data-label="함께 퍼즐">하지 않습니다. 서비스 운영을 위해 서버·호스팅 업체에 처리를 맡깁니다(아래 '처리 위탁').</td></tr>
+          <tr><th scope="row">채팅·외부 연결</th><td data-label="함께 퍼즐">화면 안 채팅, 다른 사이트로 가는 광고나 게임 링크가 없습니다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="collect">
+    <h2 id="collect">1. 어떤 정보를, 왜, 얼마 동안 다루나요</h2>
+    <div class="doc-table">
+      <table>
+        <thead><tr><th scope="col">누구</th><th scope="col">정보</th><th scope="col">쓰는 곳</th><th scope="col">보관 기간</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">교사</th><td data-label="정보">구글 계정 이메일, 구글이 로그인할 때 함께 보내는 이름·프로필 사진 주소</td><td data-label="쓰는 곳">교사 로그인, 내 수업·내 그림 구분</td><td data-label="보관 기간">탈퇴할 때까지</td></tr>
+          <tr><th scope="row">교사</th><td data-label="정보">교사가 올린 그림(사진 속 위치 정보 등은 지우고 줄여서 저장)</td><td data-label="쓰는 곳">퍼즐 그림, '내 그림' 목록</td><td data-label="보관 기간">교사가 지울 때까지. 1년 동안 수업에 쓰지 않은 그림은 정리해 지웁니다.</td></tr>
+          <tr><th scope="row">교사</th><td data-label="정보">수업 정보(수업 코드, 고른 그림, 조각 수, 모둠, 도움 설정, 수업 상태)</td><td data-label="쓰는 곳">수업 열기·진행</td><td data-label="보관 기간">수업이 끝나고 30일 뒤 삭제</td></tr>
+          <tr><th scope="row">학생</th><td data-label="정보">익명 접속 번호(이름·연락처와 연결되지 않는 무작위 번호), 모둠, 색 번호, 마지막 접속 시각</td><td data-label="쓰는 곳">모둠 배정, 조각 나누기, 연결이 끊긴 친구 조각 다시 나누기</td><td data-label="보관 기간">수업이 끝나면 삭제(늦어도 24시간 뒤 자동 삭제)</td></tr>
+          <tr><th scope="row">학생</th><td data-label="정보">이름(별명)</td><td data-label="쓰는 곳">같은 모둠 친구 화면에 표시, 같은 기기로 다시 들어오기</td><td data-label="보관 기간"><strong>서버에 저장하지 않습니다.</strong> 학생 기기의 브라우저에만 남고, 모둠 친구에게는 실시간 연결로만 전달됩니다.</td></tr>
+          <tr><th scope="row">모둠</th><td data-label="정보">퍼즐 진행(조각 위치, 맞춘 조각, 완성 시각)</td><td data-label="쓰는 곳">모둠 퍼즐, 교사 '모둠 한눈에 보기'</td><td data-label="보관 기간">수업과 함께 삭제</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="doc-list">
+      <li>학생의 실명, 학번, 연락처, 사진, 음성, 위치는 받지 않습니다. 학생에게는 별명을 쓰게 해도 수업에 지장이 없습니다.</li>
+      <li>학생 활동 기록(누가 몇 조각을 맞췄는지 등)은 남기지 않습니다.</li>
+      <li>쿠키로 사용자를 추적하지 않습니다. 로그인 상태와 '다시 들어오기'를 위해 브라우저 저장소(localStorage)를 씁니다.</li>
+      <li>서비스를 안전하게 운영하려고 서버·호스팅 업체가 접속 기록(IP 주소, 접속 시각 등)을 짧은 기간 자동으로 남길 수 있습니다.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="delete">
+    <h2 id="delete">2. 어떻게 지우나요</h2>
+    <ul class="doc-list">
+      <li><strong>내 그림 지우기</strong>: 교사 화면의 '내 그림'에서 지우면 저장소의 그림 파일도 함께 지워집니다.</li>
+      <li><strong>수업 끝내기</strong>: 교사가 '수업 끝내기'를 누르면 학생 익명 접속 번호와 모둠 배정이 바로 지워집니다. 누르지 않아도 24시간 뒤 자동으로 지워집니다.</li>
+      <li><strong>자동 정리</strong>: 끝난 수업의 기록은 30일 뒤 자동으로 지워집니다.</li>
+      <li><strong>학생 기기의 이름</strong>: 브라우저의 사이트 데이터(방문 기록·저장소)를 지우면 함께 지워집니다.</li>
+      <li><strong>교사 탈퇴</strong>: 아래 문의처로 요청하면 계정, 올린 그림, 수업 기록을 모두 지웁니다.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="entrust">
+    <h2 id="entrust">3. 처리 위탁과 국외 이전</h2>
+    <p>서비스를 운영하기 위해 아래 업체의 서버를 씁니다. 개인정보를 다른 목적으로 제공하거나 팔지 않습니다.</p>
+    <div class="doc-table">
+      <table>
+        <thead><tr><th scope="col">업체</th><th scope="col">맡기는 일</th><th scope="col">다루는 정보</th><th scope="col">서버 위치</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Supabase Inc.</th><td data-label="맡기는 일">데이터베이스, 로그인, 그림 저장소, 실시간 연결</td><td data-label="다루는 정보">위 1번의 교사·학생·수업 정보</td><td data-todo="server-region" data-label="서버 위치">서버 지역 확정 전(서울 지역 사용 예정)</td></tr>
+          <tr><th scope="row">Vercel Inc.</th><td data-label="맡기는 일">웹사이트 파일 전달(호스팅)</td><td data-label="다루는 정보">접속 기록(IP 주소 등)</td><td data-label="서버 위치">전 세계 전송망(서울 우선)</td></tr>
+          <tr><th scope="row">jsDelivr</th><td data-label="맡기는 일">글꼴(Pretendard)과 서버 연결 도구 파일 전달</td><td data-label="다루는 정보">파일을 받을 때의 접속 기록(IP 주소 등)</td><td data-label="서버 위치">전 세계 전송망</td></tr>
+          <tr><th scope="row">Google LLC</th><td data-label="맡기는 일">교사 구글 로그인</td><td data-label="다루는 정보">교사가 로그인할 때의 구글 계정 정보</td><td data-label="서버 위치">구글 서버</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="doc-note">위 업체는 해외 기업이어서 정보가 국외 서버에서 처리될 수 있습니다. 서비스를 이용하는 동안 인터넷으로 전송되고, 보관 기간은 위 1번과 같습니다.</p>
+  </section>
+
+  <section aria-labelledby="safety">
+    <h2 id="safety">4. 안전하게 지키는 방법</h2>
+    <ul class="doc-list">
+      <li>모든 연결은 암호화(HTTPS)합니다.</li>
+      <li>학생은 자기 모둠의 퍼즐만 읽고 바꿀 수 있고, 다른 모둠·다른 수업의 정보는 서버에서 막습니다.</li>
+      <li>교사가 올린 그림은 공개되지 않는 저장소에 두고, 그 교사의 수업에서만 보입니다.</li>
+      <li>사이트에서 불러오는 파일은 이 사이트와 위 업체의 주소로만 제한합니다.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="children">
+    <h2 id="children">5. 만 14세 미만 학생</h2>
+    <p>함께 퍼즐은 학생의 개인정보를 서버에 저장하지 않도록 만들었습니다. 학생은 교사의 안내에 따라 수업 시간에만 쓰며, 이름 대신 별명을 써도 됩니다. 학교의 학습지원 소프트웨어 운영 방침에 따라 사용해 주세요.</p>
+  </section>
+
+  <section aria-labelledby="pictures">
+    <h2 id="pictures">6. 내장 그림 출처</h2>
+    <p>수업 만들기에서 고를 수 있는 내장 그림 20장은 모두 함께 퍼즐이 직접 그린 그림입니다. 수업에 자유롭게 쓸 수 있습니다. 학생 얼굴이 나온 학급 사진을 올릴 때는 학교 방침을 먼저 확인해 주세요.</p>
+  </section>
+
+  <section aria-labelledby="contact">
+    <h2 id="contact">7. 문의</h2>
+    <p>개인정보 관련 문의, 교사 탈퇴 요청은 이메일로 보내 주세요: <a href="mailto:jinsyu.com@gmail.com">jinsyu.com@gmail.com</a></p>
+    <p class="doc-note" data-todo="effective-date">이 방침은 서비스를 정식으로 공개하는 날부터 적용합니다. 내용이 바뀌면 이 페이지에 바뀐 날짜와 내용을 알립니다.</p>
+  </section>
 </main>
 </body>
 </html>

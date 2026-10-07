@@ -11,9 +11,19 @@ function readWebpHeader(path) {
 }
 
 describe('built-in pictures index', () => {
-  it('has a version and the six mockup scenes for now', () => {
+  it('has a version and 20 pictures: the six mockup scenes first, landscape and a few portrait', () => {
     expect(index.version).toBe(1);
-    expect(index.images.map((i) => i.key)).toEqual(['sea', 'village', 'space', 'garden', 'classroom', 'friends']);
+    expect(index.images).toHaveLength(20);
+    expect(index.images.slice(0, 6).map((i) => i.key)).toEqual(['sea', 'village', 'space', 'garden', 'classroom', 'friends']);
+    expect(new Set(index.images.map((i) => i.key)).size).toBe(20);
+    const portrait = index.images.filter((i) => i.height > i.width);
+    expect(portrait.length).toBeGreaterThanOrEqual(2);
+    expect(portrait.length).toBeLessThanOrEqual(3);
+    for (const i of index.images) {
+      // 3:2 landscape (1800 x 1200) or 2:3 portrait (1200 x 1800).
+      expect([`${i.width}x${i.height}`]).toContain(i.width > i.height ? '1800x1200' : '1200x1800');
+      expect(i.source.name).toBe('함께 퍼즐 자체 제작'); // no outside artwork yet
+    }
   });
 
   it.each(index.images.map((i) => [i.key, i]))('%s is a valid built-in picture', (key, image) => {
@@ -21,8 +31,15 @@ describe('built-in pictures index', () => {
     expect(image.title.length).toBeGreaterThan(0);
     expect(image.category.length).toBeGreaterThan(0);
     expect(Math.max(image.width, image.height)).toBeLessThanOrEqual(2000);
-    expect(image.source).toBeTruthy();
-    expect(image.license).toBeTruthy();
+    // source { name, author, url } and license { name, url }; outside pictures need the author and both URLs.
+    expect(image.source.name.length).toBeGreaterThan(0);
+    expect(image.source.author.length).toBeGreaterThan(0);
+    expect(image.license.name.length).toBeGreaterThan(0);
+    const selfMade = image.source.name === '함께 퍼즐 자체 제작';
+    for (const url of [image.source.url, image.license.url]) {
+      if (selfMade) expect(url).toBeNull();
+      else expect(url).toMatch(/^https:\/\//);
+    }
     for (const path of [image.src, image.thumb]) {
       expect(path).toMatch(new RegExp(`^/images/builtin/${key}(-thumb)?\\.webp$`));
       expect(readWebpHeader(path)).toBe('RIFFWEBP');

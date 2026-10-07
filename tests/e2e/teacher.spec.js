@@ -42,7 +42,8 @@ async function expectTouchSize(locator) {
 
 // Draws the QR SVG on a canvas and reads it with jsQR, like a tablet camera would.
 async function readQr(page) {
-  await page.addScriptTag({ path: JSQR_PATH });
+  // Evaluated (not a <script> tag): the page CSP rightly blocks inline scripts.
+  await page.evaluate(readFileSync(JSQR_PATH, 'utf8'));
   return page.evaluate(async () => {
     const svg = document.querySelector('.t-join-qr svg');
     const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' });
@@ -115,7 +116,7 @@ test('D1: a teacher picks a picture, piece count and groups, opens the class, an
 
   // Picture: the first built-in is chosen and previewed with the real 24-piece cut.
   const pictures = page.getByRole('radiogroup', { name: '내장 그림' }).getByRole('radio');
-  await expect(pictures).toHaveCount(6);
+  await expect(pictures).toHaveCount(20); // public/images/builtin/index.json
   await expect(pictures.first()).toBeChecked();
   const preview = page.locator('.t-preview svg');
   await expect(preview).toHaveAttribute('aria-label', /바다 친구들을 24조각\(가로 6, 세로 4\)/);

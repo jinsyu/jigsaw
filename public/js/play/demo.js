@@ -1,12 +1,16 @@
-// /play?demo=1 — solo puzzle on the built-in sea picture, kept in memory.
+// /play?demo=1 — solo puzzle on a built-in picture, kept in memory.
+// &picture=<key> picks the built-in picture (public/images/builtin/index.json, default sea);
 // &pieces=12|24|48|70 picks the piece count (default 24); help settings (spec rule 10):
-// &preview=1 &outline=0 &picture=0 &underlay=1 (1 = on, 0 = off, missing = default).
+// &preview=1 &outline=0 &button=0 &underlay=1 (1 = on, 0 = off, missing = default;
+// button = the completed picture button).
 // For development and demonstrations only: no server, nothing is saved.
 import { PIECE_COUNTS, gridFor, layoutFor } from '../puzzle/geometry.js';
 import { createLocalStore, shuffledPieces } from '../store/local-store.js';
 import { mountPlayScreen } from './play-screen.js';
 
-const PICTURE = { src: '/images/demo/sea.svg', width: 600, height: 400 };
+const BUILTIN_INDEX = '/images/builtin/index.json';
+const DEFAULT_PICTURE_KEY = 'sea';
+const DEFAULT_PICTURE = { src: '/images/builtin/sea.webp', width: 1800, height: 1200 };
 const DEFAULT_PIECES = 24;
 const SEED = 42;
 const ME = 'demo';
@@ -17,7 +21,7 @@ export function demoPieceCount(search) {
   return PIECE_COUNTS.includes(n) ? n : DEFAULT_PIECES;
 }
 
-const HINT_PARAMS = { preview: 'preview', outline: 'outline', picture: 'pictureButton', underlay: 'underlay' };
+const HINT_PARAMS = { preview: 'preview', outline: 'outline', button: 'pictureButton', underlay: 'underlay' };
 
 // Help settings from the page address; only '1' and '0' count.
 export function demoHints(search) {
@@ -30,13 +34,28 @@ export function demoHints(search) {
   return hints;
 }
 
-export function createDemoStore(pieceCount = DEFAULT_PIECES, hints = {}) {
-  const aspect = PICTURE.width / PICTURE.height;
+// Built-in picture key from the page address.
+export function demoPictureKey(search) {
+  const value = new URLSearchParams(search).get('picture');
+  return value && /^[a-z0-9-]{1,64}$/.test(value) ? value : DEFAULT_PICTURE_KEY;
+}
+
+// { src, width, height } of a built-in picture; unknown keys give the default.
+export async function loadDemoPicture(key) {
+  if (key === DEFAULT_PICTURE_KEY) return DEFAULT_PICTURE;
+  const response = await fetch(BUILTIN_INDEX);
+  if (!response.ok) throw new Error(`built-in pictures: ${response.status}`);
+  const found = (await response.json()).images.find((image) => image.key === key);
+  return found ? { src: found.src, width: found.width, height: found.height } : DEFAULT_PICTURE;
+}
+
+export function createDemoStore(pieceCount = DEFAULT_PIECES, hints = {}, picture = DEFAULT_PICTURE) {
+  const aspect = picture.width / picture.height;
   const { cols, rows } = gridFor(pieceCount, aspect);
   return createLocalStore({
     layout: layoutFor(cols, rows, aspect),
     seed: SEED,
-    picture: PICTURE,
+    picture,
     groupName: '혼자 연습',
     me: ME,
     members: [{ uid: ME, name: '나', color: 0 }],
@@ -46,7 +65,8 @@ export function createDemoStore(pieceCount = DEFAULT_PIECES, hints = {}) {
 }
 
 export async function startDemo(main) {
-  const store = createDemoStore(demoPieceCount(location.search), demoHints(location.search));
+  const picture = await loadDemoPicture(demoPictureKey(location.search));
+  const store = createDemoStore(demoPieceCount(location.search), demoHints(location.search), picture);
   const screen = await mountPlayScreen(main, store);
   // Test and demo hook: read-only view of the state and the board camera.
   window.__puzzleDemo = {

@@ -5,6 +5,7 @@ import { readFileSync, statSync, createReadStream } from 'node:fs';
 import { join, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveRequest, headersFor } from './lib/vercel-routing.mjs';
+import { withLocalSupabase } from './lib/local-csp.mjs';
 
 const ROOT_DIR = fileURLToPath(new URL('..', import.meta.url));
 const PUBLIC_DIR = join(ROOT_DIR, 'public');
@@ -59,6 +60,9 @@ const server = createServer((req, res) => {
   }
   // No caching locally so edited files show up on reload.
   const headers = { ...headersFor(pathname, config), 'Cache-Control': 'no-store' };
+  if (headers['Content-Security-Policy']) {
+    headers['Content-Security-Policy'] = withLocalSupabase(headers['Content-Security-Policy'], req.headers.host);
+  }
   const result = resolveRequest(pathname, config, isFile);
 
   if (result.type === 'redirect') {
