@@ -12,7 +12,7 @@
   - SEO: title·description·canonical(`https://jigsaw.gyosil.app`)·OG(og 이미지 1200x630), `robots.txt`, `sitemap.xml`, 파비콘(SVG + PNG 32·180, 목업 `iconPiece` 모양).
   - 시험: Vitest 예제 1개, Playwright 스모크(첫 화면 표시, 360·390·1024·1440px 가로 넘침 없음).
 
-- [ ] T2: 퍼즐 기하·맞춤 판정 JS 모듈 + 공용 시험 사례 표 — DoD: D7
+- [x] T2: 퍼즐 기하·맞춤 판정 JS 모듈 + 공용 시험 사례 표 — DoD: D7
   - `public/js/puzzle/geometry.js`: 시드 rng, 조각 수(12·24·48·70) → 격자(4x3, 6x4, 8x6, 10x7, 세로 그림은 행열 바꿈), 조각 모양(목업 `common.js` `makePuzzle`·`edge` 재사용, Path2D/SVG path 둘 다).
   - 좌표 규약: 완성 그림 너비 = cols x 100 단위, 높이는 그림 비율로. 덩어리 위치 (x, y) = 완성 그림 원점의 판 위 위치. 판 = 각 변 약 √2배(넓이 2배).
   - `public/js/puzzle/snap.js`: `findMerges(clusters, droppedId, tol)` — 이웃 조각을 가진 덩어리끼리 원점 차이가 허용 거리 안이면 합치고, 합친 뒤 다시 검사(연쇄). 합친 위치는 큰 덩어리(같으면 id 작은 쪽) 기준으로 정한다. 진행률(맞춘 조각 = 2개 이상 덩어리에 속한 조각 수)·완성 판정.
