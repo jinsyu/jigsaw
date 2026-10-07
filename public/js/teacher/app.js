@@ -1,7 +1,9 @@
-// Teacher screens under /teacher: sign-in, 내 수업, 새 수업, 내 그림, and the session lobby.
-// Loaded on demand by js/app.js so student pages never download supabase-js.
-import { isConfigured, pickConfig } from '../config.js';
-import { getTeacherClient } from '../supabase-client.js';
+// Teacher screens under /teacher: sign-in, 함께 퍼즐 시작하기, 내 수업, 새 수업, 내 그림, and the
+// class lobby. Loaded on demand by js/app.js. Everything goes through the rt server
+// (rt-client.js) with the teacher token from sign-in; nothing here talks to Supabase.
+import { hasRtServer, pickConfig } from '../config.js';
+import { RtError, rtRequest } from '../rt-client.js';
+import { clearTeacherAuth, readTeacherAuth, saveTeacherAuth, teacherLabel, tokenExpiry } from './auth.js';
 import { h, nodes as present, pieceIcon, setTitle } from './dom.js';
 import { parseTeacherPath } from './routes.js';
 import { renderHome } from './home-view.js';
@@ -9,8 +11,11 @@ import { renderCreate } from './create-view.js';
 import { renderImages } from './images-view.js';
 import { renderLobby } from './lobby-view.js';
 import { renderLogin, renderNotReady } from './login-view.js';
+import { renderStart } from './start-view.js';
 
 const STYLESHEET = '/css/teacher.css';
+// setTimeout cannot wait longer than this (about 24.8 days).
+const MAX_TIMER_MS = 2 ** 31 - 1;
 
 function loadStylesheet(href) {
   if (document.querySelector(`link[href="${href}"]`)) return Promise.resolve();
@@ -21,30 +26,6 @@ function loadStylesheet(href) {
     link.addEventListener('error', resolve);
     document.head.append(link);
   });
-}
-
-// Reads ?error_description=... left by a failed Google sign-in, and drops the
-// OAuth parameters (?code=, ?error=) from the address bar.
-function takeOAuthResult() {
-  const url = new URL(location.href);
-  const failed = url.searchParams.has('error') || url.searchParams.has('error_description');
-  let changed = false;
-  for (const key of ['code', 'error', 'error_code', 'error_description', 'state']) {
-    if (url.searchParams.has(key)) {
-      url.searchParams.delete(key);
-      changed = true;
-    }
-  }
-  if (changed) history.replaceState(history.state, '', url.pathname + url.search + url.hash);
-  return failed ? '로그인하지 못했어요. 다시 시도해 주세요.' : '';
-}
-
-const isTeacherSession = (session) => Boolean(session?.user && !session.user.is_anonymous);
-
-function teacherName(user) {
-  const meta = user.user_metadata ?? {};
-  const name = meta.full_name || meta.name || (user.email ?? '').split('@')[0] || '선생';
-  return name;
 }
 
 const NAV = [
@@ -61,34 +42,88 @@ export async function startTeacher(main) {
   const config = pickConfig(location.hostname);
   await loadStylesheet(STYLESHEET);
 
-  if (!isConfigured(config)) {
+  if (!hasRtServer(config)) {
     renderNotReady(main);
     return;
   }
 
-  main.append(h('p', { class: 't-loading', role: 'status' }, '선생님 화면을 여는 중이에요…'));
-  let client;
-  let session;
-  try {
-    client = await getTeacherClient(config);
-    ({ data: { session } } = await client.auth.getSession());
-  } catch (error) {
-    console.error(error);
-    renderStartError(main);
-    return;
-  }
-  const loginError = takeOAuthResult();
   const bar = h('header', { class: 't-bar', hidden: true });
-  main.before(bar);
-  let user = isTeacherSession(session) ? session.user : null;
+  // "다시 연결하는 중" while a live screen (lobby, overview) has lost the rt server.
+  const band = h('p', { class: 't-band', role: 'status', hidden: true }, h('i', { class: 'dot is-lost' }), '서버와 연결이 끊겼어요. 다시 연결하는 중이에요…');
+  main.before(bar, band);
+  let auth = readTeacherAuth(localStorage);
+  let start = null; // { startTicket, displayName } between Google sign-in and 함께 퍼즐 시작하기
+  let notice = ''; // shown once on the sign-in screen
   let cleanup = null;
   let firstRender = true;
+  let expiryTimer = 0;
+
+  function signOut(message = '') {
+    clearTeacherAuth(localStorage);
+    clearTimeout(expiryTimer);
+    window.google?.accounts?.id?.disableAutoSelect?.();
+    auth = null;
+    start = null;
+    notice = message;
+    render();
+  }
+
+  // The token ends after 12 hours: back to the sign-in screen at that moment, not on the next tap.
+  function watchExpiry() {
+    clearTimeout(expiryTimer);
+    if (!auth) return;
+    const wait = Math.min(MAX_TIMER_MS, Math.max(0, tokenExpiry(auth.token) - Date.now() - 60_000));
+    expiryTimer = setTimeout(() => {
+      if (!readTeacherAuth(localStorage)) signOut('로그인한 지 오래되어 다시 로그인해 주세요.');
+      else watchExpiry();
+    }, wait);
+  }
+
+  // Requests with the teacher token. A refused token signs the teacher out.
+  async function request(path, options = {}) {
+    try {
+      return await rtRequest(config.rtUrl, path, { ...options, token: auth?.token });
+    } catch (error) {
+      if (error instanceof RtError && (error.code === 'invalid_token' || error.code === 'not_teacher') && auth) {
+        signOut('다시 로그인해 주세요.');
+      }
+      throw error;
+    }
+  }
 
   const ctx = {
-    client,
     config,
-    get user() {
-      return user;
+    get auth() {
+      return auth;
+    },
+    api: {
+      get: (path) => request(path),
+      post: (path, json) => request(path, { method: 'POST', json }),
+      del: (path) => request(path, { method: 'DELETE' }),
+      upload: (path, blob) => request(path, { method: 'POST', body: blob, contentType: blob.type }),
+      // Sign-in requests carry no teacher token.
+      public: (path, json) => rtRequest(config.rtUrl, path, { method: 'POST', json }),
+    },
+    signedIn({ token, teacher }) {
+      auth = { token, displayName: teacher?.displayName ?? '' };
+      saveTeacherAuth(localStorage, auth);
+      start = null;
+      notice = '';
+      watchExpiry();
+      render();
+    },
+    needsStart({ startTicket, profile }) {
+      start = { startTicket, displayName: profile?.displayName ?? '' };
+      render();
+    },
+    cancelStart(message = '') {
+      start = null;
+      notice = message;
+      render();
+    },
+    signOut,
+    setReconnecting(on) {
+      band.hidden = !on;
     },
     navigate(path, { replace = false } = {}) {
       if (replace) history.replaceState(null, '', path);
@@ -111,36 +146,36 @@ export async function startTeacher(main) {
           h('a', { href: item.href, 'aria-current': item.view === active ? 'page' : null }, item.label),
         ),
       );
-      const name = teacherName(user);
+      const label = teacherLabel(auth?.displayName);
       const account = h(
         'div',
         { class: 't-account' },
-        h('span', { class: 'avatar', 'aria-hidden': 'true' }, name.slice(0, 1)),
-        h('span', { class: 't-name' }, `${name} 선생님`),
-        h('button', { class: 'btn t-logout', type: 'button', onclick: signOut }, '로그아웃'),
+        h('span', { class: 'avatar', 'aria-hidden': 'true' }, label.slice(0, 1)),
+        h('span', { class: 't-name' }, label),
+        h('button', { class: 'btn t-logout', type: 'button', onclick: () => signOut() }, '로그아웃'),
       );
       bar.replaceChildren(brand, nav, account);
     },
   };
 
-  async function signOut() {
-    // 'local' clears this browser even when the network is down.
-    await client.auth.signOut({ scope: 'local' });
-  }
-
   function render() {
     cleanup?.();
     cleanup = null;
+    band.hidden = true;
     main.replaceChildren();
     main.className = 'teacher';
     main.removeAttribute('aria-busy');
     document.documentElement.classList.remove('is-lobby');
     window.scrollTo(0, 0);
 
-    if (!user) {
+    if (!auth && start) {
+      ctx.setBar('none');
+      cleanup = renderStart(main, ctx, start) ?? null;
+    } else if (!auth) {
       ctx.setBar('none');
       setTitle('선생님 로그인');
-      renderLogin(main, ctx, { error: firstRender ? loginError : '' });
+      cleanup = renderLogin(main, ctx, { notice }) ?? null;
+      notice = '';
     } else {
       const route = parseTeacherPath(location.pathname);
       const views = { home: renderHome, new: renderCreate, images: renderImages, session: renderLobby };
@@ -154,17 +189,6 @@ export async function startTeacher(main) {
     firstRender = false;
   }
 
-  client.auth.onAuthStateChange((event, session) => {
-    const next = isTeacherSession(session) ? session.user : null;
-    if ((next?.id ?? null) === (user?.id ?? null)) {
-      user = next; // token refresh: same teacher, keep the screen
-      return;
-    }
-    user = next;
-    // Leave the callback before rendering: supabase-js holds a lock while it runs.
-    setTimeout(render, 0);
-  });
-
   document.addEventListener('click', (event) => {
     if (event.defaultPrevented || event.button !== 0) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -177,6 +201,7 @@ export async function startTeacher(main) {
   });
   window.addEventListener('popstate', render);
 
+  watchExpiry();
   render();
 }
 
@@ -185,21 +210,6 @@ function focusHeadingIfIdle(main) {
   const active = document.activeElement;
   if (active && active !== document.body && main.contains(active)) return;
   main.querySelector('h1')?.focus({ preventScroll: true });
-}
-
-function renderStartError(main) {
-  setTitle('화면을 열지 못했어요');
-  main.removeAttribute('aria-busy');
-  main.className = 'teacher t-center';
-  main.replaceChildren(
-    h(
-      'section',
-      { class: 'card t-login-card' },
-      h('h1', {}, '화면을 열지 못했어요'),
-      h('p', { class: 'sub' }, '인터넷 연결을 확인하고 새로고침해 주세요.'),
-      h('button', { class: 'btn pri big', type: 'button', onclick: () => location.reload() }, '새로고침'),
-    ),
-  );
 }
 
 function renderNotFound(main, ctx) {

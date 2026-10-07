@@ -3,7 +3,7 @@ import { join, extname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { headersFor } from '../../scripts/lib/vercel-routing.mjs';
-import { withLocalSupabase } from '../../scripts/lib/local-csp.mjs';
+import { withLocalServers } from '../../scripts/lib/local-csp.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const config = JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf8'));
@@ -16,7 +16,9 @@ const directives = Object.fromEntries(
 );
 
 // The only outside hosts the site may load from or talk to.
-const ALLOWED_HOSTS = ['cdn.jsdelivr.net', '*.supabase.co'];
+// accounts.google.com: Google sign-in (GIS, spec D15). Loaded only once the hosted Google
+// client ID is set (T25); the CSP header lists it from T23.
+const ALLOWED_HOSTS = ['cdn.jsdelivr.net', '*.supabase.co', 'accounts.google.com'];
 
 function filesUnder(dir) {
   return readdirSync(dir).flatMap((name) => {
@@ -51,13 +53,17 @@ describe('Content-Security-Policy (vercel.json)', () => {
     expect(csp).not.toMatch(/unsafe-inline|(?<!wasm-)unsafe-eval|unsafe-hashes|\*(?!\.supabase\.co)/);
   });
 
-  it('the local server adds only the local Supabase stack, for connections and images', () => {
-    const local = withLocalSupabase(csp, 'localhost:4173');
-    expect(local).toContain("connect-src 'self' https://*.supabase.co wss://*.supabase.co http://127.0.0.1:56321 ws://127.0.0.1:56321");
-    expect(local).toContain("img-src 'self' data: blob: https://*.supabase.co http://127.0.0.1:56321 ws://127.0.0.1:56321");
-    expect(local.replace(/ (http|ws):\/\/127\.0\.0\.1:56321/g, '')).toBe(csp);
+  it('the local server adds only the local stack: Supabase for connections and images, the rt server for connections', () => {
+    const local = withLocalServers(csp, 'localhost:4173');
+    expect(local).toContain(
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co http://127.0.0.1:56321 ws://127.0.0.1:56321 http://127.0.0.1:3400 ws://127.0.0.1:3400",
+    );
+    expect(local).toContain("img-src 'self' data: blob: https://*.supabase.co http://127.0.0.1:56321 ws://127.0.0.1:56321;");
+    expect(local.replace(/ (http|ws):\/\/127\.0\.0\.1:(56321|3400)/g, '')).toBe(csp);
     // A tablet on the same Wi-Fi uses the LAN address for the stack as well.
-    expect(withLocalSupabase(csp, '192.168.0.12:4173')).toContain('http://192.168.0.12:56321 ws://192.168.0.12:56321');
+    const lan = withLocalServers(csp, '192.168.0.12:4173');
+    expect(lan).toContain('http://192.168.0.12:56321 ws://192.168.0.12:56321');
+    expect(lan).toContain('http://192.168.0.12:3400 ws://192.168.0.12:3400');
   });
 });
 

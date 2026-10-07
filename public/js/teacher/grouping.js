@@ -9,7 +9,7 @@ import { memberColor } from '../student/colors.js';
 import { withParticle } from '../student/names.js';
 import { enableChipDrag } from './drag.js';
 import { h, icon, nodes, pieceIcon } from './dom.js';
-import { groupColumns, startBlocker } from './roster.js';
+import { UNNAMED, groupColumns, startBlocker } from './roster.js';
 
 export function createGroupingPanel({ groups, onAssign, onRandomize, onStart }) {
   let roster = null;
@@ -87,7 +87,7 @@ export function createGroupingPanel({ groups, onAssign, onRandomize, onStart }) 
     return roster.pool.find((s) => s.id === id) ?? roster.groups.flatMap((g) => g.students).find((s) => s.id === id) ?? null;
   }
 
-  const nameOf = (student) => student?.name ?? '이름 없는 학생';
+  const nameOf = (student) => student?.label ?? UNNAMED;
   const placeName = (groupId) => (groupId === null ? '모둠 없음' : `${boxes.get(groupId)?.number}모둠`);
 
   function announce(text) {
@@ -114,7 +114,7 @@ export function createGroupingPanel({ groups, onAssign, onRandomize, onStart }) 
   }
 
   // Chips and slots are kept per member / per box and updated in place, so a live update
-  // (Presence, broadcasts, RPC replies) never swaps the element under a tap, a drag start or
+  // (server events, answers) never swaps the element under a tap, a drag start or
   // a key press, and focus stays where it was.
   const chipItems = new Map(); // member id -> { li, button, color, name, online }
   const slotItems = new Map(); // 'pool' | group id -> { li, button }
@@ -135,7 +135,7 @@ export function createGroupingPanel({ groups, onAssign, onRandomize, onStart }) 
     const { button } = item;
     const color = memberColor(student.groupId === null ? null : student.color);
     const name = nameOf(student);
-    button.className = `chip t-chip${student.online ? '' : ' off'}${selected === student.id ? ' is-selected' : ''}`;
+    button.className = `chip t-chip${student.online ? '' : ' off'}${student.name ? '' : ' is-unnamed'}${selected === student.id ? ' is-selected' : ''}`;
     button.setAttribute('aria-pressed', selected === student.id ? 'true' : 'false');
     if (item.color !== color || item.name !== name || item.online !== student.online) {
       button.replaceChildren(
@@ -194,7 +194,7 @@ export function createGroupingPanel({ groups, onAssign, onRandomize, onStart }) 
   function rememberFocus() {
     const active = document.activeElement;
     if (!element.contains(active)) return null;
-    if (active.dataset.member) return { member: Number(active.dataset.member) };
+    if (active.dataset.member) return { member: active.dataset.member };
     if (active.dataset.slot) return { slot: active.dataset.slot };
     return null;
   }

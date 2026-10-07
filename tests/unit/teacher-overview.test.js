@@ -1,76 +1,60 @@
 import { describe, expect, it } from 'vitest';
-import {
-  buildOverview,
-  clockOffset,
-  formatClock,
-  overviewColumns,
-  percentOf,
-  spokenClock,
-} from '../../public/js/teacher/overview-data.js';
+import { buildOverview, formatClock, overviewColumns, percentOf, spokenClock } from '../../public/js/teacher/overview-data.js';
+import { createClassState } from '../../public/js/teacher/session-live.js';
 
 const T0 = Date.parse('2026-10-07T09:00:00Z');
-const iso = (ms) => new Date(T0 + ms).toISOString();
 
-// session_overview answer: 3 groups (2 playing, 1 without students), 4 students.
-function answer() {
+// The rt server's overview (session.overview()): 3 groups (2 playing, 1 without students).
+function overview() {
   return {
-    now: iso(600_000),
     status: 'playing',
-    started_at: iso(0),
-    ended_at: null,
+    startedAt: T0,
     groups: [
       {
-        id: 11,
         number: 1,
-        completed_at: null,
-        total: 24,
-        placed: 15,
+        empty: false,
+        completedAt: null,
+        progress: { placed: 15, total: 24, complete: false },
         clusters: [
-          { id: 5, x: 10, y: 20, locked: true, held_by: null, pieces: [0, 1, 2] },
-          { id: 9, x: 400.5, y: 3, locked: false, held_by: 'u2', pieces: [7] },
+          { id: 5, x: 10, y: 20, locked: true, heldBy: null, pieces: [0, 1, 2] },
+          { id: 9, x: 400.5, y: 3, locked: false, heldBy: 'm2', pieces: [7] },
         ],
       },
-      { id: 12, number: 2, completed_at: iso(552_000), total: 24, placed: 24, clusters: [] },
-      { id: 13, number: 3, completed_at: null, total: 0, placed: 0, clusters: [] },
+      { number: 2, empty: false, completedAt: T0 + 552_000, progress: { placed: 24, total: 24, complete: true }, clusters: [] },
+      { number: 3, empty: true, completedAt: null, progress: null, clusters: [] },
     ],
     members: [
-      { id: 1, user_id: 'u1', group_id: 11, color: 1, last_seen: iso(598_000) },
-      { id: 2, user_id: 'u2', group_id: 11, color: 0, last_seen: iso(558_000) },
-      { id: 3, user_id: 'u3', group_id: 12, color: 0, last_seen: iso(599_000) },
-      { id: 4, user_id: 'u4', group_id: null, color: null, last_seen: iso(599_500) },
+      { id: 'm1', name: '민준', group: 1, color: 1, online: true },
+      { id: 'm2', name: '유나', group: 1, color: 0, online: false },
+      { id: 'm3', name: '서연', group: 2, color: 0, online: true },
+      { id: 'm4', name: '지호', group: null, color: null, online: true },
     ],
   };
 }
 
 describe('buildOverview', () => {
-  const online = new Map([
-    [1, '민준'],
-    [3, '서연'],
-    [4, '지호'],
-  ]);
-  const seen = new Map([[2, '유나']]);
-  const model = buildOverview(answer(), { online, seen, serverNow: T0 + 600_000 });
+  const model = buildOverview({ ...overview(), awayMs: (id) => (id === 'm2' ? 42_000 : null) });
 
   it('progress per group: placed / total, floored; a finished group is 100% with its time', () => {
     const [one, two, three] = model.groups;
-    expect(one).toMatchObject({ number: 1, total: 24, placed: 15, percent: 62, done: false, durationMs: null });
+    expect(one).toMatchObject({ id: 1, number: 1, total: 24, placed: 15, percent: 62, done: false, durationMs: null });
     expect(two).toMatchObject({ number: 2, percent: 100, done: true, durationMs: 552_000 });
     expect(three).toMatchObject({ total: 0, percent: 0, done: false });
   });
 
-  it('clusters keep the drawing order and the holder', () => {
+  it('clusters keep the drawing order and the holder (a member id)', () => {
     expect(model.groups[0].clusters).toEqual([
       { id: 5, x: 10, y: 20, locked: true, heldBy: null, pieces: [0, 1, 2] },
-      { id: 9, x: 400.5, y: 3, locked: false, heldBy: 'u2', pieces: [7] },
+      { id: 9, x: 400.5, y: 3, locked: false, heldBy: 'm2', pieces: [7] },
     ]);
   });
 
-  it('students by colour with names from Presence (or remembered), away time for those not online', () => {
+  it('students by colour with names from the server, away time for those not online', () => {
     expect(model.groups[0].students).toEqual([
-      { id: 2, name: '유나', online: false, color: 0, groupId: 11, awayMs: 42_000 },
-      { id: 1, name: '민준', online: true, color: 1, groupId: 11, awayMs: null },
+      { id: 'm2', name: '유나', label: '유나', online: false, color: 0, groupId: 1, awayMs: 42_000 },
+      { id: 'm1', name: '민준', label: '민준', online: true, color: 1, groupId: 1, awayMs: null },
     ]);
-    expect(model.pool).toEqual([{ id: 4, name: '지호', online: true, color: null, groupId: null, awayMs: null }]);
+    expect(model.pool).toEqual([{ id: 'm4', name: '지호', label: '지호', online: true, color: null, groupId: null, awayMs: null }]);
   });
 
   it('summary counts only groups with a puzzle: done 1 / 2, average progress of those', () => {
@@ -81,16 +65,88 @@ describe('buildOverview', () => {
     expect(model.roster.total).toBe(4);
   });
 
-  it('a group whose every piece is locked counts as done even before completed_at arrives', () => {
-    const raw = answer();
-    raw.groups[0].placed = 24;
-    const m = buildOverview(raw, { online, seen, serverNow: T0 });
+  it('a group whose every piece is locked counts as done even before completedAt arrives', () => {
+    const raw = overview();
+    raw.groups[0].progress.placed = 24;
+    const m = buildOverview(raw);
     expect(m.groups[0]).toMatchObject({ done: true, percent: 100, durationMs: null });
   });
 
-  it('copes with an empty answer (ended class: no members)', () => {
-    const m = buildOverview({ status: 'ended', groups: [], members: [] }, { online: new Map(), seen: new Map(), serverNow: 0 });
-    expect(m).toMatchObject({ status: 'ended', activeCount: 0, doneCount: 0, averagePercent: 0, pool: [] });
+  it('copes with an empty class', () => {
+    const m = buildOverview({ status: 'playing', groups: [], members: [] });
+    expect(m).toMatchObject({ activeCount: 0, doneCount: 0, averagePercent: 0, pool: [], startedAt: null });
+  });
+});
+
+describe('createClassState (what the teacher socket receives)', () => {
+  function stateMessage(now = T0 + 1000) {
+    const o = overview();
+    return {
+      now,
+      session: { id: 's1', code: '123456', status: 'playing', startedAt: T0, pieceCount: 24, hints: {} },
+      roster: o.members,
+      overview: { status: 'playing', startedAt: T0, groups: o.groups, members: o.members },
+    };
+  }
+
+  it("'state' replaces everything and sets the server clock", () => {
+    let local = T0;
+    const c = createClassState({ clock: () => local });
+    c.applyState(stateMessage(T0 + 5000));
+    expect(c.state).toMatchObject({ ready: true, status: 'playing', startedAt: T0 });
+    expect(c.state.members.map((m) => m.id)).toEqual(['m1', 'm2', 'm3', 'm4']);
+    expect(c.state.groups.map((g) => g.number)).toEqual([1, 2, 3]);
+    expect(c.serverNow()).toBe(T0 + 5000);
+  });
+
+  it('join adds or renames a student, presence and groups update them', () => {
+    let local = T0;
+    const c = createClassState({ clock: () => local });
+    c.applyState(stateMessage());
+    c.applyEvent({ type: 'join', member: { id: 'm5', name: '하은', group: null, color: null, online: true } });
+    expect(c.state.members.at(-1)).toMatchObject({ id: 'm5', name: '하은' });
+    c.applyEvent({ type: 'join', member: { id: 'm2', name: '유나', group: 1, color: 0, online: true } });
+    expect(c.state.members.filter((m) => m.id === 'm2')).toHaveLength(1);
+    expect(c.applyEvent({ type: 'groups', members: [{ id: 'm5', group: 3, color: 0 }] })).toEqual({ kind: 'roster', needState: false });
+    expect(c.state.members.find((m) => m.id === 'm5')).toMatchObject({ group: 3, color: 0 });
+    expect(c.applyEvent({ type: 'groups', members: [{ id: 'nobody', group: 1, color: 0 }] }).needState).toBe(true);
+  });
+
+  it('counts the time away from the moment this page saw a student leave', () => {
+    let local = T0;
+    const c = createClassState({ clock: () => local });
+    c.applyState(stateMessage());
+    expect(c.awayMs('m2')).toBeNull(); // already away when the page opened: unknown since when
+    c.applyEvent({ type: 'presence', memberId: 'm1', online: false });
+    local += 42_000;
+    expect(c.awayMs('m1')).toBe(42_000);
+    c.applyEvent({ type: 'presence', memberId: 'm1', online: true });
+    expect(c.awayMs('m1')).toBeNull();
+  });
+
+  it("'overview' merges the groups that changed and the roster", () => {
+    const c = createClassState({ clock: () => T0 });
+    c.applyState(stateMessage());
+    c.applyOverview({
+      now: T0 + 2000,
+      status: 'playing',
+      startedAt: T0,
+      groups: [{ number: 3, empty: false, completedAt: null, progress: { placed: 0, total: 24 }, clusters: [] }],
+      members: [...overview().members, { id: 'm5', name: '하은', group: 3, color: 0, online: true }],
+    });
+    expect(c.state.groups.find((g) => g.number === 3).empty).toBe(false);
+    expect(c.state.groups.find((g) => g.number === 1).progress.placed).toBe(15);
+    expect(c.state.members).toHaveLength(5);
+  });
+
+  it('start and end change the status', () => {
+    const c = createClassState({ clock: () => T0 });
+    c.applyState({ ...stateMessage(), overview: { ...stateMessage().overview, status: 'waiting', startedAt: null } });
+    expect(c.state.status).toBe('waiting');
+    expect(c.applyEvent({ type: 'start', startedAt: T0 + 9000 }).kind).toBe('start');
+    expect(c.state).toMatchObject({ status: 'playing', startedAt: T0 + 9000 });
+    expect(c.applyEvent({ type: 'end' }).kind).toBe('end');
+    expect(c.state.status).toBe('ended');
   });
 });
 
@@ -119,10 +175,5 @@ describe('clock and layout helpers', () => {
 
   it('overviewColumns: 6 groups in 3 x 2 like the mockup', () => {
     expect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map(overviewColumns)).toEqual([1, 2, 3, 2, 3, 3, 4, 4, 3, 4, 4]);
-  });
-
-  it('clockOffset: server time minus the middle of the call', () => {
-    expect(clockOffset(new Date(10_500).toISOString(), 1000, 2000)).toBe(9000);
-    expect(clockOffset('nonsense', 0, 0)).toBe(0);
   });
 });

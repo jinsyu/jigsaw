@@ -15,7 +15,7 @@ export function renderImages(main, ctx) {
     'section',
     { class: 'card t-card t-images-upload', 'aria-labelledby': 't-images-upload-title' },
     h('h2', { class: 't-step', id: 't-images-upload-title' }, '사진 올리기'),
-    uploadPanel({ client: ctx.client, onUploaded: () => load() }),
+    uploadPanel({ api: ctx.api, onUploaded: () => load() }),
   );
   main.append(
     h(
@@ -69,7 +69,7 @@ export function renderImages(main, ctx) {
       actions.querySelectorAll('button').forEach((b) => (b.disabled = true));
       try {
         const nextId = card.nextElementSibling?.dataset.imageId ?? null;
-        await deleteImage(ctx.client, image);
+        await deleteImage(ctx.api, image);
         if (!alive) return;
         await load('지웠어요.');
         focusAfterDelete(nextId);
@@ -95,7 +95,7 @@ export function renderImages(main, ctx) {
     body.setAttribute('aria-busy', 'true');
     if (!body.firstChild) body.replaceChildren(h('p', { class: 't-loading' }, '내 그림을 불러오는 중이에요…'));
     try {
-      const images = await loadMyImages(ctx.client);
+      const images = await loadMyImages(ctx.api);
       if (!alive) return;
       body.replaceChildren(
         ...(note ? [h('p', { class: 't-done', role: 'status' }, note)] : []),

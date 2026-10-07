@@ -118,7 +118,7 @@ describe('DB 권한: anon·authenticated 는 아무것도 못 한다 (D12)', () 
       expect(error, table).toBeNull();
     }
     const { data } = await admin.from('teachers').select('id').order('id');
-    expect(data.map((r) => r.id)).toEqual([TEACHERS.one.id, TEACHERS.two.id]);
+    expect(data.map((r) => r.id)).toEqual(expect.arrayContaining([TEACHERS.one.id, TEACHERS.two.id]));
     const sessionRow = {
       teacher_id: TEACHERS.one.id,
       code: '000001',

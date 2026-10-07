@@ -78,7 +78,7 @@ export function enableChipDrag(root, { onDrop, onStart, onEnd }) {
     if (!chip || !root.contains(chip) || !event.isPrimary || event.button !== 0 || drag) return;
     drag = {
       chip,
-      id: Number(chip.dataset.member),
+      id: chip.dataset.member, // member ids are the rt server's UUIDs
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,

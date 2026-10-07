@@ -11,7 +11,6 @@ const STAGES = {
   encoder: [0.35, '변환 도구를 불러오는 중이에요… (처음 한 번만)'],
   encode: [0.5, '사진 정보를 지우고 바꾸는 중이에요…'],
   upload: [0.7, '올리는 중이에요…'],
-  save: [0.9, '저장하는 중이에요…'],
 };
 
 const coarsePointer = () => window.matchMedia?.('(any-pointer: coarse)').matches ?? false;
@@ -19,9 +18,9 @@ const coarsePointer = () => window.matchMedia?.('(any-pointer: coarse)').matches
 let panelCount = 0;
 
 /**
- * @param {{ client: object, onUploaded: (image: object) => void }} options
+ * @param {{ api: object, onUploaded: (image: object) => void }} options  api: the teacher app's rt requests
  */
-export function uploadPanel({ client, onUploaded }) {
+export function uploadPanel({ api, onUploaded }) {
   const id = `t-upload-${++panelCount}`;
   // The buttons below open these; screen readers only need the buttons.
   const fileInput = h('input', { type: 'file', accept: 'image/*', class: 'sr-only', id: `${id}-file`, tabindex: '-1', 'aria-hidden': 'true' });
@@ -75,7 +74,7 @@ export function uploadPanel({ client, onUploaded }) {
     error.textContent = '';
     setBusy(true);
     try {
-      const image = await uploadImage(client, file, showStage);
+      const image = await uploadImage(api, file, showStage);
       bar.value = 1;
       statusText.textContent = '올렸어요. 바로 고를 수 있어요.';
       root.dataset.uploadedId = image.id; // the last picture uploaded here

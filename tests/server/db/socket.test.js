@@ -15,7 +15,13 @@ const SERVER = fileURLToPath(new URL('../../../server/src/index.js', import.meta
 const ORIGIN = 'http://localhost:4173';
 const SECRET = randomBytes(32).toString('hex');
 const NAMES = ['소켓가람', '소켓나래', '소켓다온', '소켓라온'];
+// Open classes of the seeded teachers left in the database (other test runs) are restored when
+// this server starts; room above the per-teacher and total limits keeps them from failing
+// 'open class' here. The E2E tests use their own teachers (scripts/lib/local-teacher.mjs);
+// still, do not run pnpm test:db and pnpm test:e2e at the same time on one local stack.
 const LIMITS = {
+  RT_MAX_OPEN_PER_TEACHER: '100',
+  RT_MAX_OPEN_SESSIONS: '400',
   RT_MAX_CONNECTIONS_PER_IP: '25',
   RT_MESSAGES_PER_SECOND: '20',
   RT_WRONG_CODE_LIMIT: '4',
@@ -308,7 +314,8 @@ describe('재시작 (D17)', () => {
     await startServer();
     await waitFor(() => a.states.length > statesBefore && teacher.states.length > 1, { timeout: 10000 });
     const board = a.states.at(-1).group.board;
-    expect(board.clusters.find((c) => c.id === first.id)).toMatchObject({ x: 50, y: 60 });
+    // Where the server put it (it keeps every piece on the board: clampPosition).
+    expect(board.clusters.find((c) => c.id === first.id)).toMatchObject({ x: first.x, y: first.y });
     expect(a.states.at(-1).me.name).toBe(NAMES[0]);
 
     // SIGTERM: the board change still waiting for its batch is saved before the exit.
@@ -319,7 +326,8 @@ describe('재시작 (D17)', () => {
     const count = a.states.length;
     await startServer();
     await waitFor(() => a.states.length > count, { timeout: 10000 });
-    expect(a.states.at(-1).group.board.clusters.find((c) => c.id === second.id)).toMatchObject({ x: 300, y: 70 });
+    // A piece in the last column or row is pulled in from (300, 70): compare with the server's answer.
+    expect(a.states.at(-1).group.board.clusters.find((c) => c.id === second.id)).toMatchObject({ x: second.x, y: second.y });
     closeAll();
   });
 });

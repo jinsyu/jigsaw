@@ -3,41 +3,27 @@
 // - Every group's board as a small canvas (real frame and pieces, overview-board.js), its
 //   progress (pieces locked in the frame / all), its students (online or 잠시 나감), and
 //   '완성' with the time taken once done. A clock shows how long the class has been playing.
-// - Refreshed by one session_overview read every POLL_MS; nothing is read while the page is
-//   hidden. Names come from Presence on session:<id> only (D14), like the lobby.
+// - Kept up to date by the rt server: it pushes the groups that changed at most every second
+//   (spec D11, session-live.js); names come only from its roster (D14), like the lobby.
 // - A group card opens the big view of that group (same data). 모둠 편성 opens the lobby's
 //   grouping panel (drag, or pick and place with the keyboard) for late students and moves.
-// - 수업 끝내기 asks first, then end_session: students see '수업이 끝났어요', members and
-//   their anonymous accounts are deleted (D14).
-import { assignMember, endSession } from './data.js';
+// - 수업 끝내기 asks first, then 'end': students see '수업이 끝났어요', their group places are
+//   deleted and their tokens stop working (D14).
 import { actionDialog } from './dialogs.js';
 import { h, pieceIcon, setTitle } from './dom.js';
 import { formatCode, hintsSummary } from './format.js';
 import { createGroupingPanel } from './grouping.js';
 import { createBoardArt, createBoardCanvas } from './overview-board.js';
-import {
-  POLL_MS,
-  buildOverview,
-  clockOffset,
-  fetchOverview,
-  formatClock,
-  getPuzzleSetup,
-  overviewColumns,
-  pictureSource,
-  spokenClock,
-} from './overview-data.js';
+import { buildOverview, formatClock, overviewColumns, pictureSource, spokenClock } from './overview-data.js';
+import { UNNAMED } from './roster.js';
 import { joinUrl, qrSvg } from './qr.js';
 import { formatDuration } from '../student/celebrate.js';
 import { memberColor } from '../student/colors.js';
-import { presenceNames } from '../student/presence.js';
 import { loadPicture } from '../play/picture.js';
 import { layoutFor } from '../puzzle/geometry.js';
-import { hintsFromSession } from '../store/puzzle-store.js';
+import { normalizeHints } from '../store/puzzle-store.js';
 import { exposeTestHook } from '../test-hooks.js';
 
-// After this many failed reads in a row the screen says the data may be old.
-const FAILS_BEFORE_WARNING = 2;
-const UNKNOWN_NAME = '이름 모름';
 
 const svgIcon = (body, size = 20) =>
   h('span', {
@@ -56,13 +42,13 @@ const ICON = {
 };
 
 function studentChip(student) {
-  const name = student.name ?? UNKNOWN_NAME;
+  const name = student.label ?? UNNAMED;
   const away = student.online
     ? null
     : h('em', {}, student.awayMs === null || student.awayMs >= 3600_000 ? '잠시 나감' : `잠시 나감 ${formatClock(student.awayMs)}`);
   return h(
     'li',
-    { class: `chip${student.online ? '' : ' off'}` },
+    { class: `chip${student.online ? '' : ' off'}${student.name ? '' : ' is-unnamed'}` },
     pieceIcon(memberColor(student.color)),
     h('span', { class: 't-ov-name' }, name),
     away,
@@ -70,7 +56,7 @@ function studentChip(student) {
 }
 
 const chipsKey = (students) =>
-  students.map((s) => `${s.id}:${s.name}:${s.color}:${s.online}:${s.online ? '' : formatClock(s.awayMs ?? 0)}`).join('|');
+  students.map((s) => `${s.id}:${s.label}:${s.color}:${s.online}:${s.awayMs === null ? '' : formatClock(s.awayMs)}`).join('|');
 
 function progressText(group) {
   if (group.total === 0) return '퍼즐 없음';
@@ -131,27 +117,21 @@ function createCard(group, { onOpen }) {
  * @param {HTMLElement} main
  * @param {object} ctx  teacher app context
  * @param {object} options
- * @param {object} options.session   getSession() row (code, groups, hints, picture keys, piece_count)
+ * @param {ReturnType<import('./session-live.js').connectClass>} options.live  the class connection
  * @param {{ title: string }} options.picture
  * @param {Array} options.builtins  built-in picture list (index.json)
  * @param {(result: { byMe: boolean, doneCount: number, activeCount: number }) => void} options.onEnded
- * @returns {() => void} stop
+ * @returns {{ update: () => void, stop: () => void }}  update(): the class state changed
  */
-export function showOverview(main, ctx, { session, picture, builtins, onEnded }) {
+export function showOverview(main, ctx, { live, picture, builtins, onEnded }) {
   document.documentElement.classList.add('is-overview');
-  setTitle(`모둠 한눈에 보기 · 코드 ${session.code}`);
-  const hints = hintsFromSession(session);
+  const setup = live.state.setup;
+  setTitle(`모둠 한눈에 보기 · 코드 ${setup.code}`);
+  const hints = normalizeHints(setup.hints);
+  const groupNumbers = live.state.groups.map((g) => g.number);
   let alive = true;
-  let raw = null; // last session_overview answer (members patched by local moves)
   let model = null;
-  let offset = 0; // server ms - local ms
-  let presence = {};
-  const seen = new Map();
-  const triedKeys = new Set();
-  let fails = 0;
-  let pollTimer = 0;
-  let polling = false;
-  let pollAgain = false;
+  let dirty = false; // changed while the page was hidden
   let art = null;
   let picRevoke = () => {};
   let zoomGroup = null; // group id in the big view
@@ -168,7 +148,7 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
       'span',
       { class: 'pill pri' },
       h('span', { class: 'sr-only' }, '수업 '),
-      `코드 ${formatCode(session.code)}`,
+      `코드 ${formatCode(setup.code)}`,
       h('span', { class: 'sr-only' }, ', 코드와 QR 크게 보기'),
     ),
   );
@@ -176,7 +156,7 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
   const endButton = h('button', { class: 'btn danger t-bar-btn', type: 'button', 'aria-haspopup': 'dialog' }, '수업 끝내기');
   ctx.setBar('lobby', {
     nodes: [
-      h('span', { class: 'pill t-summary' }, `${picture.title} · ${session.piece_count}조각`),
+      h('span', { class: 'pill t-summary' }, `${picture.title} · ${setup.pieceCount}조각`),
       codeButton,
       h('span', { class: 'spacer' }),
       clock,
@@ -187,7 +167,7 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
 
   // ---------- page ----------
   const doneCount = h('b', {}, '0');
-  const doneTotal = h('span', {}, `/ ${session.groups.length}모둠`);
+  const doneTotal = h('span', {}, `/ ${groupNumbers.length}모둠`);
   const average = h('b', {}, '0%');
   const lateNames = h('span', { class: 't-ov-late-names' });
   const lateCount = h('b', {});
@@ -201,7 +181,7 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
   const lateLive = h('p', { class: 'sr-only', 'aria-live': 'polite' });
   const warning = h('p', { class: 't-error t-ov-warn', role: 'alert' });
   const announcer = h('p', { class: 'sr-only', 'aria-live': 'polite' });
-  const cards = session.groups.map((g) => createCard(g, { onOpen: openZoom }));
+  const cards = groupNumbers.map((n) => createCard({ id: n, number: n }, { onOpen: openZoom }));
   const columns = overviewColumns(cards.length);
   const grid = h(
     'ul',
@@ -222,7 +202,7 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
       h('span', { class: 'pill ok t-ov-done' }, '완성 ', doneCount, ' ', doneTotal),
       h('span', { class: 'pill t-ov-avg' }, '평균 진행률 ', average),
       h('span', { class: 'pill t-ov-hints' }, hintsSummary(hints)),
-      h('span', { class: 't-ov-note' }, '모둠을 누르면 크게 볼 수 있어요 · 3초마다 새로 고침'),
+      h('span', { class: 't-ov-note' }, '모둠을 누르면 크게 볼 수 있어요 · 바뀌면 바로 보여요'),
     ),
     late,
     lateLive,
@@ -234,21 +214,21 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
   // ---------- dialogs ----------
   const zoom = createZoomDialog();
   const grouping = createGroupingDialog();
-  const code = createCodeDialog(session);
+  const code = createCodeDialog(setup);
   let endedByMe = false;
   let ending = false;
   const end = actionDialog({
     id: 't-end',
     title: '수업을 끝낼까요?',
-    text: '학생 화면에 ‘수업이 끝났어요’가 나오고 이 코드로 더 이상 들어올 수 없어요. 모둠 배정과 학생 익명 계정은 바로 지워져요.',
+    text: '학생 화면에 ‘수업이 끝났어요’가 나오고 이 코드로 더 이상 들어올 수 없어요. 모둠 배정은 바로 지워져요.',
     confirm: '수업 끝내기',
     busy: '끝내는 중…',
     failed: '수업을 끝내지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.',
     action: async () => {
-      // The 'end' broadcast (or a read) can arrive before the answer: this dialog finishes.
+      // The 'end' event can arrive before the answer: this dialog finishes.
       ending = true;
       try {
-        await endSession(ctx.client, session.id);
+        await live.end();
       } finally {
         ending = false;
       }
@@ -266,70 +246,27 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
   endButton.addEventListener('click', () => end.showModal());
 
   // ---------- reading ----------
-  function names() {
-    const rows = raw?.members ?? [];
-    const { names: online, unknownKeys } = presenceNames(presence, rows);
-    for (const [id, name] of online) seen.set(id, name);
-    // A Presence key with no row yet: most likely a student who just joined.
-    if (unknownKeys.some((key) => !triedKeys.has(key))) {
-      unknownKeys.forEach((key) => triedKeys.add(key));
-      poll();
-    }
-    return online;
-  }
-
   function rebuild() {
-    if (!raw || !alive) return;
-    model = buildOverview(raw, { online: names(), seen, serverNow: Date.now() + offset });
+    if (!alive) return;
+    if (document.visibilityState === 'hidden') {
+      dirty = true;
+      return;
+    }
+    dirty = false;
+    const state = live.state;
+    model = buildOverview({
+      status: state.status,
+      startedAt: state.startedAt,
+      groups: state.groups,
+      members: state.members,
+      awayMs: (id) => live.model.awayMs(id),
+    });
     render();
   }
 
-  async function poll() {
-    if (!alive) return;
-    clearTimeout(pollTimer);
-    pollTimer = 0;
-    if (document.visibilityState === 'hidden') return;
-    if (polling) {
-      pollAgain = true;
-      return;
-    }
-    polling = true;
-    try {
-      const sentAt = Date.now();
-      const answer = await fetchOverview(ctx.client, session.id);
-      if (!alive) return;
-      offset = clockOffset(answer.now, sentAt, Date.now());
-      raw = answer;
-      fails = 0;
-      warning.textContent = '';
-      if (answer.status === 'ended') {
-        if (!ending && !endedByMe) finish(false);
-        return;
-      }
-      rebuild();
-    } catch (error) {
-      console.error(error);
-      fails += 1;
-      if (fails >= FAILS_BEFORE_WARNING) warning.textContent = '새 정보를 받지 못하고 있어요. 인터넷 연결을 확인해 주세요.';
-    } finally {
-      polling = false;
-      if (alive) {
-        if (pollAgain) {
-          pollAgain = false;
-          poll();
-        } else if (document.visibilityState !== 'hidden') {
-          pollTimer = setTimeout(poll, POLL_MS);
-        }
-      }
-    }
-  }
-
   function onVisibility() {
-    if (document.visibilityState === 'hidden') {
-      clearTimeout(pollTimer);
-      pollTimer = 0;
-    } else {
-      poll();
+    if (document.visibilityState !== 'hidden') {
+      if (dirty) rebuild();
       tick();
     }
   }
@@ -338,7 +275,7 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
   // ---------- clock ----------
   function tick() {
     if (!model?.startedAt) return;
-    const elapsed = Date.now() + offset - model.startedAt;
+    const elapsed = live.model.serverNow() - model.startedAt;
     const text = formatClock(elapsed);
     if (clockText.textContent !== text) {
       clockText.textContent = text;
@@ -346,16 +283,16 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
     }
   }
   const clockTimer = setInterval(() => {
-    if (document.visibilityState !== 'hidden') tick();
+    if (document.visibilityState === 'hidden') return;
+    tick();
+    // '잠시 나감 0:42' counts up.
+    if (live.state.awaySince.size > 0) rebuild();
   }, 1000);
 
   // ---------- drawing ----------
+  // Holds are by member id: the holder's colour on the board.
   function boardStateOf(group) {
-    const colors = new Map();
-    for (const s of group.students) {
-      const row = model.members.find((m) => m.id === s.id);
-      if (row) colors.set(row.user_id, memberColor(s.color));
-    }
+    const colors = new Map(group.students.map((s) => [s.id, memberColor(s.color)]));
     return { clusters: group.clusters, done: group.done, colors };
   }
 
@@ -397,7 +334,7 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
     if (!model) return;
     tick();
     doneCount.textContent = String(model.doneCount);
-    doneTotal.textContent = `/ ${model.activeCount || session.groups.length}모둠`;
+    doneTotal.textContent = `/ ${model.activeCount || groupNumbers.length}모둠`;
     average.textContent = `${model.averagePercent}%`;
     for (const card of cards) {
       const group = model.groups.find((g) => g.id === card.id);
@@ -415,7 +352,7 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
     const pool = model.pool;
     late.hidden = pool.length === 0;
     lateCount.textContent = `${pool.length}명`;
-    const list = pool.map((s) => s.name ?? UNKNOWN_NAME).join(', ');
+    const list = pool.map((s) => s.label).join(', ');
     lateNames.textContent = list;
     const text = pool.length ? `모둠이 없는 학생 ${pool.length}명: ${list}` : '';
     if (lateLive.dataset.text !== text) {
@@ -448,7 +385,7 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
 
   async function loadBoards() {
     try {
-      const [setup, source] = await Promise.all([getPuzzleSetup(ctx.client, session.id), pictureSource(ctx.client, session, builtins)]);
+      const source = await pictureSource(setup, builtins);
       picRevoke = source.revoke;
       const image = await loadPicture(source.src);
       if (!alive) return;
@@ -471,7 +408,7 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
         card.loading.remove();
         card.board.classList.add('is-failed');
       }
-      warning.textContent = '모둠 판 그림을 불러오지 못했어요. 새로고침해 주세요. 진행률은 계속 새로 고쳐요.';
+      warning.textContent = '모둠 판 그림을 불러오지 못했어요. 새로고침해 주세요. 진행률은 계속 보여요.';
     }
   }
 
@@ -588,7 +525,12 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
 
   // ---------- 모둠 편성 (late students, moves) ----------
   function createGroupingDialog() {
-    const panel = createGroupingPanel({ groups: session.groups, onAssign: assign, onRandomize: () => {}, onStart: () => {} });
+    const panel = createGroupingPanel({
+      groups: groupNumbers.map((n) => ({ id: n, number: n })),
+      onAssign: assign,
+      onRandomize: () => {},
+      onStart: () => {},
+    });
     const close = h('button', { class: 'iconbtn t-ov-gclose', type: 'button', 'aria-label': '모둠 편성 닫기' }, svgIcon(ICON.close, 22));
     const done = h('button', { class: 'btn pri', type: 'button' }, '다 했어요');
     const dialog = h(
@@ -614,25 +556,23 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
       keepOpen = false;
     });
 
-    async function assign(memberId, groupId) {
-      const row = raw?.members.find((m) => Number(m.id) === memberId);
-      if (!row) return;
-      const before = { group_id: row.group_id, color: row.color };
+    async function assign(memberId, group) {
+      const before = live.state.members.find((m) => m.id === memberId);
+      if (!before) return;
       panel.clearError();
-      Object.assign(row, { group_id: groupId, color: groupId === null ? null : row.color });
+      // Show the move at once; the server decides the colour.
+      live.model.moveLocally(memberId, group, group === null ? null : before.color);
       rebuild();
       try {
-        const saved = await assignMember(ctx.client, memberId, groupId);
-        Object.assign(row, { group_id: saved.group_id, color: saved.color });
+        await live.assign(memberId, group);
       } catch (error) {
         console.error(error);
-        Object.assign(row, before);
+        live.model.moveLocally(memberId, before.group, before.color);
         panel.showError(
-          error?.message === 'session_ended' ? '이미 끝난 수업이에요.' : '옮기지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.',
+          error?.code === 'session_ended' ? '이미 끝난 수업이에요.' : '옮기지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.',
         );
       }
       rebuild();
-      poll();
     }
 
     return {
@@ -650,33 +590,10 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
     }
   }
 
-  // ---------- presence ----------
-  // The lobby has just left the same topic; supabase-js hands back a channel that is still
-  // leaving, so wait until it is gone before joining again.
-  let channel = null;
-  topicFree(ctx.client, `session:${session.id}`)
-    .then(() => ctx.client.realtime.setAuth())
-    .catch((error) => console.error(error))
-    .then(() => {
-      if (!alive) return;
-      channel = ctx.client.channel(`session:${session.id}`, { config: { private: true } });
-      channel
-        .on('presence', { event: 'sync' }, () => {
-          presence = channel.presenceState();
-          rebuild();
-        })
-        .on('broadcast', { event: 'groups' }, () => poll())
-        .on('broadcast', { event: 'end' }, () => {
-          if (!ending && !endedByMe) finish(false);
-        })
-        .subscribe();
-    });
-
   // ---------- life cycle ----------
   function stop() {
     if (!alive) return;
     alive = false;
-    clearTimeout(pollTimer);
     clearInterval(clockTimer);
     document.removeEventListener('visibilitychange', onVisibility);
     resizeObserver.disconnect();
@@ -686,7 +603,6 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
     picRevoke();
     grouping.destroy();
     document.documentElement.classList.remove('is-overview');
-    if (channel) ctx.client.removeChannel(channel).catch(() => {});
   }
 
   function finish(byMe) {
@@ -697,36 +613,36 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
     onEnded(result);
   }
 
-  poll();
+  rebuild();
   loadBoards();
   // Test hook (local stack only, test-hooks.js): the last model, read only.
   const removeHook = exposeTestHook('__overview', { model: () => model });
-  return () => {
-    stop();
-    removeHook();
+  return {
+    // The class changed (session-live.js); an ended class is the lobby's business (onEnded).
+    update(change) {
+      if (change?.kind === 'end') {
+        if (!ending && !endedByMe) finish(false);
+        return;
+      }
+      rebuild();
+    },
+    stop() {
+      stop();
+      removeHook();
+    },
   };
 }
 
-// Resolves once no channel of the client is on `topic` (at most `waitMs`, then it is removed).
-async function topicFree(client, topic, waitMs = 3000) {
-  const full = `realtime:${topic}`;
-  const deadline = Date.now() + waitMs;
-  while (client.getChannels().some((c) => c.topic === full) && Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  for (const stale of client.getChannels().filter((c) => c.topic === full)) await client.removeChannel(stale);
-}
-
 // Code, address and QR again, big, for students who come late.
-function createCodeDialog(session) {
-  const url = joinUrl(location.origin, session.code);
+function createCodeDialog(setup) {
+  const url = joinUrl(location.origin, setup.code);
   const close = h('button', { class: 'btn', type: 'button', autofocus: true }, '닫기');
   const dialog = h(
     'dialog',
     { class: 't-ov-codebox', 'aria-labelledby': 't-ov-code-title' },
     h('h2', { id: 't-ov-code-title' }, '늦게 온 학생은 이 코드로 들어와요'),
     h('p', { class: 't-join-url' }, location.host),
-    h('p', { class: 't-join-code' }, h('span', { class: 'sr-only' }, '수업 코드 '), formatCode(session.code)),
+    h('p', { class: 't-join-code' }, h('span', { class: 'sr-only' }, '수업 코드 '), formatCode(setup.code)),
     h('div', { class: 't-join-qr', html: qrSvg(url, `입장 QR 코드: ${url}`) }),
     h('p', { class: 't-join-note' }, 'QR 코드를 찍으면 코드를 넣지 않아도 돼요. 들어온 학생은 모둠 편성에서 모둠에 넣어 주세요.'),
     h('div', { class: 't-actions' }, close),

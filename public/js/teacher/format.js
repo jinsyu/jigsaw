@@ -1,6 +1,6 @@
 // Wording and number helpers for the teacher screens (pure, unit-tested).
 
-// create_session accepts 1..12 groups.
+// The rt server accepts 1..12 groups (server/src/engine/registry.js).
 export const GROUP_COUNT = { min: 1, max: 12, initial: 6 };
 export const PIECE_COUNT_INITIAL = 24;
 const TYPICAL_GROUP_SIZE = 4;
@@ -79,13 +79,12 @@ export function formatDateTime(iso, timeZone) {
   }).format(new Date(iso));
 }
 
-const NETWORK_ERROR = /fetch|network|load failed/i;
-
-// Messages for a failed create_session call (error codes: supabase/migrations/*session_flow.sql).
+// Messages for a refused or failed POST /api/sessions (rt-client RtError codes, server/src/http.js).
 export function createErrorMessage(error) {
-  if (error?.code === '42501') return '선생님 계정으로 다시 로그인해 주세요.';
-  if (error?.code === '22023') return '그림을 다시 골라 주세요.';
-  if (error?.code === '55000') return '지금은 수업 코드를 만들 수 없어요. 잠시 뒤 다시 눌러 주세요.';
-  if (!error?.code && NETWORK_ERROR.test(error?.message ?? '')) return '인터넷 연결을 확인하고 다시 눌러 주세요.';
+  if (error?.network) return '인터넷 연결을 확인하고 다시 눌러 주세요.';
+  if (error?.code === 'invalid_token' || error?.code === 'not_teacher') return '선생님 계정으로 다시 로그인해 주세요.';
+  if (error?.code === 'invalid_picture') return '그림을 다시 골라 주세요.';
+  if (error?.code === 'too_many_sessions') return '열린 수업이 너무 많아요. 끝난 수업을 닫은 뒤 다시 눌러 주세요.';
+  if (error?.code === 'no_free_code' || error?.code === 'shutting_down') return '지금은 수업 코드를 만들 수 없어요. 잠시 뒤 다시 눌러 주세요.';
   return '수업을 열지 못했어요. 잠시 뒤 다시 눌러 주세요.';
 }

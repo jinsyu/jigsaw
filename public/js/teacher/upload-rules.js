@@ -1,14 +1,14 @@
 // Rules for teachers' own pictures (T8, spec D2): checked in the browser before anything
 // is uploaded. Pure functions so they can be unit tested.
 
-// Long side of the stored picture (images_long_side check in the schema).
+// Long side of the stored picture (the rt server refuses larger ones: server/src/teacher/images.js).
 export const MAX_LONG_SIDE = 2000;
 // Smaller pictures make blurry puzzles.
 export const MIN_LONG_SIDE = 200;
 // What a teacher may pick (phone photos are a few MB; scans can be large).
 export const MAX_FILE_BYTES = 30 * 1024 * 1024;
-// What the Storage bucket accepts (file_size_limit of the "images" bucket).
-export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+// What the rt server accepts (server/src/teacher/images.js MAX_BYTES).
+export const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
 export const WEBP_QUALITIES = [0.85, 0.75, 0.65, 0.55];
 
 const IMAGE_TYPE = /^image\//;
@@ -57,7 +57,7 @@ export function looksLikeWebp(bytes) {
   return b.length >= 12 && text(0, 4) === 'RIFF' && text(8, 12) === 'WEBP';
 }
 
-// Message for a failed upload (supabase-js errors, fetch failures).
+// Message for a failed upload (rt-client errors, fetch failures).
 export function uploadErrorMessage(error) {
   if (!error) return MESSAGES.failed;
   if (error.userMessage) return error.userMessage;
@@ -66,14 +66,4 @@ export function uploadErrorMessage(error) {
     return MESSAGES.network;
   }
   return MESSAGES.failed;
-}
-
-// UUID v4 also on plain http LAN addresses (crypto.randomUUID needs a secure context).
-export function newImageId(cryptoApi = globalThis.crypto) {
-  if (typeof cryptoApi.randomUUID === 'function') return cryptoApi.randomUUID();
-  const b = cryptoApi.getRandomValues(new Uint8Array(16));
-  b[6] = (b[6] & 0x0f) | 0x40;
-  b[8] = (b[8] & 0x3f) | 0x80;
-  const hex = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }

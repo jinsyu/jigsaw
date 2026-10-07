@@ -1,18 +1,16 @@
-import { createClient } from '@supabase/supabase-js';
 import { expect, test } from '@playwright/test';
-import { pickConfig } from '../../public/js/config.js';
-import { closeSql, deleteSessions, signInPage, sql, teacherSession } from './support/teacher.js';
+import { deleteLegacySessions as deleteSessions, legacyTeacher as teacherSession } from './support/legacy.js';
+import { closeSql, sql } from './support/teacher.js';
 
-// T9: students join with a code and a name, wait, and the teacher groups them and starts
-// (D3, D4, D14). Several browser contexts play the students against the local stack.
+// T9: students join with a code and a name, wait, get their group and start (D3, D4, D14).
+// Several browser contexts play the students against the local stack. The student screens
+// still use the old structure (Supabase) until T22, so the teacher's moves are made from Node
+// (RPCs); the teacher's lobby itself runs on the rt server since T21 (teacher.spec.js).
 // Every test ends its session and removes it, with the anonymous accounts it created.
 
-const LOCAL = pickConfig('localhost');
 const createdSessions = [];
-const nodeClients = [];
 
 test.afterAll(async () => {
-  for (const client of nodeClients.splice(0)) await client.removeAllChannels();
   if (createdSessions.length) {
     await sql(
       `delete from auth.users where is_anonymous and id in
@@ -60,46 +58,16 @@ async function newStudent(browser, testInfo) {
 
 const savedEntry = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('jigsaw-student') ?? 'null'));
 
-// Real touch input (CDP), which Chromium turns into pointer events like a tablet would.
-async function touchDrag(page, from, to) {
-  const cdp = await page.context().newCDPSession(page);
-  const point = (x, y) => [{ x: Math.round(x), y: Math.round(y), id: 1 }];
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: point(from.x, from.y) });
-  for (let i = 1; i <= 12; i++) {
-    const t = i / 12;
-    await cdp.send('Input.dispatchTouchEvent', {
-      type: 'touchMove',
-      touchPoints: point(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t),
-    });
-  }
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  await cdp.detach();
-}
 
-async function mouseDrag(page, from, to) {
-  await page.mouse.move(from.x, from.y);
-  await page.mouse.down();
-  await page.mouse.move(from.x + 12, from.y + 8, { steps: 3 });
-  await page.mouse.move(to.x, to.y, { steps: 12 });
-  await page.mouse.up();
-}
-
-const centre = (box) => ({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
-
-test('D3·D4·D14: students join by code or QR, the teacher sees names live, groups them and starts', async ({
-  browser,
-  page,
-  context,
-}, testInfo) => {
+test('D3·D4·D14: students join by code or QR, get their groups and start', async ({ browser }, testInfo) => {
   test.setTimeout(120_000);
-  const touch = Boolean(testInfo.project.use.hasTouch);
   const session = await openSession(4);
-  const teacherErrors = trackErrors(page);
-  await signInPage(context);
-  await page.goto(`/teacher/sessions/${session.id}`);
-  await expect(page.locator('.t-join-wait')).toHaveText('학생들이 들어오기를 기다리고 있어요');
-  await expect(page.getByRole('button', { name: '시작하기' })).toBeDisabled();
-  await expect(page.locator('#t-start-hint')).toHaveText('학생이 들어오면 시작할 수 있어요.');
+  const rpc = async (fn, args) => {
+    const { data, error } = await session.client.rpc(fn, args);
+    if (error) throw error;
+    return data;
+  };
+  const memberOf = async (student) => (await savedEntry(student.page)).memberId;
 
   // Student A types the code on the home page (six cells).
   const a = await newStudent(browser, testInfo);
@@ -118,14 +86,7 @@ test('D3·D4·D14: students join by code or QR, the teacher sees names live, gro
   await a.page.getByLabel('내 이름').fill('  다솜이 ');
   await expectNoHorizontalOverflow(a.page);
   await a.page.screenshot({ path: testInfo.outputPath('student-2-name.png') });
-  // D3: from pressing 다음 (sign-in, join_session, Presence) to the name in the lobby: within a second.
-  const pressedA = Date.now();
   await a.page.getByRole('button', { name: '다음' }).click();
-  await expect(page.locator('.t-pool .t-chip', { hasText: '다솜이' })).toBeVisible({ timeout: 1000 });
-  const latencyA = Date.now() - pressedA;
-  // Exactly the name: no stray "null" text from optional parts, in the text or the accessible name.
-  await expect(page.locator('.t-pool .t-chip', { hasText: '다솜이' })).toHaveText('다솜이');
-  await expect(page.getByRole('button', { name: '다솜이', exact: true })).toHaveCount(1);
   await expect(a.page.getByRole('heading', { level: 1, name: '선생님이 모둠을 정하고 있어요' })).toBeVisible();
 
   // Student B scans the QR: the code is already in the address, so only the name is asked.
@@ -133,12 +94,8 @@ test('D3·D4·D14: students join by code or QR, the teacher sees names live, gro
   await b.page.goto(`/join?code=${session.code}`);
   await expect(b.page.getByRole('heading', { level: 1, name: '이름을 알려 주세요' })).toBeVisible();
   await b.page.getByLabel('내 이름').fill('보람찬');
-  const pressedB = Date.now();
   await b.page.getByLabel('내 이름').press('Enter');
-  await expect(page.locator('.t-pool .t-chip', { hasText: '보람찬' })).toBeVisible({ timeout: 1000 });
-  const latencyB = Date.now() - pressedB;
   await expect(b.page.getByRole('heading', { level: 1, name: '선생님이 모둠을 정하고 있어요' })).toBeVisible();
-  testInfo.annotations.push({ type: 'name latency (ms)', description: `${latencyA}, ${latencyB}` });
 
   // Student C mistypes the code: told to check it, keeps the name, goes straight in after fixing it.
   const wrong = session.code === '000000' ? '000001' : '000000';
@@ -157,19 +114,8 @@ test('D3·D4·D14: students join by code or QR, the teacher sees names live, gro
   await expectNoHorizontalOverflow(c.page);
   await c.page.screenshot({ path: testInfo.outputPath('student-3-waiting.png') });
 
-  await expect(page.locator('.t-pool h3')).toContainText('3명');
-  for (const name of ['다솜이', '보람찬', '한결이']) {
-    await expect(page.locator('.t-chip', { hasText: name })).toHaveText(name);
-  }
-  await expect(page.locator('.t-grouping')).not.toContainText('null');
-  await expect(page.locator('.t-join-wait')).toHaveText('들어온 학생 3명');
-  await expect(page.locator('#t-start-hint')).toHaveText('학생을 모둠에 넣으면 시작할 수 있어요.');
-  await expectNoHorizontalOverflow(page);
-  await page.screenshot({ path: testInfo.outputPath('teacher-lobby-pool.png'), fullPage: true });
-
-  // 무작위로 나누기: everyone gets a group, and each student screen shows it.
-  await page.getByRole('button', { name: '무작위로 나누기' }).click();
-  await expect(page.locator('.t-pool .t-empty-line')).toHaveText('모든 학생이 모둠에 들어갔어요.');
+  // 무작위로 나누기 (from Node): everyone gets a group, and each student screen shows it.
+  await rpc('randomize_groups', { p_session: session.id });
   for (const [student, name] of [
     [a, '다솜이'],
     [b, '보람찬'],
@@ -184,58 +130,25 @@ test('D3·D4·D14: students join by code or QR, the teacher sees names live, gro
     await expect(student.page.locator('.st-mate.is-me')).toContainText(name);
   }
 
-  // Drag A into 1모둠 (touch on touch projects, mouse otherwise).
-  const chipA = page.locator('.t-chip', { hasText: '다솜이' });
-  const box1 = page.locator('.t-group').nth(0);
-  await box1.scrollIntoViewIfNeeded();
-  await chipA.scrollIntoViewIfNeeded();
-  const from = centre(await chipA.boundingBox());
-  const toBox = await box1.boundingBox();
-  const to = { x: toBox.x + toBox.width / 2, y: toBox.y + Math.min(toBox.height - 10, 60) };
-  if (touch) await touchDrag(page, from, to);
-  else await mouseDrag(page, from, to);
-  await expect(box1.locator('.t-chip', { hasText: '다솜이' })).toBeVisible();
-  await expect(box1.locator('.t-chip', { hasText: '다솜이' })).toHaveAttribute('aria-pressed', 'false');
-  await expect(box1.locator('.t-chip', { hasText: '다솜이' })).toHaveText('다솜이');
+  // Moves: 다솜이 into 1모둠, 보람찬 into another group, 한결이 back to no group.
+  const g = (number) => session.groups.find((x) => x.number === number).id;
+  await rpc('assign_member', { p_member: await memberOf(a), p_group: g(1) });
   await expect(a.page.getByRole('heading', { level: 1 })).toHaveText('다솜이, 1모둠이에요!');
-
-  // Keyboard: pick B with Enter, place it in 2모둠 with its 여기에 놓기 button.
-  const chipB = page.locator('.t-chip', { hasText: '보람찬' });
-  const bInTwo = (await page.locator('.t-group').nth(1).locator('.t-chip', { hasText: '보람찬' }).count()) > 0;
-  const target = bInTwo ? 3 : 2;
-  await chipB.focus();
-  await page.keyboard.press('Enter');
-  await expect(chipB).toHaveAttribute('aria-pressed', 'true');
-  const place = page.getByRole('button', { name: `보람찬을 ${target}모둠에 놓기` });
-  await place.focus();
-  await page.keyboard.press('Enter');
-  await expect(page.locator('.t-group').nth(target - 1).locator('.t-chip', { hasText: '보람찬' })).toBeVisible();
-  await expect(page.locator('.t-chip', { hasText: '보람찬' })).toBeFocused();
+  const target = 2;
+  await rpc('assign_member', { p_member: await memberOf(b), p_group: g(target) });
   await expect(b.page.getByRole('heading', { level: 1 })).toHaveText(`보람찬, ${target}모둠이에요!`);
-
-  // C back to the pool by keyboard, so the start asks first.
-  await page.locator('.t-chip', { hasText: '한결이' }).focus();
-  await page.keyboard.press('Enter');
-  await page.getByRole('button', { name: '한결이를 모둠에서 빼기' }).click();
-  await expect(page.locator('.t-pool .t-chip', { hasText: '한결이' })).toBeVisible();
+  await rpc('assign_member', { p_member: await memberOf(c), p_group: null });
   await expect(c.page.getByRole('heading', { level: 1 })).toHaveText('선생님이 모둠을 정하고 있어요');
-  await expectNoHorizontalOverflow(page);
-  await page.screenshot({ path: testInfo.outputPath('teacher-lobby-grouped.png'), fullPage: true });
 
   // Same group as A: put C into 1모둠 to check groupmates on both screens.
-  await page.locator('.t-chip', { hasText: '한결이' }).focus();
-  await page.keyboard.press('Enter');
-  await page.getByRole('button', { name: '한결이를 1모둠에 놓기' }).click();
+  await rpc('assign_member', { p_member: await memberOf(c), p_group: g(1) });
   await expect(a.page.locator('.st-mate', { hasText: '한결이' })).toBeVisible();
   await expect(c.page.locator('.st-mate', { hasText: '다솜이' })).toBeVisible();
   await expectNoHorizontalOverflow(a.page);
   await a.page.screenshot({ path: testInfo.outputPath('student-3-waiting-group.png') });
 
   // 시작하기 → every student gets their own group's puzzle (T11), on /play (not the demo).
-  // The lobby turns into 모둠 한눈에 보기 (T12, tests/e2e/overview.spec.js).
-  await page.getByRole('button', { name: '시작하기' }).click();
-  await expect(page.locator('.t-ov-card')).toHaveCount(4);
-  await expect(page.getByRole('button', { name: '무작위로 나누기' })).toHaveCount(0);
+  await rpc('start_session', { p_session: session.id });
   for (const [student, number] of [
     [a, 1],
     [b, target],
@@ -278,26 +191,20 @@ test('D3·D4·D14: students join by code or QR, the teacher sees names live, gro
     expect(student.errors).toEqual([]);
     await student.context.close();
   }
-  expect(teacherErrors).toEqual([]);
 });
 
-test('a student can fix the name while waiting, and the teacher sees the new name', async ({ browser, page, context }, testInfo) => {
+test('a student can fix the name while waiting, and comes back to it from home', async ({ browser }, testInfo) => {
   const session = await openSession(2);
-  await signInPage(context);
-  await page.goto(`/teacher/sessions/${session.id}`);
   const s = await newStudent(browser, testInfo);
   await s.page.goto(`/join?code=${session.code}`);
   await s.page.getByLabel('내 이름').fill('민쥰');
   await s.page.getByRole('button', { name: '다음' }).click();
-  await expect(page.locator('.t-chip', { hasText: '민쥰' })).toBeVisible();
+  await expect(s.page.getByText('민쥰, 잘 들어왔어요!')).toBeVisible();
   await s.page.getByRole('button', { name: '이름 고치기' }).click();
   await expect(s.page.getByRole('heading', { level: 1, name: '이름을 고쳐 주세요' })).toBeVisible();
   await s.page.getByLabel('내 이름').fill('민준');
   await s.page.getByRole('button', { name: '바꾸기' }).click();
   await expect(s.page.getByText('민준, 잘 들어왔어요!')).toBeVisible();
-  await expect(page.locator('.t-chip', { hasText: '민준' })).toBeVisible();
-  await expect(page.locator('.t-chip', { hasText: '민쥰' })).toHaveCount(0);
-  await expect(page.locator('.t-chip', { hasText: '민준' })).toHaveText('민준');
   expect((await savedEntry(s.page)).name).toBe('민준');
 
   // Home shows a way back into the same class.
@@ -309,62 +216,6 @@ test('a student can fix the name while waiting, and the teacher sees the new nam
   await resume.click();
   await expect(s.page.getByText('민준, 잘 들어왔어요!')).toBeVisible();
   expect(s.errors).toEqual([]);
-
-  // The student leaves: the lobby keeps the name it saw, greyed, with '나감'.
   await s.context.close();
-  const gone = page.locator('.t-chip', { hasText: '민준' });
-  await expect(gone).toHaveText('민준나감', { timeout: 15000 });
-  await expect(gone.locator('.t-chip-name')).toHaveText('민준');
-  await expect(gone.locator('em')).toHaveText('나감');
-  await expect(gone).toHaveClass(/\boff\b/);
-  await expect(page.locator('.t-grouping')).not.toContainText('null');
 });
 
-test('lobby on a 1920 x 1080 whiteboard with 25 students: names, groups and buttons fit without scrolling', async ({
-  page,
-  context,
-}, testInfo) => {
-  test.skip(testInfo.project.name !== 'desktop-1440', 'one whiteboard run is enough');
-  test.setTimeout(120_000);
-  const session = await openSession(6);
-  const names = ['민준', '서연', '지호', '유나', '하은', '도윤', '서준', '지우', '예준', '수아', '시우', '하린', '주원'];
-  const more = ['지아', '은우', '채원', '건우', '윤서', '현우', '다은', '선우', '예린', '소율', '연우', '정우'];
-  for (const name of [...names, ...more]) {
-    const client = createClient(LOCAL.supabaseUrl, LOCAL.publishableKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-    nodeClients.push(client);
-    const { data } = await client.auth.signInAnonymously();
-    const { data: joined } = await client.rpc('join_session', { p_code: session.code });
-    await client.realtime.setAuth(data.session.access_token);
-    const channel = client.channel(`session:${session.id}`, { config: { private: true, presence: { key: data.user.id } } });
-    await new Promise((resolve) => channel.subscribe((s) => s === 'SUBSCRIBED' && resolve()));
-    await channel.track({ member: joined.member_id, name });
-  }
-  await signInPage(context);
-  await page.setViewportSize({ width: 1920, height: 1080 });
-  await page.goto(`/teacher/sessions/${session.id}`);
-  await expect(page.locator('.t-join-wait')).toHaveText('들어온 학생 25명');
-  await expect(page.locator('.t-chip', { hasText: '민준' })).toHaveText('민준');
-  await expect(page.locator('.t-grouping')).not.toContainText('null');
-  await page.getByRole('button', { name: '무작위로 나누기' }).click();
-  await expect(page.locator('.t-pool .t-empty-line')).toHaveText('모든 학생이 모둠에 들어갔어요.');
-  await page.getByRole('button', { name: '무작위로 나누기' }).click();
-  const dialog = page.getByRole('dialog', { name: '모둠을 다시 나눌까요?' });
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole('button', { name: '다시 나누기' }).click();
-  await expect(dialog).toHaveCount(0);
-
-  // Read inside the page: live updates may redraw the chips between two steps.
-  const fontSize = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.t-chip')).fontSize));
-  expect(fontSize).toBeGreaterThanOrEqual(19); // mockup: 19px names
-  expect(await page.locator('.t-join-code').evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(110);
-  const { scrollHeight, innerHeight } = await page.evaluate(() => ({
-    scrollHeight: document.documentElement.scrollHeight,
-    innerHeight: window.innerHeight,
-  }));
-  expect(scrollHeight).toBeLessThanOrEqual(innerHeight);
-  const columns = await page.locator('.t-groups').evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length);
-  expect(columns).toBe(3); // 6 groups as 3 x 2, like the mockup
-  await page.screenshot({ path: testInfo.outputPath('teacher-lobby-1920-25.png') });
-});

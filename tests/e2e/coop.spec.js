@@ -10,7 +10,8 @@ import {
   puzzleState,
   showFrame as showPuzzleFrame,
 } from './support/puzzle.js';
-import { closeSql, deleteSessions, sql, teacherSession } from './support/teacher.js';
+import { deleteLegacySessions as deleteSessions, legacyTeacher as teacherSession } from './support/legacy.js';
+import { closeSql, sql } from './support/teacher.js';
 
 // T11: one group plays the same puzzle on several devices against the local stack
 // (D5~D10). Every student is its own browser context; the teacher runs from Node.

@@ -1,17 +1,17 @@
-// Help settings (spec rule 10): DB row <-> Hints, the create_session arguments and the
+// Help settings (spec rule 10): DB row <-> Hints, the POST /api/sessions body and the
 // teacher wording.
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_HINTS, hintsFromSession } from '../../public/js/store/puzzle-store.js';
 import { createSession } from '../../public/js/teacher/data.js';
 import { HINT_OPTIONS, hintsSummary, onOffLabel } from '../../public/js/teacher/format.js';
 
-function fakeClient() {
+function fakeApi() {
   const calls = [];
   return {
     calls,
-    rpc: async (name, args) => {
-      calls.push({ name, args });
-      return { data: { id: 1 }, error: null };
+    post: async (path, body) => {
+      calls.push({ path, body });
+      return { ok: true, sessionId: 's1', code: '123456' };
     },
   };
 }
@@ -31,39 +31,33 @@ describe('hintsFromSession', () => {
 
 describe('createSession', () => {
   it('sends all four help settings, with the defaults when none are given', async () => {
-    const client = fakeClient();
-    await createSession(client, { picture: { builtinKey: 'sea', aspect: 1.5 }, pieceCount: 24, groupCount: 3 });
-    expect(client.calls[0]).toEqual({
-      name: 'create_session',
-      args: {
-        p_piece_count: 24,
-        p_group_count: 3,
-        p_builtin_key: 'sea',
-        p_aspect: 1.5,
-        p_hint_preview: false,
-        p_hint_outline: true,
-        p_hint_picture_button: true,
-        p_hint_underlay: false,
+    const api = fakeApi();
+    const created = await createSession(api, { picture: { builtinKey: 'sea', aspect: 1.5, title: '바다' }, pieceCount: 24, groupCount: 3 });
+    expect(created).toEqual({ sessionId: 's1', code: '123456' });
+    expect(api.calls[0]).toEqual({
+      path: '/api/sessions',
+      body: {
+        pieceCount: 24,
+        groupCount: 3,
+        picture: { builtinKey: 'sea' },
+        hints: { preview: false, outline: true, pictureButton: true, underlay: false },
       },
     });
   });
 
   it('sends the teacher choice', async () => {
-    const client = fakeClient();
-    await createSession(client, {
-      picture: { imageId: 'abc' },
+    const api = fakeApi();
+    await createSession(api, {
+      picture: { imageId: 'abc', width: 720, height: 480 },
       pieceCount: 12,
       groupCount: 1,
       hints: { preview: true, outline: false, pictureButton: false, underlay: true },
     });
-    expect(client.calls[0].args).toEqual({
-      p_piece_count: 12,
-      p_group_count: 1,
-      p_image_id: 'abc',
-      p_hint_preview: true,
-      p_hint_outline: false,
-      p_hint_picture_button: false,
-      p_hint_underlay: true,
+    expect(api.calls[0].body).toEqual({
+      pieceCount: 12,
+      groupCount: 1,
+      picture: { imageId: 'abc' },
+      hints: { preview: true, outline: false, pictureButton: false, underlay: true },
     });
   });
 });

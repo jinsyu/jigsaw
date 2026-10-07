@@ -1,12 +1,16 @@
-// Picks the Supabase project from the page address. Only public values live here:
-// the publishable key is meant for browsers, and access is enforced by RLS.
+// Picks the servers from the page address. Only public values live here.
 //
-// - localhost, 127.0.0.1, private LAN addresses and *.local: the local stack
-//   (pnpm db:start). A tablet on the same Wi-Fi reaches it through the same host.
-// - Any other host: the hosted project. Its URL and key are filled in at T14;
-//   until then isConfigured() is false and teacher screens show "준비 중".
+// - localhost, 127.0.0.1, private LAN addresses and *.local: the local stack. The rt server
+//   (pnpm rt:dev, port 3400) and Supabase (pnpm db:start) on the same host, so a tablet on
+//   the same Wi-Fi reaches them through the address it opened the page with.
+// - Any other host: the hosted servers. The rt address and the Google client ID are filled
+//   in at T25, once rt.gyosil.app runs; until then the teacher screens show "준비 중".
+//
+// supabaseUrl / publishableKey are still read by the student screens until they move to
+// the rt server (T22); the teacher screens never talk to Supabase.
 
-const LOCAL_PORT = 56321;
+const LOCAL_SUPABASE_PORT = 56321;
+const LOCAL_RT_PORT = 3400;
 // Default publishable key of every local Supabase CLI stack (not a secret).
 const LOCAL_PUBLISHABLE_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
 
@@ -14,7 +18,10 @@ const REMOTE = {
   env: 'remote',
   supabaseUrl: '',
   publishableKey: '',
-  googleSignIn: true,
+  // T25: the rt.gyosil.app address, only after that server is up (a push here is a deploy).
+  rtUrl: '',
+  // T25: the public OAuth client ID of the gyosil Google sign-in.
+  googleClientId: '',
 };
 
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
@@ -29,14 +36,21 @@ export function pickConfig(hostname) {
   const apiHost = LOOPBACK.has(hostname) ? '127.0.0.1' : hostname;
   return {
     env: 'local',
-    supabaseUrl: `http://${apiHost}:${LOCAL_PORT}`,
+    supabaseUrl: `http://${apiHost}:${LOCAL_SUPABASE_PORT}`,
     publishableKey: LOCAL_PUBLISHABLE_KEY,
-    // Google sign-in is not set up on the local stack. Sign in with the seeded test
+    rtUrl: `http://${apiHost}:${LOCAL_RT_PORT}`,
+    // Google sign-in is not set up locally. Open the teacher screens with the seeded test
     // teacher from outside the site: `pnpm teacher:open` (scripts/teacher-open.mjs).
-    googleSignIn: false,
+    googleClientId: '',
   };
 }
 
+// Student screens (Supabase, until T22).
 export function isConfigured(config) {
   return Boolean(config.supabaseUrl && config.publishableKey);
+}
+
+// Teacher screens (rt server).
+export function hasRtServer(config) {
+  return Boolean(config.rtUrl);
 }

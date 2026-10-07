@@ -2,85 +2,147 @@
 // enough to read from the back of the classroom on an interactive whiteboard, and the
 // 모둠 편성 panel: students appear by name as they join, the teacher drags them into groups
 // (or picks and places them with the keyboard), shuffles them, and starts the puzzles.
+// Once the puzzles start the same page turns into 모둠 한눈에 보기 (overview-view.js).
 //
-// Names come only from Presence on session:<id> and stay in this page's memory (spec D14).
-// Presence keys and payloads are set by the student's browser, so a name is shown only for
-// a members row of this session read from the database (student/presence.js).
-import { assignMember, endSession, getSession, listMembers, randomizeGroups, startSession } from './data.js';
+// Everything live comes over the class's socket (session-live.js): names exist only in the
+// rt server's memory and this page (spec D14), and arrive within a second of joining (D3).
+import { listSessions } from './data.js';
 import { confirmDialog } from './dialogs.js';
 import { h, icon, setTitle } from './dom.js';
 import { formatCode, hintsSummary, sessionSummary, statusLabel } from './format.js';
 import { createGroupingPanel } from './grouping.js';
-import { loadBuiltins, loadMyImages, sessionPicture } from './pictures.js';
+import { loadBuiltins } from './pictures.js';
 import { showOverview } from './overview-view.js';
 import { joinUrl, qrSvg } from './qr.js';
-import { applyGroupChanges, buildRoster } from './roster.js';
-import { presenceNames } from '../student/presence.js';
-import { hintsFromSession } from '../store/puzzle-store.js';
-
-const NETWORK_ERROR = /fetch|network|load failed/i;
+import { buildRoster } from './roster.js';
+import { ClassActionError, connectClass } from './session-live.js';
+import { normalizeHints } from '../store/puzzle-store.js';
 
 function actionError(error, fallback) {
-  if (!error?.code && NETWORK_ERROR.test(error?.message ?? '')) return '인터넷 연결을 확인하고 다시 해 주세요.';
-  if (error?.message === 'session_ended') return '이미 끝난 수업이에요.';
-  if (error?.message === 'session_not_waiting') return '이미 시작한 수업이에요.';
-  if (error?.code === '42501') return '선생님 계정으로 다시 로그인해 주세요.';
+  if (error instanceof ClassActionError) {
+    if (error.code === 'session_ended') return '이미 끝난 수업이에요.';
+    if (error.code === 'session_not_waiting') return '이미 시작한 수업이에요.';
+    if (error.code === 'timeout' || error.code === 'not_connected') return '서버와 연결이 끊겼어요. 다시 연결되면 한 번 더 해 주세요.';
+  }
   return fallback;
+}
+
+async function pictureTitle(setup) {
+  if (!setup.builtinKey) return '내 그림';
+  try {
+    const builtins = await loadBuiltins();
+    return builtins.find((b) => b.key === setup.builtinKey)?.title ?? '그림';
+  } catch {
+    return '그림';
+  }
 }
 
 export function renderLobby(main, ctx, { sessionId }) {
   let alive = true;
-  let stopLive = null;
+  let view = null; // { update(change), stop() } of the lobby or the overview
+  let mode = null; // 'lobby' | 'overview' | 'done'
+  let picture = null;
   ctx.setBar('lobby', { nodes: [] });
   setTitle('수업 대기실');
   main.append(h('p', { class: 't-loading', role: 'status' }, '수업을 불러오는 중이에요…'));
 
-  async function load() {
+  const live = connectClass({
+    rtUrl: ctx.config.rtUrl,
+    token: ctx.auth.token,
+    sessionId,
+    onChange: (change) => alive && changed(change),
+    onConnection: (status) => {
+      if (!alive) return;
+      ctx.setReconnecting(status === 'lost' && mode !== null && mode !== 'done');
+      if (mode === 'lobby') view?.update({ kind: 'connection', status });
+      if (status === 'lost' && mode === null) lostBeforeState();
+    },
+    onRefused: (reason) => alive && refused(reason),
+  });
+
+  let opening = false;
+  async function changed(change) {
+    if (mode === 'done') return;
+    if (change.kind === 'end') return ended(false);
+    if (mode === null) {
+      if (change.kind !== 'state' || opening) return;
+      opening = true;
+      picture = { title: await pictureTitle(live.state.setup) };
+      if (!alive) return;
+      open();
+      return;
+    }
+    if (mode === 'lobby' && live.state.status === 'playing') return toOverview();
+    view?.update(change);
+  }
+
+  function open() {
+    if (live.state.status === 'playing') toOverview();
+    else {
+      mode = 'lobby';
+      view = showLobby(main, ctx, live, picture, { onPlaying: () => alive && toOverview() });
+    }
+    ctx.headingReady?.();
+  }
+
+  async function toOverview() {
+    if (mode === 'overview' || mode === 'done') return;
+    view?.stop();
+    mode = 'overview';
+    view = null;
+    const builtins = await loadBuiltins().catch(() => []);
+    if (!alive || mode !== 'overview') return;
+    view = showOverview(main, ctx, { live, picture, builtins, onEnded: (result) => finish(result) });
+    ctx.headingReady?.();
+  }
+
+  function finish(result) {
+    mode = 'done';
+    view?.stop();
+    view = null;
+    live.close();
+    ctx.setReconnecting(false);
+    showEnded(main, ctx, result);
+  }
+
+  function ended(byMe) {
+    if (mode === 'overview' && view) return view.update({ kind: 'end' }); // the overview says how it went
+    if (live.ending) return; // 수업 닫기 on this page: its dialog goes on to 내 수업
+    finish({ byMe, doneCount: 0, activeCount: 0 });
+  }
+
+  // The server will not open this class for us: signed out, or the class is gone / not ours.
+  async function refused(reason) {
+    if (reason === 'invalid_token') return ctx.signOut('다시 로그인해 주세요.');
+    mode = 'done';
+    view?.stop();
+    view = null;
+    live.close();
+    ctx.setReconnecting(false);
+    let known = null;
     try {
-      const session = await getSession(ctx.client, sessionId);
-      if (!alive) return;
-      if (!session) return showMessage(main, ctx, '이 수업을 찾을 수 없어요', '지워졌거나 다른 선생님의 수업이에요.');
-      if (session.status === 'ended') {
-        return showMessage(main, ctx, '이미 끝난 수업이에요', '이 코드로는 더 이상 들어올 수 없어요. 새 수업을 열어 주세요.', true);
-      }
-      const [builtins, members] = await Promise.all([loadBuiltins(), listMembers(ctx.client, session.id)]);
-      const myImages = session.image_id ? await loadMyImages(ctx.client) : [];
-      if (!alive) return;
-      const picture = sessionPicture(session, builtins, myImages);
-      // Once the puzzles start, the lobby turns into 모둠 한눈에 보기 (T12).
-      const overview = () => {
-        stopLive?.();
-        stopLive = showOverview(main, ctx, { session, picture, builtins, onEnded: (result) => showEnded(main, ctx, result) });
-        ctx.headingReady?.();
-      };
-      if (session.status === 'playing') overview();
-      else {
-        stopLive = showLobby(main, ctx, session, picture, members, { onPlaying: () => alive && overview() });
-        ctx.headingReady?.();
-      }
+      known = (await listSessions(ctx.api)).find((s) => s.id === sessionId) ?? null;
     } catch (error) {
       console.error(error);
-      if (!alive) return;
-      main.replaceChildren(
-        h(
-          'div',
-          { class: 't-wrap' },
-          h(
-            'section',
-            { class: 'card t-empty', role: 'alert' },
-            h('h1', { tabindex: '-1' }, '수업을 불러오지 못했어요'),
-            h('p', { class: 'sub' }, '인터넷 연결을 확인하고 다시 시도해 주세요.'),
-            h('button', { class: 'btn', type: 'button', onclick: () => (main.replaceChildren(), load()) }, icon('refresh'), '다시 시도'),
-          ),
-        ),
-      );
-      ctx.headingReady?.();
+    }
+    if (!alive) return;
+    if (known?.status === 'ended') {
+      showMessage(main, ctx, '이미 끝난 수업이에요', '이 코드로는 더 이상 들어올 수 없어요. 새 수업을 열어 주세요.', true);
+    } else {
+      showMessage(main, ctx, '이 수업을 찾을 수 없어요', '지워졌거나 다른 선생님의 수업이에요.');
     }
   }
-  load();
+
+  // No answer yet and the connection failed: say so, keep trying in the background.
+  function lostBeforeState() {
+    const note = main.querySelector('.t-loading');
+    if (note) note.textContent = '서버에 연결하지 못했어요. 다시 연결하는 중이에요…';
+  }
+
   return () => {
     alive = false;
-    stopLive?.();
+    view?.stop();
+    live.close();
   };
 }
 
@@ -115,17 +177,20 @@ function showEnded(main, ctx, { byMe, doneCount, activeCount }) {
     main,
     ctx,
     byMe ? '수업을 끝냈어요' : '이미 끝난 수업이에요',
-    `학생 화면에 ‘수업이 끝났어요’가 나왔고, 모둠 배정과 학생 익명 계정은 지워졌어요.${done}`,
+    `학생 화면에 ‘수업이 끝났어요’가 나왔고, 모둠 배정은 지워졌어요.${done}`,
     true,
   );
 }
 
-function showLobby(main, ctx, session, picture, initialMembers, { onPlaying }) {
+function showLobby(main, ctx, live, picture, { onPlaying }) {
   document.documentElement.classList.add('is-lobby');
-  const summary = sessionSummary({ title: picture.title, pieceCount: session.piece_count, groupCount: session.groups.length });
-  setTitle(`수업 코드 ${session.code}`);
+  const setup = live.state.setup;
+  const hints = normalizeHints(setup.hints);
+  const groups = live.state.groups.map((g) => ({ id: g.number, number: g.number }));
+  const summary = sessionSummary({ title: picture.title, pieceCount: setup.pieceCount, groupCount: groups.length });
+  setTitle(`수업 코드 ${setup.code}`);
 
-  const dialog = closeDialog(ctx, session);
+  const dialog = closeDialog(ctx, live);
   ctx.setBar('lobby', {
     nodes: [
       h('span', { class: 'pill t-summary' }, summary),
@@ -135,7 +200,7 @@ function showLobby(main, ctx, session, picture, initialMembers, { onPlaying }) {
     ],
   });
 
-  const url = joinUrl(location.origin, session.code);
+  const url = joinUrl(location.origin, setup.code);
   const waitDot = h('i', { class: 'dot' });
   const waitText = h('span', {});
   const waitLine = h('p', { class: 't-join-wait', role: 'status' }, waitDot, waitText);
@@ -145,45 +210,24 @@ function showLobby(main, ctx, session, picture, initialMembers, { onPlaying }) {
     h('h1', { class: 'sr-only', id: 't-join-title', tabindex: '-1' }, `${picture.title} 수업 대기실`),
     h('p', { class: 't-join-k' }, '태블릿에서 이 주소를 열고 코드를 넣어요'),
     h('p', { class: 't-join-url' }, location.host),
-    h('p', { class: 't-join-code', 'data-code': session.code }, h('span', { class: 'sr-only' }, '수업 코드 '), formatCode(session.code)),
+    h('p', { class: 't-join-code', 'data-code': setup.code }, h('span', { class: 'sr-only' }, '수업 코드 '), formatCode(setup.code)),
     h('div', { class: 't-join-qr', 'data-url': url, html: qrSvg(url, `입장 QR 코드: ${url}`) }),
     h('p', { class: 't-join-note' }, 'QR 코드를 찍으면 코드를 넣지 않아도 돼요'),
     waitLine,
-    h('p', { class: 't-join-hints' }, hintsSummary(hintsFromSession(session))),
+    h('p', { class: 't-join-hints' }, hintsSummary(hints)),
   );
 
-  let status = session.status;
-  let members = initialMembers;
-  let presence = {};
-  let connection = 'connecting';
-  const seen = new Map(); // last name seen per member, this page only
-  const triedKeys = new Set();
+  let connection = 'ok';
   let alive = true;
 
-  // Leaves the channel and drops the panel's listeners. Safe to call more than once.
-  function stop() {
-    if (!alive) return;
-    alive = false;
-    clearTimeout(grace);
-    panel.destroy();
-    ctx.client.removeChannel(channel).catch(() => {});
-  }
-
-  const panel = createGroupingPanel({
-    groups: session.groups,
-    onAssign: assign,
-    onRandomize: randomize,
-    onStart: start,
-  });
+  const panel = createGroupingPanel({ groups, onAssign: assign, onRandomize: randomize, onStart: start });
   main.replaceChildren(h('div', { class: 't-lobby' }, join, panel.element), dialog);
 
   function redraw() {
     if (!alive) return;
-    const { names, unknownKeys } = presenceNames(presence, members);
-    for (const [id, name] of names) seen.set(id, name);
-    const roster = buildRoster({ members, groups: session.groups, online: names, seen });
+    const status = live.state.status;
+    const roster = buildRoster({ members: live.state.members, groups });
     panel.update(roster, { status });
-
     const lost = connection === 'lost';
     waitDot.className = `dot${roster.onlineCount || lost ? '' : ' t-pulse'}${lost ? ' is-lost' : ''}`;
     waitText.textContent = lost
@@ -193,52 +237,20 @@ function showLobby(main, ctx, session, picture, initialMembers, { onPlaying }) {
         : status === 'playing'
           ? statusLabel('playing')
           : '학생들이 들어오기를 기다리고 있어요';
-    // A Presence key we have no row for: most likely a student who just joined.
-    if (unknownKeys.some((key) => !triedKeys.has(key))) {
-      unknownKeys.forEach((key) => triedKeys.add(key));
-      reloadMembers();
-    }
   }
 
-  let reloading = null;
-  let reloadAgain = false;
-  function reloadMembers() {
-    if (reloading) {
-      reloadAgain = true;
-      return reloading;
-    }
-    reloading = listMembers(ctx.client, session.id)
-      .then((rows) => {
-        members = rows;
-        redraw();
-      })
-      .catch((error) => console.error(error))
-      .finally(() => {
-        reloading = null;
-        if (reloadAgain && alive) {
-          reloadAgain = false;
-          reloadMembers();
-        }
-      });
-    return reloading;
-  }
-
-  function setMember(row) {
-    members = members.map((m) => (m.id === row.id ? { ...m, group_id: row.group_id, color: row.color } : m));
-  }
-
-  async function assign(memberId, groupId) {
-    const before = members.find((m) => m.id === memberId);
+  async function assign(memberId, group) {
+    const before = live.state.members.find((m) => m.id === memberId);
     if (!before) return;
     panel.clearError();
     // Show the move at once; the server decides the colour.
-    setMember({ id: memberId, group_id: groupId, color: groupId === null ? null : before.color });
+    live.model.moveLocally(memberId, group, group === null ? null : before.color);
     redraw();
     try {
-      setMember(await assignMember(ctx.client, memberId, groupId));
+      await live.assign(memberId, group);
     } catch (error) {
       console.error(error);
-      setMember(before);
+      live.model.moveLocally(memberId, before.group, before.color);
       panel.showError(actionError(error, '옮기지 못했어요. 다시 해 주세요.'));
     }
     redraw();
@@ -246,7 +258,7 @@ function showLobby(main, ctx, session, picture, initialMembers, { onPlaying }) {
 
   async function randomize() {
     panel.clearError();
-    if (members.some((m) => m.group_id !== null)) {
+    if (live.state.members.some((m) => m.group !== null)) {
       const ok = await confirmDialog(main, {
         title: '모둠을 다시 나눌까요?',
         text: '지금 나눈 모둠은 사라지고, 모든 학생을 무작위로 다시 나눠요.',
@@ -256,8 +268,7 @@ function showLobby(main, ctx, session, picture, initialMembers, { onPlaying }) {
     }
     panel.setBusy('randomize');
     try {
-      const rows = await randomizeGroups(ctx.client, session.id);
-      members = members.map((m) => rows.find((r) => r.id === m.id) ?? m);
+      await live.randomize();
       panel.announce('모든 학생을 무작위로 나눴어요.');
     } catch (error) {
       console.error(error);
@@ -269,7 +280,7 @@ function showLobby(main, ctx, session, picture, initialMembers, { onPlaying }) {
 
   async function start() {
     panel.clearError();
-    const waitingCount = members.filter((m) => m.group_id === null).length;
+    const waitingCount = live.state.members.filter((m) => m.group === null).length;
     if (waitingCount) {
       const ok = await confirmDialog(main, {
         title: '이대로 시작할까요?',
@@ -281,67 +292,34 @@ function showLobby(main, ctx, session, picture, initialMembers, { onPlaying }) {
     }
     panel.setBusy('start');
     try {
-      await startSession(ctx.client, session.id);
+      await live.start();
       return onPlaying();
     } catch (error) {
       console.error(error);
-      if (error?.message === 'session_not_waiting') return onPlaying();
+      if (error?.code === 'session_not_waiting') return onPlaying();
       panel.showError(actionError(error, '시작하지 못했어요. 다시 눌러 주세요.'));
     }
     panel.setBusy('');
     redraw();
   }
 
-  // Live updates on session:<id>. The teacher listens only; students track their names.
-  const channel = ctx.client.channel(`session:${session.id}`, { config: { private: true } });
-  channel
-    .on('presence', { event: 'sync' }, () => {
-      presence = channel.presenceState();
-      redraw();
-    })
-    .on('broadcast', { event: 'groups' }, ({ payload }) => {
-      const result = applyGroupChanges(members, payload?.members ?? []);
-      members = result.members;
-      redraw();
-      if (result.missing) reloadMembers();
-    })
-    .on('broadcast', { event: 'start' }, () => {
-      if (alive) onPlaying(); // started in another tab
-    })
-    .on('broadcast', { event: 'end' }, () => {
-      if (!alive) return;
-      stop(); // leave the channel and the drag key listener now, not only on navigation
-      dialog.close();
-      showMessage(main, ctx, '이미 끝난 수업이에요', '이 코드로는 더 이상 들어올 수 없어요. 새 수업을 열어 주세요.', true);
-    });
-  const grace = setTimeout(() => {
-    if (connection === 'connecting') {
-      connection = 'lost';
-      redraw();
-    }
-  }, 6000);
-  ctx.client.realtime
-    .setAuth()
-    .catch((error) => console.error(error))
-    .then(() => {
-      if (!alive) return;
-      channel.subscribe((state) => {
-        if (!alive) return;
-        if (state === 'SUBSCRIBED') {
-          connection = 'ok';
-          reloadMembers(); // catch up on anything missed while connecting
-        } else if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT' || state === 'CLOSED') {
-          connection = 'lost';
-        }
-        redraw();
-      });
-    });
-
   redraw();
-  return stop;
+  return {
+    update(change) {
+      if (change?.kind === 'connection') connection = change.status === 'lost' ? 'lost' : 'ok';
+      redraw();
+    },
+    stop() {
+      if (!alive) return;
+      alive = false;
+      if (dialog.open) dialog.close();
+      panel.destroy();
+      document.documentElement.classList.remove('is-lobby');
+    },
+  };
 }
 
-function closeDialog(ctx, session) {
+function closeDialog(ctx, live) {
   const error = h('p', { class: 't-error', role: 'alert' });
   const confirm = h('button', { class: 'btn danger', type: 'button' }, '수업 닫기');
   const cancel = h('button', { class: 'btn', type: 'button', autofocus: true }, '취소');
@@ -361,7 +339,7 @@ function closeDialog(ctx, session) {
     confirm.disabled = true;
     confirm.textContent = '닫는 중…';
     try {
-      await endSession(ctx.client, session.id);
+      await live.end();
       dialog.close();
       ctx.navigate('/teacher');
     } catch (err) {

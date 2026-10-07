@@ -29,7 +29,7 @@ export function pictureCard({ src, title, detail, radio }) {
 }
 
 export function uploadedDetail(image) {
-  return formatDateTime(image.created_at).replace(/ (오전|오후).*$/, '');
+  return formatDateTime(image.createdAt).replace(/ (오전|오후).*$/, '');
 }
 
 export function faceWarning() {

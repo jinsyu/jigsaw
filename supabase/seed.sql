@@ -35,6 +35,27 @@ insert into jigsaw.teachers (id)
 select u.id from auth.users u
 where u.email in ('teacher1@jigsaw.test', 'teacher2@jigsaw.test');
 
+-- Teachers of the teacher screens' E2E tests and `pnpm teacher:open` (no password: only the
+-- local rt server's dev route issues their token). Kept apart from teacher1/2, which the DB
+-- tests use. scripts/lib/local-teacher.mjs adds the same rows to stacks seeded before them.
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change_token_new, email_change,
+  email_change_token_current, phone_change, phone_change_token, reauthentication_token
+)
+select
+  '00000000-0000-0000-0000-000000000000', t.id, 'authenticated', 'authenticated', t.email, '', now(),
+  '{"provider":"email","providers":["email"]}', '{}', now(), now(),
+  '', '', '', '', '', '', '', ''
+from (values
+  ('33333333-3333-4333-8333-333333333333'::uuid, 'e2e-teacher@jigsaw.test'),
+  ('44444444-4444-4444-8444-444444444444'::uuid, 'e2e-other@jigsaw.test')
+) as t (id, email);
+
+insert into jigsaw.teachers (id)
+values ('33333333-3333-4333-8333-333333333333'), ('44444444-4444-4444-8444-444444444444');
+
 -- Local stand-in for the shared gyosil core.profiles table, which already exists on the hosted
 -- project (platform.md). Seed only, never in a jigsaw migration. Same columns as the hosted
 -- table (checked read-only on the hosted project before T20).

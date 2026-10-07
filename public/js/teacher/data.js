@@ -1,82 +1,25 @@
-// Supabase reads and RPC calls used by the teacher screens.
-// Teachers only read through RLS and change sessions through RPCs (T4).
+// Class requests of the teacher screens (rt server, server/src/http.js). The live parts of a
+// class (students, groups, start, end, overview) go over its socket (session-live.js).
 import { normalizeHints } from '../store/puzzle-store.js';
 
-const SESSION_FIELDS =
-  'id, code, status, builtin_key, image_id, piece_count, created_at, started_at, ended_at, ' +
-  'hint_preview, hint_outline, hint_picture_button, hint_underlay';
-
-export async function listSessions(client) {
-  const { data, error } = await client
-    .from('sessions')
-    .select(`${SESSION_FIELDS}, groups(count)`)
-    .order('created_at', { ascending: false })
-    .limit(50);
-  if (error) throw error;
-  return data.map(({ groups, ...s }) => ({ ...s, groupCount: groups?.[0]?.count ?? 0 }));
+/**
+ * My classes, newest first: { id, code, status, builtinKey, imageId, pieceCount, groupCount,
+ * hints, createdAt, startedAt, endedAt }.
+ */
+export async function listSessions(api) {
+  const { sessions } = await api.get('/api/sessions');
+  return sessions.map((s) => ({ ...s, hints: normalizeHints(s.hints) }));
 }
 
-export async function getSession(client, id) {
-  const { data, error } = await client
-    .from('sessions')
-    .select(`${SESSION_FIELDS}, groups(id, number)`)
-    .eq('id', id)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
-  const groups = [...data.groups].sort((a, b) => a.number - b.number);
-  return { ...data, groups };
-}
-
-// picture: { builtinKey, aspect } or { imageId }; hints: puzzle-store Hints (missing = defaults).
-export async function createSession(client, { picture, pieceCount, groupCount, hints = {} }) {
-  const h = normalizeHints(hints);
-  const args = {
-    p_piece_count: pieceCount,
-    p_group_count: groupCount,
-    p_hint_preview: h.preview,
-    p_hint_outline: h.outline,
-    p_hint_picture_button: h.pictureButton,
-    p_hint_underlay: h.underlay,
+// picture: { builtinKey } or { imageId }; hints: puzzle-store Hints (missing = defaults).
+// Resolves with { sessionId, code }.
+export async function createSession(api, { picture, pieceCount, groupCount, hints = {} }) {
+  const body = {
+    pieceCount,
+    groupCount,
+    picture: picture.imageId ? { imageId: picture.imageId } : { builtinKey: picture.builtinKey },
+    hints: normalizeHints(hints),
   };
-  if (picture.imageId) args.p_image_id = picture.imageId;
-  else Object.assign(args, { p_builtin_key: picture.builtinKey, p_aspect: picture.aspect });
-  const { data, error } = await client.rpc('create_session', args);
-  if (error) throw error;
-  return data;
-}
-
-export async function endSession(client, id) {
-  const { error } = await client.rpc('end_session', { p_session: id });
-  if (error) throw error;
-}
-
-// Students of a session (no names: those come from Presence on session:<id>).
-export async function listMembers(client, sessionId) {
-  const { data, error } = await client
-    .from('members')
-    .select('id, user_id, group_id, color')
-    .eq('session_id', sessionId)
-    .order('id');
-  if (error) throw error;
-  return data;
-}
-
-// group null = back to "no group yet".
-export async function assignMember(client, memberId, groupId) {
-  const { data, error } = await client.rpc('assign_member', { p_member: memberId, p_group: groupId });
-  if (error) throw error;
-  return data;
-}
-
-export async function randomizeGroups(client, sessionId) {
-  const { data, error } = await client.rpc('randomize_groups', { p_session: sessionId });
-  if (error) throw error;
-  return data;
-}
-
-export async function startSession(client, sessionId) {
-  const { data, error } = await client.rpc('start_session', { p_session: sessionId });
-  if (error) throw error;
-  return data;
+  const { sessionId, code } = await api.post('/api/sessions', body);
+  return { sessionId, code };
 }

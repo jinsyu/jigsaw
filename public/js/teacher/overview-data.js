@@ -1,53 +1,24 @@
-// Data for 모둠 한눈에 보기 (mockup teacher-overview): one session_overview read every
-// POLL_MS (spec: the teacher polls instead of listening to every group channel), turned into
-// what the screen shows. The model functions are pure (unit-tested).
+// Data for 모둠 한눈에 보기 (mockup teacher-overview): the class state the rt server pushes
+// (session-live.js) turned into what the screen shows. The model functions are pure
+// (unit-tested).
 //
-// Student names come only from Presence (student/presence.js) and the page's memory (D14);
-// the server sends member rows without names.
+// Student names come only from the rt server's roster (its memory, spec D14).
 import { buildRoster } from './roster.js';
 
-export const POLL_MS = 3000;
-// A student out of Presence for this long has had the tray dealt to the others (T6: 1 minute).
-export const TRAY_DEALT_MS = 60_000;
-
-const SETUP_FIELDS = 'cols, rows, aspect, seed';
-
-// Grid, picture aspect and shape seed: the same on every device (geometry.js).
-export async function getPuzzleSetup(client, sessionId) {
-  const { data, error } = await client.from('sessions').select(SETUP_FIELDS).eq('id', sessionId).maybeSingle();
-  if (error) throw error;
-  if (!data) throw new Error(`session ${sessionId} is not readable`);
-  return { cols: data.cols, rows: data.rows, aspect: data.aspect, seed: Number(data.seed) };
-}
-
-export async function fetchOverview(client, sessionId) {
-  const { data, error } = await client.rpc('session_overview', { p_session: sessionId });
-  if (error) throw error;
-  return data;
-}
-
-// The picture to cut the pieces from: a built-in file, or the teacher's own picture from the
-// private bucket as a blob: URL (allowed by img-src everywhere, never expires mid-class).
-export async function pictureSource(client, session, builtins) {
-  if (session.builtin_key) {
-    const found = builtins.find((b) => b.key === session.builtin_key);
-    if (!found?.src) throw new Error(`unknown built-in picture: ${session.builtin_key}`);
+// The picture to cut the pieces from: a built-in file, or the teacher's own picture through the
+// signed URL the server sent with the state, read once into a blob: URL (allowed by img-src
+// everywhere, never expires mid-class, and the canvases stay readable).
+export async function pictureSource(setup, builtins, fetchImpl = globalThis.fetch) {
+  if (setup.builtinKey) {
+    const found = builtins.find((b) => b.key === setup.builtinKey);
+    if (!found?.src) throw new Error(`unknown built-in picture: ${setup.builtinKey}`);
     return { src: found.src, revoke: () => {} };
   }
-  if (!session.image_id) throw new Error('the session has no picture');
-  const { data: image, error } = await client.from('images').select('path').eq('id', session.image_id).maybeSingle();
-  if (error) throw error;
-  if (!image) throw new Error('the picture is not readable');
-  const { data: blob, error: downloadError } = await client.storage.from('images').download(image.path);
-  if (downloadError) throw downloadError;
-  const src = URL.createObjectURL(blob);
+  if (!setup.pictureUrl) throw new Error('the class picture has no address');
+  const res = await fetchImpl(setup.pictureUrl, { credentials: 'omit', cache: 'no-store' });
+  if (!res.ok) throw new Error(`picture: HTTP ${res.status}`);
+  const src = URL.createObjectURL(await res.blob());
   return { src, revoke: () => URL.revokeObjectURL(src) };
-}
-
-// Server ms - local ms, from the server time in an answer and the local times around the call.
-export function clockOffset(serverIso, sentAt, receivedAt) {
-  const server = Date.parse(serverIso);
-  return Number.isFinite(server) ? server - (sentAt + receivedAt) / 2 : 0;
 }
 
 export const percentOf = (placed, total) => (total > 0 ? Math.floor((placed / total) * 100) : 0);
@@ -83,65 +54,47 @@ export function overviewColumns(count) {
 }
 
 /**
- * @param {object} raw  session_overview answer
  * @param {object} input
- * @param {Map<number, string>} input.online  names of members online now (presenceNames)
- * @param {Map<number, string>} input.seen    last name seen per member (this page only)
- * @param {number} input.serverNow            ms, server clock
+ * @param {string} input.status
+ * @param {number|null} input.startedAt   ms, server clock
+ * @param {Array} input.groups   server overview groups: { number, empty, completedAt, progress: { placed, total }, clusters }
+ * @param {Array} input.members  server roster: { id, name, group, color, online }
+ * @param {(memberId: string) => number|null} [input.awayMs]  time offline seen on this page
  */
-export function buildOverview(raw, { online, seen, serverNow }) {
-  const groupsRaw = raw?.groups ?? [];
-  const members = (raw?.members ?? []).map((m) => ({
-    id: Number(m.id),
-    user_id: m.user_id,
-    group_id: m.group_id === null || m.group_id === undefined ? null : Number(m.group_id),
-    color: m.color ?? null,
-    lastSeen: Date.parse(m.last_seen),
-  }));
-  const roster = buildRoster({
-    members,
-    groups: groupsRaw.map((g) => ({ id: Number(g.id), number: g.number })),
-    online,
-    seen,
-  });
-  const lastSeen = new Map(members.map((m) => [m.id, m.lastSeen]));
-  const withAway = (student) => ({
-    ...student,
-    awayMs: student.online || !Number.isFinite(lastSeen.get(student.id)) ? null : Math.max(0, serverNow - lastSeen.get(student.id)),
-  });
-  const startedAt = raw?.started_at ? Date.parse(raw.started_at) : null;
+export function buildOverview({ status = 'playing', startedAt = null, groups: groupsRaw = [], members = [], awayMs = () => null }) {
+  const groupRefs = groupsRaw.map((g) => ({ id: g.number, number: g.number }));
+  const roster = buildRoster({ members, groups: groupRefs });
+  const withAway = (student) => ({ ...student, awayMs: student.online ? null : awayMs(student.id) });
 
   const groups = groupsRaw.map((g) => {
-    const id = Number(g.id);
-    const total = Number(g.total) || 0;
-    const placed = Math.min(total, Number(g.placed) || 0);
-    const completedAt = g.completed_at ? Date.parse(g.completed_at) : null;
+    const total = g.empty ? 0 : Number(g.progress?.total) || 0;
+    const placed = Math.min(total, Number(g.progress?.placed) || 0);
+    const completedAt = Number.isFinite(g.completedAt) ? g.completedAt : null;
     const done = total > 0 && (completedAt !== null || placed === total);
     return {
-      id,
+      id: g.number,
       number: g.number,
       total,
       placed,
       percent: done ? 100 : percentOf(placed, total),
       done,
-      durationMs: done && completedAt !== null && startedAt !== null ? Math.max(0, completedAt - startedAt) : null,
+      durationMs: done && completedAt !== null && Number.isFinite(startedAt) ? Math.max(0, completedAt - startedAt) : null,
       clusters: (g.clusters ?? []).map((c) => ({
-        id: Number(c.id),
+        id: c.id,
         x: c.x,
         y: c.y,
         locked: c.locked === true,
-        heldBy: c.held_by ?? null,
+        heldBy: c.heldBy ?? null,
         pieces: c.pieces ?? [],
       })),
-      students: (roster.groups.find((r) => r.id === id)?.students ?? []).map(withAway),
+      students: (roster.groups.find((r) => r.id === g.number)?.students ?? []).map(withAway),
     };
   });
   const active = groups.filter((g) => g.total > 0);
   return {
-    status: raw?.status ?? 'playing',
-    startedAt,
+    status,
+    startedAt: Number.isFinite(startedAt) ? startedAt : null,
     groups,
-    members,
     roster,
     pool: roster.pool.map(withAway),
     activeCount: active.length,

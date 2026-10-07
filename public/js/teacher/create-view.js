@@ -1,5 +1,6 @@
 // 새 수업 만들기 (mockup teacher-create): pick a picture, a piece count, a group count and
-// the help settings, then '수업 열기' calls create_session and opens the lobby with the code and QR.
+// the help settings, then '수업 열기' asks the rt server for the class and opens the lobby with
+// the code and QR.
 import { createSession } from './data.js';
 import { h, icon, setTitle } from './dom.js';
 import {
@@ -362,7 +363,7 @@ export function renderCreate(main, ctx) {
     const panel = panels.mine;
     panel.replaceChildren(gridSkeleton(2));
     panel.setAttribute('aria-busy', 'true');
-    loadMyImages(ctx.client)
+    loadMyImages(ctx.api)
       .then((images) => {
         if (!alive) return;
         tabButtons.mine.querySelector('.t-tab-count').textContent = String(images.length);
@@ -420,7 +421,7 @@ export function renderCreate(main, ctx) {
       .finally(() => panel.removeAttribute('aria-busy'));
   }
 
-  panels.upload.append(uploadPanel({ client: ctx.client, onUploaded: (image) => showMine(image.id) }));
+  panels.upload.append(uploadPanel({ api: ctx.api, onUploaded: (image) => showMine(image.id) }));
 
   async function open() {
     if (state.busy) return;
@@ -434,13 +435,13 @@ export function renderCreate(main, ctx) {
     openButton.textContent = '수업을 여는 중…';
     side.setAttribute('aria-busy', 'true');
     try {
-      const session = await createSession(ctx.client, {
+      const created = await createSession(ctx.api, {
         picture: state.picture,
         pieceCount: state.pieceCount,
         groupCount: clampGroupCount(groupInput.value),
         hints: state.hints,
       });
-      if (alive) ctx.navigate(sessionPath(session.id));
+      if (alive) ctx.navigate(sessionPath(created.sessionId));
     } catch (err) {
       console.error(err);
       if (!alive) return;

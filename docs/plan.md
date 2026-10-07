@@ -132,7 +132,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
     - 열린 수업 그림 지우기가 거부되고, 지우면 Storage 파일도 사라진다(D2).
     - 실제 구글 로그인은 T25 에서 확인한다.
 
-- [ ] T21: 화면 전환 ① 교사 화면 — DoD: D1, D2, D3, D4, D11
+- [x] T21: 화면 전환 ① 교사 화면 — DoD: D1, D2, D3, D4, D11
   - `public/js/rt-client.js`: rt 주소를 고른다(`config.js`: 로컬 주소면 `http://localhost:3400`). 운영 rt 주소는 T25 까지 비워 둔다. 비어 있으면 교사·학생 화면은 지금처럼 '준비 중'을 보인다(이 태스크부터 main 푸시가 곧 운영 배포이므로). 이를 E2E(`csp.spec`·`teacher.spec` 의 '준비 중' 시험)로 계속 확인한다. fetch 래퍼와 socket.io 클라이언트(고정 버전 ESM, `public/js/vendor/socket.io-<버전>.esm.min.js`)를 둔다.
   - 로그인 화면은 GIS 버튼이다. nonce 는 원본·해시를 만들어 원본을 서버로 보낸다. 받은 교사 토큰은 localStorage 에 두고 만료되면 다시 로그인한다. 로컬·E2E 는 dev 교사 토큰을 주입한다. 처음 오는 교사는 '함께 퍼즐 시작하기' 화면(이름·약관 동의, 목업 문체)을 거친다. 시작하기 화면은 로그인 응답의 `profile.displayName`(다른 gyosil 앱에서 정한 이름)을 이름 칸에 미리 채운다.
   - 연결 교체: `teacher/data.js`·`pictures.js`·`upload.js`(WebP 변환은 그대로, 전송만 rt 로)·`lobby-view.js`(Presence 대신 서버 명단)·`overview-data.js`(3초 폴링 대신 서버 푸시)를 rt 연결로 바꾼다. 교사 화면은 supabase-js 를 import 하지 않는다.
@@ -152,6 +152,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
 - [ ] T23: 이전 구조 제거·CSP·처리방침·전체 E2E — DoD: D12, D14, D15, D16, D17
   - 삭제 대상:
     - 마이그레이션·시험: `supabase/migrations/20261007*`, `tests/db/*`(살릴 것은 T17~T19 서버 시험으로 이미 옮김), `snap-parity`.
+    - 옛 구조 E2E 도우미: `tests/e2e/support/legacy.js`(T21 에서 학생 화면 시험용으로 남긴 시드 교사 비밀번호 로그인, T22 에서 쓰는 곳이 없어지면 함께 삭제).
     - 화면 모듈: `public/js/supabase-client.js`·`store/supabase-api.js`.
     - 설정: supabase-js CDN 참조, `config.toml` 의 익명 로그인·익명 가입 한도, pg_cron 관련 설정.
   - 정리 뒤 로컬 DB 에 jigsaw 스키마만 남는지 확인한다.

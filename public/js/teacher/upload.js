@@ -1,5 +1,5 @@
-// Teachers' own pictures (T8, spec D2): shrink in the browser, store as WebP in the
-// private "images" bucket, and delete again (file and row).
+// Teachers' own pictures (T8, spec D2): shrink in the browser, send the WebP to the rt server
+// (which stores it in the private bucket jigsaw-images), and delete again (file and row).
 //
 // - Redrawing on a canvas keeps only the pixels: EXIF (camera, place, time) is dropped.
 //   <img> applies the EXIF orientation before drawing, so photos stay upright.
@@ -13,11 +13,8 @@ import {
   checkFile,
   fitSize,
   isHeic,
-  newImageId,
 } from './upload-rules.js';
 
-const BUCKET = 'images';
-const SIGNED_URL_SECONDS = 60 * 60;
 // Relative to this module, so it works on any host. The .wasm sits next to its loader.
 const WASM_ENCODER = new URL('../vendor/jsquash-webp-1.5.0/encode.js', import.meta.url).href;
 
@@ -110,61 +107,44 @@ export async function prepareImage(file, onStage = () => {}) {
 }
 
 /**
- * Uploads a picture: Storage file first, then the images row (the file is removed again
- * if the row cannot be saved). Resolves with the row plus a short-lived URL.
- * @param {import('@supabase/supabase-js').SupabaseClient} client
+ * Uploads a picture through the rt server, which checks it again and stores it in the private
+ * bucket (spec D2). Resolves with { id, width, height, url, encoder }.
+ * @param {{ upload: (path: string, blob: Blob) => Promise<object> }} api
  * @param {File} file
- * @param {(stage: string) => void} [onStage]  prepareImage stages, then 'upload' | 'save'
+ * @param {(stage: string) => void} [onStage]  prepareImage stages, then 'upload'
  */
-export async function uploadImage(client, file, onStage = () => {}) {
-  const { blob, width, height, encoder } = await prepareImage(file, onStage);
-  const { data: auth, error: authError } = await client.auth.getSession();
-  if (authError || !auth.session) throw userError(MESSAGES.failed, authError);
-  const id = newImageId();
-  const path = `${auth.session.user.id}/${id}.webp`;
-
+export async function uploadImage(api, file, onStage = () => {}) {
+  const { blob, encoder } = await prepareImage(file, onStage);
   onStage('upload');
-  const { error: uploadError } = await client.storage
-    .from(BUCKET)
-    .upload(path, blob, { contentType: 'image/webp', upsert: false, cacheControl: '3600' });
-  if (uploadError) throw userError(uploadErrorText(uploadError), uploadError);
-
-  onStage('save');
-  const { data: row, error: rowError } = await client
-    .from('images')
-    .insert({ id, width, height })
-    .select('id, path, width, height, created_at')
-    .single();
-  if (rowError) {
-    await client.storage.from(BUCKET).remove([path]);
-    throw userError(uploadErrorText(rowError), rowError);
+  try {
+    const { image } = await api.upload('/api/images', blob);
+    return { ...image, encoder };
+  } catch (error) {
+    throw userError(UPLOAD_REFUSALS[error?.code] ?? requestErrorText(error), error);
   }
-  const { data: signed } = await client.storage.from(BUCKET).createSignedUrl(row.path, SIGNED_URL_SECONDS);
-  return { ...row, url: signed?.signedUrl ?? null, encoder };
 }
 
-function uploadErrorText(error) {
-  const text = `${error?.name ?? ''} ${error?.message ?? ''}`;
-  return /fetch|network|load failed/i.test(text) ? MESSAGES.network : MESSAGES.failed;
+const UPLOAD_REFUSALS = {
+  too_many_images: '내 그림은 100장까지 둘 수 있어요. 안 쓰는 그림을 지운 뒤 올려 주세요.',
+  too_many_uploads: '사진을 너무 자주 올렸어요. 잠시 뒤 다시 올려 주세요.',
+};
+
+function requestErrorText(error) {
+  return error?.network ? MESSAGES.network : MESSAGES.failed;
 }
 
 export const IN_USE_MESSAGE = '열려 있는 수업에서 쓰고 있어 지울 수 없어요. 수업을 끝낸 뒤 지워 주세요.';
+export const GONE_MESSAGE = '이미 지워진 그림이에요. 목록을 새로 불러와 주세요.';
 
 /**
- * Deletes a picture: refuses while an open session uses it, then removes the Storage file
- * and the row (file first, so a failure leaves the card to try again).
+ * Deletes a picture (Storage file and row). The rt server refuses while an open class uses it.
  */
-export async function deleteImage(client, image) {
-  const { data: open, error: openError } = await client
-    .from('sessions')
-    .select('id')
-    .eq('image_id', image.id)
-    .neq('status', 'ended')
-    .limit(1);
-  if (openError) throw userError(uploadErrorText(openError), openError);
-  if (open.length) throw userError(IN_USE_MESSAGE);
-  const { error: fileError } = await client.storage.from(BUCKET).remove([image.path]);
-  if (fileError) throw userError(uploadErrorText(fileError), fileError);
-  const { error: rowError } = await client.from('images').delete().eq('id', image.id);
-  if (rowError) throw userError(uploadErrorText(rowError), rowError);
+export async function deleteImage(api, image) {
+  try {
+    await api.del(`/api/images/${encodeURIComponent(image.id)}`);
+  } catch (error) {
+    if (error?.code === 'image_in_use') throw userError(IN_USE_MESSAGE, error);
+    if (error?.code === 'not_found') throw userError(GONE_MESSAGE, error);
+    throw userError(requestErrorText(error), error);
+  }
 }

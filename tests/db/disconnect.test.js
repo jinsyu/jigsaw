@@ -104,8 +104,9 @@ async function trayOf(groupId, student) {
 // Puts one of the student's tray pieces on the board, far apart from the others.
 async function placeOne(groupId, student, offset = 0) {
   const { rows } = await sql(
-    `select "row" * 4 + col as piece from public.pieces
-     where group_id = $1 and owner_id = $2 and not on_board order by "row", col limit 1`,
+    `select p."row" * s.cols + p.col as piece from public.pieces p
+     join public.groups g on g.id = p.group_id join public.sessions s on s.id = g.session_id
+     where p.group_id = $1 and p.owner_id = $2 and not p.on_board order by p."row", p.col limit 1`,
     [groupId, student.userId],
   );
   const result = await rpcOk(student.client, 'take_from_tray', {

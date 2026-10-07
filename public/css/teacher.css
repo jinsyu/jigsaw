@@ -105,6 +105,34 @@ html.is-teacher .t-bar { word-break: keep-all; }
 .t-login-foot a { display: inline-flex; align-items: center; min-height: 44px; color: var(--sub); }
 .t-back-home { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: var(--sub); font-size: 15px; font-weight: 600; text-decoration: none; }
 
+/* ---------- 함께 퍼즐 시작하기 ---------- */
+.t-google-slot { min-height: 44px; display: flex; justify-content: center; }
+.t-google-status:empty { display: none; }
+.t-start-form { align-self: stretch; display: flex; flex-direction: column; gap: 10px; text-align: left; margin-top: 4px; }
+.t-label { font-size: 15px; font-weight: 700; color: var(--ink); }
+.t-text-input {
+  width: 100%; min-width: 0; height: 52px; border: 0; border-radius: 14px; background: #fff; color: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--line); padding: 0 16px; font: inherit; font-size: 18px; font-weight: 600;
+}
+.t-text-input:focus { outline: none; box-shadow: inset 0 0 0 2.5px var(--pri); }
+.t-hint { font-size: 13px; line-height: 1.5; color: var(--sub); margin-top: -4px; }
+.t-agree { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; line-height: 1.45; cursor: pointer; }
+.t-agree-input { flex: none; width: 22px; height: 22px; margin: 0; accent-color: var(--pri); }
+.t-agree a { color: var(--pri); font-weight: 600; }
+.t-start-form .btn { width: 100%; }
+.t-start-other { box-shadow: none; color: var(--sub); }
+
+/* ---------- 다시 연결하는 중 (lobby, overview) ---------- */
+.t-band {
+  position: fixed; z-index: 40; left: 50%; transform: translateX(-50%);
+  top: calc(env(safe-area-inset-top) + 76px); max-width: calc(100vw - 24px);
+  display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px;
+  background: var(--warn-weak); color: #7A4300; font-size: 15px; font-weight: 700; line-height: 1.4;
+  box-shadow: 0 6px 18px rgba(20, 30, 60, .16);
+}
+.t-band[hidden] { display: none; }
+.t-band .dot { background: var(--warn); }
+
 /* ---------- 내 수업 ---------- */
 .t-section + .t-section { margin-top: 28px; }
 .t-section-title { display: flex; align-items: baseline; gap: 8px; font-size: 18px; font-weight: 800; margin-bottom: 12px; }
@@ -419,6 +447,7 @@ a.t-session:hover { box-shadow: 0 6px 18px rgba(20, 30, 60, .08), inset 0 0 0 1.
 .t-chip .ic { width: 24px; height: 24px; flex: none; }
 .t-chip-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .t-chip:hover { box-shadow: inset 0 0 0 1.5px #CBC2B2; }
+.t-chip.is-unnamed .t-chip-name, .t-ov-mates .chip.is-unnamed .t-ov-name { font-style: italic; }
 .t-chip.is-selected { box-shadow: inset 0 0 0 2.5px var(--pri); background: #F7F8FF; }
 .t-chip.is-lifted { opacity: .35; }
 .t-chip-ghost {

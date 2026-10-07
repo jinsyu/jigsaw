@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { isConfigured, pickConfig } from '../../public/js/config.js';
+import { hasRtServer, isConfigured, pickConfig } from '../../public/js/config.js';
 
 describe('pickConfig', () => {
-  it.each(['localhost', '127.0.0.1', '[::1]'])('%s uses the local Supabase stack', (host) => {
+  it.each(['localhost', '127.0.0.1', '[::1]'])('%s uses the local stack (rt server and Supabase)', (host) => {
     const config = pickConfig(host);
     expect(config.env).toBe('local');
+    expect(config.rtUrl).toBe('http://127.0.0.1:3400');
+    expect(hasRtServer(config)).toBe(true);
     expect(config.supabaseUrl).toBe('http://127.0.0.1:56321');
     expect(config.publishableKey).toMatch(/^sb_publishable_/);
     expect(isConfigured(config)).toBe(true);
@@ -15,14 +17,16 @@ describe('pickConfig', () => {
     (host) => {
       const config = pickConfig(host);
       expect(config.env).toBe('local');
+      expect(config.rtUrl).toBe(`http://${host}:3400`);
       expect(config.supabaseUrl).toBe(`http://${host}:56321`);
     },
   );
 
-  it('any other host uses the hosted project, empty until T14', () => {
+  it('any other host uses the hosted servers, whose rt address stays empty until T25 (준비 중)', () => {
     const config = pickConfig('jigsaw.gyosil.app');
     expect(config.env).toBe('remote');
-    expect(config.googleSignIn).toBe(true);
+    expect(config.rtUrl).toBe('');
+    expect(hasRtServer(config)).toBe(false);
     expect(isConfigured(config)).toBe(false);
   });
 
@@ -35,7 +39,7 @@ describe('pickConfig', () => {
 
   it('the local stack has no Google sign-in and carries no account details', () => {
     const local = pickConfig('localhost');
-    expect(local.googleSignIn).toBe(false);
-    expect(Object.keys(local).sort()).toEqual(['env', 'googleSignIn', 'publishableKey', 'supabaseUrl']);
+    expect(local.googleClientId).toBe('');
+    expect(Object.keys(local).sort()).toEqual(['env', 'googleClientId', 'publishableKey', 'rtUrl', 'supabaseUrl']);
   });
 });

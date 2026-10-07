@@ -7,7 +7,6 @@ import {
   fitSize,
   isHeic,
   looksLikeWebp,
-  newImageId,
   uploadErrorMessage,
 } from '../../public/js/teacher/upload-rules.js';
 
@@ -62,12 +61,14 @@ describe('helpers', () => {
 
   it('explains network failures differently from other failures', () => {
     expect(uploadErrorMessage(new TypeError('Failed to fetch'))).toBe(MESSAGES.network);
-    expect(uploadErrorMessage({ message: 'new row violates row-level security policy' })).toBe(MESSAGES.failed);
+    expect(uploadErrorMessage({ message: 'server_error' })).toBe(MESSAGES.failed);
     expect(uploadErrorMessage({ userMessage: '직접 정한 안내' })).toBe('직접 정한 안내');
   });
 
-  it('makes v4 UUIDs without crypto.randomUUID (plain http on a LAN address)', () => {
-    const id = newImageId({ getRandomValues: (a) => a.map((_, i) => (i * 37) & 255) });
-    expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  it('keeps the browser limit at what the rt server accepts', async () => {
+    const { MAX_UPLOAD_BYTES } = await import('../../public/js/teacher/upload-rules.js');
+    const { MAX_BYTES, MAX_LONG_SIDE: SERVER_LONG_SIDE } = await import('../../server/src/teacher/images.js');
+    expect(MAX_UPLOAD_BYTES).toBe(MAX_BYTES);
+    expect(MAX_LONG_SIDE).toBe(SERVER_LONG_SIDE);
   });
 });

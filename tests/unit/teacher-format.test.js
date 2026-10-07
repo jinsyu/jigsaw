@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { RtError } from '../../public/js/rt-client.js';
 import {
   GROUP_COUNT,
   clampGroupCount,
@@ -58,12 +59,14 @@ describe('formatDateTime', () => {
 
 describe('createErrorMessage', () => {
   it.each([
-    [{ code: '42501', message: 'forbidden' }, '선생님 계정으로 다시 로그인해 주세요.'],
-    [{ code: '22023', message: 'invalid_picture' }, '그림을 다시 골라 주세요.'],
-    [{ code: '55000', message: 'no_free_code' }, '지금은 수업 코드를 만들 수 없어요. 잠시 뒤 다시 눌러 주세요.'],
-    [{ message: 'TypeError: Failed to fetch' }, '인터넷 연결을 확인하고 다시 눌러 주세요.'],
-    [{ code: 'XX000', message: 'boom' }, '수업을 열지 못했어요. 잠시 뒤 다시 눌러 주세요.'],
-  ])('%o', (error, text) => {
+    [new RtError('invalid_token', 401), '선생님 계정으로 다시 로그인해 주세요.'],
+    [new RtError('not_teacher', 403), '선생님 계정으로 다시 로그인해 주세요.'],
+    [new RtError('invalid_picture', 400), '그림을 다시 골라 주세요.'],
+    [new RtError('too_many_sessions', 429), '열린 수업이 너무 많아요. 끝난 수업을 닫은 뒤 다시 눌러 주세요.'],
+    [new RtError('no_free_code', 503), '지금은 수업 코드를 만들 수 없어요. 잠시 뒤 다시 눌러 주세요.'],
+    [new RtError('network'), '인터넷 연결을 확인하고 다시 눌러 주세요.'],
+    [new RtError('server_error', 500), '수업을 열지 못했어요. 잠시 뒤 다시 눌러 주세요.'],
+  ])('%s', (error, text) => {
     expect(createErrorMessage(error)).toBe(text);
   });
 });
