@@ -1,0 +1,74 @@
+:root {
+  --bg: #FBF7F0; --card: #fff; --ink: #1E2433; --sub: #5B6475; --muted: #8A93A3; --line: #E8E2D7;
+  --pri: #3F5BD9; --pri-weak: #E8ECFF; --ok: #1F9D55; --ok-weak: #E3F6EA; --warn: #C9700A; --warn-weak: #FFF1DC;
+  --danger: #D9443F; --board: #F3EDE2;
+  --m1: #F0544F; --m2: #22A559; --m3: #3B82F6; --m4: #9B51E0; --m5: #F2A20C; --m6: #E64C9A;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Pretendard, 'Apple SD Gothic Neo', sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+svg { display: block; }
+h1, h2, h3, p { margin: 0; }
+
+/* 시트(발표용 배경) */
+.sheet { background: #E9ECF1; padding: 44px 48px; }
+.sheet-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 28px; }
+.sheet-head h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+.sheet-head p { color: var(--sub); font-size: 17px; }
+.row { display: flex; gap: 36px; align-items: flex-start; }
+figure { margin: 0; }
+figcaption { font-size: 17px; font-weight: 600; color: var(--sub); margin: 0 0 14px 6px; display: flex; gap: 10px; align-items: center; }
+figcaption b { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 14px; }
+
+/* 기기 틀 */
+.phone { width: 390px; height: 844px; border-radius: 52px; background: #15181F; padding: 11px; box-shadow: 0 30px 60px rgba(20, 30, 60, .18); }
+.tablet { border-radius: 36px; background: #15181F; padding: 18px; box-shadow: 0 30px 60px rgba(20, 30, 60, .18); }
+.screen { width: 100%; height: 100%; border-radius: 42px; overflow: hidden; background: var(--bg); position: relative; display: flex; flex-direction: column; }
+.tablet .screen { border-radius: 20px; }
+.status { height: 46px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 6px 30px 0; font-size: 15px; font-weight: 600; }
+.status .sb { width: 64px; height: 12px; background: linear-gradient(90deg, var(--ink) 0 34%, transparent 34% 44%, var(--ink) 44% 66%, transparent 66% 74%, var(--ink) 74%); border-radius: 3px; opacity: .85; }
+
+/* 공용 요소 */
+.brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 19px; letter-spacing: -0.02em; }
+.brand .ic { width: 26px; height: 26px; }
+.btn { border: 0; border-radius: 14px; font: inherit; font-weight: 700; font-size: 16px; padding: 12px 18px; background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn.pri { background: var(--pri); color: #fff; box-shadow: none; }
+.btn.big { width: 100%; height: 58px; font-size: 19px; border-radius: 16px; }
+.btn.danger { color: var(--danger); box-shadow: inset 0 0 0 1.5px #F2C4C2; }
+.pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; background: #fff; box-shadow: inset 0 0 0 1px var(--line); color: var(--sub); }
+.pill.ok { background: var(--ok-weak); color: var(--ok); box-shadow: none; }
+.pill.pri { background: var(--pri-weak); color: var(--pri); box-shadow: none; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); display: inline-block; flex: none; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px 0 6px; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.chip .ic { width: 20px; height: 20px; }
+.chip.off { color: var(--muted); background: #F4F2EE; }
+.chip.off .ic { filter: grayscale(1) opacity(.5); }
+.chip em { font-style: normal; font-size: 12px; color: var(--muted); font-weight: 500; }
+.ic svg { width: 100%; height: 100%; }
+.sub { color: var(--sub); font-size: 16px; line-height: 1.5; }
+.hint { color: var(--muted); font-size: 14px; text-align: center; }
+.spacer { flex: 1; }
+.board { background-color: var(--board); background-image: radial-gradient(rgba(120, 100, 70, .16) 1.2px, transparent 1.3px); background-size: 22px 22px; position: relative; overflow: hidden; }
+.board > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.prog { display: inline-block; height: 8px; border-radius: 99px; background: #E9E3D8; overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--ok); border-radius: 99px; }
+.tile { background: #fff; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); padding: 4px; }
+.tile svg { width: 100%; height: 100%; }
+.iconbtn { width: 42px; height: 42px; border-radius: 12px; border: 0; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); display: grid; place-items: center; }
+.iconbtn svg { width: 22px; height: 22px; }
+
+/* 브라우저 틀 */
+.browser { border-radius: 14px; overflow: hidden; background: var(--bg); box-shadow: 0 30px 60px rgba(20, 30, 60, .16); display: flex; flex-direction: column; }
+.browser .bar { height: 46px; flex: none; background: #E4E7EC; display: flex; align-items: center; gap: 8px; padding: 0 18px; }
+.browser .bar i { width: 12px; height: 12px; border-radius: 50%; background: #C9CDD4; }
+.browser .url { margin-left: 18px; flex: 1; max-width: 560px; height: 30px; border-radius: 8px; background: #fff; display: flex; align-items: center; padding: 0 14px; font-size: 14px; color: var(--sub); }
+
+/* 교사 앱 공용 */
+.appbar { height: 68px; flex: none; display: flex; align-items: center; gap: 24px; padding: 0 32px; background: #fff; border-bottom: 1px solid var(--line); }
+.appbar nav { display: flex; gap: 6px; }
+.appbar nav a { padding: 8px 14px; border-radius: 10px; font-weight: 600; color: var(--sub); font-size: 15px; }
+.appbar nav a.on { background: var(--pri-weak); color: var(--pri); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: #FFE3C7; color: #A65A12; display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+.card { background: #fff; border-radius: 20px; box-shadow: 0 1px 0 rgba(0, 0, 0, .02), inset 0 0 0 1px var(--line); }
+.seg { display: flex; background: #F2EEE7; border-radius: 14px; padding: 4px; gap: 4px; }
+.seg span { flex: 1; text-align: center; padding: 10px 0; border-radius: 10px; font-weight: 700; color: var(--sub); }
+.seg span.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .1); }

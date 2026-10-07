@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="common.css">
+<script src="common.js"></script>
+<style>
+  body.sheet { padding: 40px; }
+  .browser { width: 1456px; height: 980px; }
+  .appbar .right { margin-left: auto; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+  .main { flex: 1; display: grid; grid-template-columns: 1fr 420px; gap: 24px; padding: 26px 32px; min-height: 0; }
+  .col { display: flex; flex-direction: column; gap: 18px; min-height: 0; }
+  .ttl h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+  .ttl p { color: var(--sub); margin-top: 4px; }
+  .card { padding: 20px 22px; }
+  .step { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; margin-bottom: 14px; }
+  .step i { font-style: normal; width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 14px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .tabs span { padding: 8px 14px; border-radius: 10px; font-weight: 700; color: var(--sub); font-size: 15px; }
+  .tabs span.on { background: var(--ink); color: #fff; }
+  .tabs em { font-style: normal; font-weight: 500; opacity: .7; margin-left: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .th { border-radius: 14px; overflow: hidden; background: #fff; box-shadow: inset 0 0 0 1px var(--line); position: relative; }
+  .th .img { aspect-ratio: 3/2; }
+  .th .img svg { width: 100%; height: 100%; }
+  .th p { padding: 8px 12px; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .th p small { color: var(--muted); font-weight: 500; }
+  .th.on { box-shadow: 0 0 0 3px var(--pri); }
+  .th .check { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; background: var(--pri); display: grid; place-items: center; }
+  .th .trash { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); }
+  .up { border-radius: 14px; border: 2px dashed #D8D0C2; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding: 14px; color: var(--sub); font-size: 13px; line-height: 1.45; }
+  .up b { color: var(--pri); font-size: 15px; }
+  .warnline { display: flex; gap: 8px; align-items: center; margin-top: 14px; padding: 10px 14px; border-radius: 12px; background: var(--warn-weak); color: #8A4E06; font-size: 14px; font-weight: 500; }
+  .side { padding: 22px; display: flex; flex-direction: column; gap: 22px; }
+  .preview { border-radius: 14px; overflow: hidden; aspect-ratio: 3/2; background: #fff; }
+  .preview svg { width: 100%; height: 100%; }
+  .lbl { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .lbl b { font-size: 17px; font-weight: 800; }
+  .lbl small { color: var(--muted); font-size: 13px; }
+  .note { font-size: 14px; color: var(--sub); margin-top: 8px; }
+  .stepper { display: flex; align-items: center; gap: 0; border-radius: 14px; box-shadow: inset 0 0 0 1.5px var(--line); width: fit-content; }
+  .stepper span { width: 54px; height: 50px; display: grid; place-items: center; font-size: 24px; color: var(--sub); }
+  .stepper b { width: 70px; text-align: center; font-size: 24px; font-weight: 800; }
+</style>
+</head>
+<body class="sheet">
+<div class="browser">
+  <div class="bar"><i></i><i></i><i></i><div class="url">jigsaw.gyosil.app/teacher/new</div></div>
+  <div class="appbar">
+    <div class="brand"><span class="ic" data-icon="#3F5BD9"></span>함께 퍼즐</div>
+    <nav><a>내 수업</a><a class="on">새 수업</a><a>내 그림</a></nav>
+    <div class="right"><span class="avatar">김</span>김지수 선생님</div>
+  </div>
+  <div class="main">
+    <div class="col">
+      <div class="ttl"><h1>새 수업 만들기</h1><p>그림, 조각 수, 모둠 수만 고르면 바로 수업 코드가 나와요.</p></div>
+      <div class="card">
+        <div class="step"><i>1</i>그림 고르기</div>
+        <div class="tabs"><span class="on">내장 그림<em>20</em></span><span>내 그림<em>2</em></span><span>사진 올리기</span></div>
+        <div class="grid" id="builtins"></div>
+      </div>
+      <div class="card">
+        <div class="step">내 그림 <small style="font-size:14px;color:var(--muted);font-weight:500;margin-left:4px">나만 볼 수 있어요 · 지울 때까지 보관</small></div>
+        <div class="grid" id="mine"></div>
+        <div class="warnline"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg>학생 얼굴이 나온 사진은 학교 방침을 확인한 뒤 올려 주세요.</div>
+      </div>
+    </div>
+    <div class="card side">
+      <div><div class="lbl"><b>바다 친구들</b><small>24조각 미리보기</small></div><div class="preview" id="preview"></div></div>
+      <div><div class="lbl"><b>2 &nbsp;조각 수</b></div>
+        <div class="seg"><span>12</span><span class="on">24</span><span>48</span><span>70</span></div>
+        <p class="note">모둠이 4명이면 한 사람에게 6조각씩 나눠 줘요.</p></div>
+      <div><div class="lbl"><b>3 &nbsp;모둠 수</b></div>
+        <div class="stepper"><span>−</span><b>6</b><span>+</span></div>
+        <p class="note">모둠마다 따로 퍼즐이 열려요. 모둠당 4~6명이 알맞아요.</p></div>
+      <div class="spacer"></div>
+      <button class="btn pri big">수업 열기</button>
+    </div>
+  </div>
+</div>
+<script>
+  M.injectScenes();
+  document.querySelectorAll('[data-icon]').forEach(el => el.innerHTML = M.iconPiece(el.dataset.icon));
+  const check = '<span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>';
+  const flip = (k) => k === 'flip' ? ' transform="scale(-1 1) translate(-600 0)"' : '';
+  const built = [['sea', '바다 친구들', '자연'], ['village', '숲속 마을', '자연'], ['space', '우주 여행', '과학'], ['garden', '꽃밭', '자연']];
+  document.getElementById('builtins').innerHTML = built.map(([k, n, t], i) =>
+    `<div class="th${i === 0 ? ' on' : ''}"><div class="img">${M.sceneSVG(k)}</div><p>${n}<small>${t}</small></p>${i === 0 ? check : ''}</div>`).join('');
+  const trash = '<span class="trash"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></span>';
+  document.getElementById('mine').innerHTML =
+    [['group', '학급 단체 사진', '3월 4일'], ['classroom', '우리 반 교실', '3월 2일']].map(([k, n, d]) =>
+      `<div class="th"><div class="img">${M.sceneSVG(k)}</div><p><span>${n} <small>${d}</small></span>${trash}</p></div>`).join('') +
+    `<div class="up"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3F5BD9" stroke-width="2" stroke-linecap="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4"/></svg><b>사진 올리기</b>크기를 자동으로 줄이고<br>촬영 위치 정보를 지워요</div>`;
+  const pz = M.makePuzzle(6, 4, 42);
+  const all = pz.pieces.map(p => ({ i: p.i, x: p.x0, y: p.y0 }));
+  document.getElementById('preview').innerHTML = `<svg viewBox="0 0 600 400">${M.piecesSVG(pz, 'sea', all, { shadow: false, seam: 'rgba(255,255,255,.95)', unit: 2.2 })}</svg>`;
+</script>
+</body>
+</html>

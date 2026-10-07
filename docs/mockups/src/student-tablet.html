@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="common.css">
+<script src="common.js"></script>
+<style>
+  .tablet { width: 1216px; height: 856px; }
+  .status { height: 30px; padding: 4px 26px 0; font-size: 13px; }
+  .top { display: flex; align-items: center; gap: 14px; padding: 6px 20px 12px; border-bottom: 1px solid var(--line); }
+  .top b { font-size: 22px; font-weight: 800; }
+  .top .prog { width: 140px; }
+  .top .num { font-weight: 700; color: var(--ok); }
+  .top .chips { display: flex; gap: 6px; margin-left: 18px; }
+  .top .iconbtn { margin-left: auto; width: auto; padding: 0 14px; gap: 8px; display: flex; font: inherit; font-weight: 600; font-size: 15px; }
+  .body { flex: 1; display: flex; min-height: 0; }
+  .body .board { flex: 1; }
+  .tray { width: 236px; flex: none; background: #fff; border-left: 1px solid var(--line); padding: 16px; }
+  .tray b { font-size: 17px; }
+  .tray p { font-size: 13px; color: var(--muted); margin: 4px 0 14px; line-height: 1.5; }
+  .tray .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tray .tile { aspect-ratio: 1; }
+</style>
+</head>
+<body class="sheet">
+<header class="sheet-head"><h1>학생 화면 · 태블릿 가로</h1><p>48조각 · 5명 모둠. 가로 화면에서는 내 조각 상자를 오른쪽에 둡니다. 친구가 잡은 조각은 친구 색 테두리와 이름표로 보입니다.</p></header>
+<div class="tablet"><div class="screen">
+  <div class="status"><span>9:41</span><span class="sb"></span></div>
+  <div class="top">
+    <b>2모둠</b><span class="prog"><i style="width:50%"></i></span><span class="num">24 / 48</span>
+    <div class="chips">
+      <span class="chip"><span class="ic" data-icon="#F0544F"></span>민준<em>나</em></span>
+      <span class="chip"><span class="ic" data-icon="#22A559"></span>서연</span>
+      <span class="chip"><span class="ic" data-icon="#3B82F6"></span>지호</span>
+      <span class="chip"><span class="ic" data-icon="#9B51E0"></span>유나</span>
+      <span class="chip"><span class="ic" data-icon="#F2A20C"></span>하은</span>
+    </div>
+    <button class="iconbtn"><svg viewBox="0 0 24 24" fill="none" stroke="#1E2433" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.6"/></svg>완성 그림</button>
+  </div>
+  <div class="body">
+    <div class="board"><svg id="b" viewBox="0 0 1100 800" preserveAspectRatio="xMidYMid slice"></svg></div>
+    <div class="tray"><b>내 조각 7개</b><p>끌어서 판에 놓아요.<br>상자 조각은 나만 꺼낼 수 있어요.</p><div class="tiles" id="tiles"></div></div>
+  </div>
+</div></div>
+<script>
+  M.injectScenes();
+  document.querySelectorAll('[data-icon]').forEach(el => el.innerHTML = M.iconPiece(el.dataset.icon));
+  const pz = M.makePuzzle(8, 6, 77);
+  const items = [
+    ...M.cluster(pz, 0, 4, 0, 2, 170, 110),
+    ...M.cluster(pz, 5, 7, 3, 5, 690, 450),
+    ...M.loose(pz, [[7, 0, 900, 70], [0, 5, 70, 620], [6, 1, 830, 250], [3, 5, 450, 650], [1, 4, 110, 430], [7, 2, 960, 340]]),
+    ...M.loose(pz, [[5, 2, 600, 300, '#F2A20C']]).map(o => ({ ...o, tag: '하은' })),
+    ...M.loose(pz, [[2, 3, 300, 420, '#3B82F6']]).map(o => ({ ...o, tag: '지호' })),
+  ];
+  document.getElementById('b').innerHTML = M.piecesSVG(pz, 'village', items, { unit: 1.1 });
+  const mine = [[0, 3], [4, 4], [6, 0], [2, 5], [5, 0], [1, 3], [7, 4]];
+  document.getElementById('tiles').innerHTML = mine.map(([c, r]) => `<div class="tile">${M.tileSVG(pz, 'village', pz.at(c, r).i)}</div>`).join('');
+</script>
+</body>
+</html>

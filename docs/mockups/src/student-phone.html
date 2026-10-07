@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="common.css">
+<script src="common.js"></script>
+<style>
+  .pad { padding: 8px 24px 26px; display: flex; flex-direction: column; flex: 1; }
+  .s1 { align-items: center; text-align: center; }
+  .s1 .hero { width: 170px; height: 170px; margin: 26px 0 18px; }
+  .s1 h2 { font-size: 26px; font-weight: 800; line-height: 1.35; letter-spacing: -0.02em; margin-bottom: 22px; }
+  .code { display: flex; gap: 6px; align-items: center; margin-bottom: 18px; }
+  .code span { width: 44px; height: 58px; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); display: grid; place-items: center; font-size: 28px; font-weight: 800; }
+  .code span.cur { box-shadow: inset 0 0 0 2.5px var(--pri); }
+  .code i { width: 10px; height: 3px; background: var(--muted); border-radius: 2px; }
+  .s1 .hint { margin-top: 12px; }
+  .teacher { font-size: 15px; color: var(--sub); margin-bottom: 8px; }
+  .teacher b { color: var(--pri); }
+  .policy { font-size: 13px; color: var(--muted); text-decoration: underline; }
+  .topnav { display: flex; align-items: center; gap: 12px; padding: 4px 18px 0; }
+  .back { font-size: 34px; color: var(--sub); line-height: 1; width: 30px; }
+  .s2 h2 { font-size: 27px; font-weight: 800; margin: 26px 0 8px; letter-spacing: -0.02em; }
+  .input { height: 62px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 2.5px var(--pri); display: flex; align-items: center; padding: 0 18px; font-size: 24px; font-weight: 700; margin-top: 24px; }
+  .caret { width: 2.5px; height: 28px; background: var(--pri); margin-left: 2px; }
+  .note { display: flex; gap: 8px; align-items: flex-start; margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: var(--ok-weak); color: #17693C; font-size: 14px; line-height: 1.45; font-weight: 500; }
+  .note svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+  .kbd { background: #D3D7DE; padding: 8px 4px 26px; display: grid; gap: 9px; }
+  .kbd div { display: flex; gap: 5px; justify-content: center; }
+  .kbd span { flex: 0 0 32px; height: 42px; border-radius: 6px; background: #fff; display: grid; place-items: center; font-size: 19px; box-shadow: 0 1px 0 rgba(0, 0, 0, .25); }
+  .kbd span.w { flex-basis: 46px; background: #ADB3BE; font-size: 14px; }
+  .kbd span.sp { flex-basis: 180px; font-size: 14px; color: var(--sub); }
+  .kbd span.done { flex-basis: 74px; background: var(--pri); color: #fff; font-size: 15px; font-weight: 700; }
+  .s3 { align-items: center; text-align: center; }
+  .s3 .bigicon { width: 120px; height: 120px; margin: 46px 0 22px; }
+  .s3 h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .mates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin: 28px 0 22px; }
+  .mate { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); font-weight: 700; font-size: 17px; }
+  .mate .ic { width: 30px; height: 30px; }
+  .mate em { font-style: normal; font-size: 12px; color: var(--pri); background: var(--pri-weak); padding: 2px 7px; border-radius: 99px; margin-left: auto; }
+  .mate.me { box-shadow: inset 0 0 0 2px var(--m1); }
+  .tipcard { width: 100%; text-align: left; padding: 16px 18px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); }
+  .tipcard b { font-size: 15px; }
+  .tipcard ol { margin: 8px 0 0; padding-left: 20px; color: var(--sub); font-size: 15px; line-height: 1.7; }
+  .pz-top { display: flex; align-items: center; justify-content: space-between; padding: 2px 16px 8px; }
+  .pz-top .l { display: flex; align-items: center; gap: 10px; }
+  .pz-top .l b { font-size: 20px; font-weight: 800; }
+  .pz-top .prog { width: 90px; }
+  .pz-top .num { font-size: 15px; font-weight: 700; color: var(--ok); }
+  .mrow { display: flex; gap: 6px; padding: 0 16px 10px; overflow: hidden; }
+  .mrow .chip { height: 28px; font-size: 13px; }
+  .mrow .chip .ic { width: 18px; height: 18px; }
+  .pz-board { flex: 1; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .tag { position: absolute; padding: 3px 9px; border-radius: 99px; color: #fff; font-size: 12px; font-weight: 700; }
+  .hint2 { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); background: rgba(30, 36, 51, .78); color: #fff; font-size: 13px; padding: 6px 12px; border-radius: 99px; white-space: nowrap; }
+  .tray { flex: none; background: #fff; padding: 12px 14px 22px; }
+  .tray-h { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+  .tray-h b { font-size: 16px; }
+  .tray-h span { font-size: 13px; color: var(--muted); }
+  .tiles { display: flex; gap: 8px; }
+  .tiles .tile { width: 62px; height: 62px; }
+  .tiles .tile.lift { box-shadow: 0 8px 18px rgba(0, 0, 0, .18), inset 0 0 0 2px var(--m1); transform: translateY(-6px) rotate(-4deg); }
+  .s5 { align-items: center; text-align: center; position: relative; }
+  .confetti { position: absolute; inset: 0; pointer-events: none; }
+  .confetti i { position: absolute; width: 9px; height: 15px; border-radius: 2px; }
+  .s5 .pill { margin-top: 38px; }
+  .s5 h2 { font-size: 34px; font-weight: 900; margin: 14px 0 8px; letter-spacing: -0.03em; }
+  .done-img { width: 100%; aspect-ratio: 3/2; margin: 26px 0 20px; border-radius: 18px; overflow: hidden; background: #fff; padding: 8px; box-shadow: 0 12px 30px rgba(60, 40, 20, .14); }
+  .done-img svg { width: 100%; height: 100%; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 18px; }
+  .stats div { background: #fff; border-radius: 16px; box-shadow: inset 0 0 0 1px var(--line); padding: 12px; }
+  .stats small { display: block; font-size: 13px; color: var(--muted); margin-bottom: 2px; }
+  .stats b { font-size: 21px; font-weight: 800; }
+</style>
+</head>
+<body class="sheet">
+<header class="sheet-head"><h1>학생 화면 · 스마트폰</h1><p>로그인 없이 코드와 이름만으로 들어와, 모둠 친구들과 퍼즐 하나를 함께 맞춥니다.</p></header>
+<div class="row">
+  <figure><figcaption><b>1</b>첫 화면 · 코드 넣기</figcaption>
+    <div class="phone"><div class="screen">
+      <div class="status"><span>9:41</span><span class="sb"></span></div>
+      <div class="pad s1">
+        <div class="brand"><span class="ic" data-icon="#3F5BD9"></span>함께 퍼즐</div>
+        <div class="hero" id="hero"></div>
+        <h2>선생님이 알려 준<br>코드를 넣어요</h2>
+        <div class="code"><span>4</span><span>8</span><span>2</span><i></i><span>9</span><span>1</span><span class="cur">3</span></div>
+        <button class="btn pri big">들어가기</button>
+        <p class="hint">QR 코드를 찍으면 코드를 넣지 않아도 돼요</p>
+        <div class="spacer"></div>
+        <p class="teacher">선생님이신가요? <b>수업 만들기 →</b></p>
+        <p class="policy">개인정보 처리방침</p>
+      </div>
+    </div></div>
+  </figure>
+
+  <figure><figcaption><b>2</b>이름 넣기</figcaption>
+    <div class="phone"><div class="screen">
+      <div class="status"><span>9:41</span><span class="sb"></span></div>
+      <div class="topnav"><span class="back">‹</span><span class="pill">수업 482 913</span></div>
+      <div class="pad s2">
+        <h2>이름을 알려 주세요</h2>
+        <p class="sub">모둠 친구들 화면에 이 이름이 보여요</p>
+        <div class="input">민준<span class="caret"></span></div>
+        <div class="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>이름은 저장하지 않아요.<br>수업이 끝나면 사라져요.</span></div>
+        <div class="spacer"></div>
+        <button class="btn pri big">다음</button>
+      </div>
+      <div class="kbd">
+        <div><span>ㅂ</span><span>ㅈ</span><span>ㄷ</span><span>ㄱ</span><span>ㅅ</span><span>ㅛ</span><span>ㅕ</span><span>ㅑ</span><span>ㅐ</span><span>ㅔ</span></div>
+        <div><span>ㅁ</span><span>ㄴ</span><span>ㅇ</span><span>ㄹ</span><span>ㅎ</span><span>ㅗ</span><span>ㅓ</span><span>ㅏ</span><span>ㅣ</span></div>
+        <div><span class="w">⇧</span><span>ㅋ</span><span>ㅌ</span><span>ㅊ</span><span>ㅍ</span><span>ㅠ</span><span>ㅜ</span><span>ㅡ</span><span class="w">⌫</span></div>
+        <div><span class="w">123</span><span class="sp">스페이스</span><span class="done">완료</span></div>
+      </div>
+    </div></div>
+  </figure>
+
+  <figure><figcaption><b>3</b>기다리기 · 내 모둠</figcaption>
+    <div class="phone"><div class="screen">
+      <div class="status"><span>9:41</span><span class="sb"></span></div>
+      <div class="pad s3">
+        <span class="pill pri" style="margin-top:10px"><i class="dot" style="background:var(--pri)"></i>선생님이 시작하기를 기다리는 중</span>
+        <div class="bigicon ic" data-icon="#F0544F"></div>
+        <h2>민준, 1모둠이에요!</h2>
+        <p class="sub">선생님이 시작하면 퍼즐이 열려요</p>
+        <div class="mates">
+          <div class="mate me"><span class="ic" data-icon="#F0544F"></span>민준<em>나</em></div>
+          <div class="mate"><span class="ic" data-icon="#22A559"></span>서연</div>
+          <div class="mate"><span class="ic" data-icon="#3B82F6"></span>지호</div>
+          <div class="mate"><span class="ic" data-icon="#9B51E0"></span>유나</div>
+        </div>
+        <div class="tipcard"><b>이렇게 맞춰요</b>
+          <ol><li>내 조각 상자에서 조각을 꺼내요</li><li>판 위 조각은 누구나 옮길 수 있어요</li><li>맞는 자리에 놓으면 딱 붙어요</li></ol>
+        </div>
+      </div>
+    </div></div>
+  </figure>
+
+  <figure><figcaption><b>4</b>함께 맞추기</figcaption>
+    <div class="phone"><div class="screen">
+      <div class="status"><span>9:41</span><span class="sb"></span></div>
+      <div class="pz-top">
+        <div class="l"><b>1모둠</b><span class="prog"><i style="width:37.5%"></i></span><span class="num">9 / 24</span></div>
+        <button class="iconbtn" title="완성 그림 보기"><svg viewBox="0 0 24 24" fill="none" stroke="#1E2433" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.6"/></svg></button>
+      </div>
+      <div class="mrow">
+        <span class="chip"><span class="ic" data-icon="#F0544F"></span>민준<em>나</em></span>
+        <span class="chip"><span class="ic" data-icon="#22A559"></span>서연</span>
+        <span class="chip"><span class="ic" data-icon="#3B82F6"></span>지호</span>
+        <span class="chip off"><span class="ic" data-icon="#9B51E0"></span>유나<em>잠시 나감</em></span>
+      </div>
+      <div class="board pz-board" id="board4"><svg id="b4" viewBox="0 0 560 760" preserveAspectRatio="xMidYMid slice"></svg>
+        <span class="hint2">두 손가락으로 크게 볼 수 있어요</span>
+      </div>
+      <div class="tray">
+        <div class="tray-h"><b>내 조각 5개</b><span>끌어서 판에 놓아요 · 나만 꺼낼 수 있어요</span></div>
+        <div class="tiles" id="tiles4"></div>
+      </div>
+    </div></div>
+  </figure>
+
+  <figure><figcaption><b>5</b>완성</figcaption>
+    <div class="phone"><div class="screen">
+      <div class="status"><span>9:41</span><span class="sb"></span></div>
+      <div class="pad s5">
+        <div class="confetti" id="conf"></div>
+        <span class="pill ok">모든 조각이 맞았어요</span>
+        <h2>1모둠 완성!</h2>
+        <p class="sub">민준 · 서연 · 지호 · 유나가 함께 맞췄어요</p>
+        <div class="done-img" id="done"></div>
+        <div class="stats"><div><small>걸린 시간</small><b>12분 40초</b></div><div><small>조각</small><b>24개</b></div></div>
+        <p class="hint">선생님 화면에도 완성이 표시됐어요</p>
+      </div>
+    </div></div>
+  </figure>
+</div>
+<script>
+  M.injectScenes();
+  document.querySelectorAll('[data-icon]').forEach(el => el.innerHTML = M.iconPiece(el.dataset.icon));
+  document.getElementById('hero').innerHTML = M.colorPieces(2, 2, 3, ['#F0544F', '#22A559', '#3B82F6', '#F2A20C']);
+
+  const pz = M.makePuzzle(6, 4, 42);
+  // 판 단위 = 조각 100. 덩어리 9조각 + 흩어진 3조각 + 서연이 잡은 1조각
+  const items = [
+    ...M.cluster(pz, 0, 2, 0, 2, 40, 170),
+    ...M.loose(pz, [[4, 0, 410, 40], [5, 3, 420, 600], [1, 3, 60, 560], [4, 3, 250, 610]]),
+    ...M.loose(pz, [[3, 2, 372, 400, '#22A559']]).map(o => ({ ...o, tag: '서연' })),
+  ];
+  document.getElementById('b4').innerHTML = M.piecesSVG(pz, 'sea', items, { unit: 1.5 });
+  const mine = [[2, 3], [4, 2], [5, 0], [3, 0], [0, 3]];
+  document.getElementById('tiles4').innerHTML = mine.map(([c, r], k) => `<div class="tile${k === 0 ? ' lift' : ''}">${M.tileSVG(pz, 'sea', pz.at(c, r).i)}</div>`).join('');
+
+  const all = pz.pieces.map(p => ({ i: p.i, x: p.x0, y: p.y0 }));
+  document.getElementById('done').innerHTML = `<svg viewBox="0 0 600 400">${M.piecesSVG(pz, 'sea', all, { shadow: false, seam: 'rgba(30,25,20,.14)' })}</svg>`;
+
+  const r = M.rng(9), cols = ['#F0544F', '#22A559', '#3B82F6', '#9B51E0', '#F2A20C', '#E64C9A'];
+  document.getElementById('conf').innerHTML = Array.from({ length: 34 }, (_, k) =>
+    `<i style="left:${(k % 2 ? 2 + r() * 14 : 84 + r() * 14).toFixed(1)}%;top:${(r() * 40).toFixed(1)}%;background:${cols[k % 6]};transform:rotate(${(r() * 180).toFixed(0)}deg)"></i>`).join('');
+</script>
+</body>
+</html>
