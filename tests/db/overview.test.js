@@ -2,6 +2,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   TEACHERS,
+  anonClient,
   cleanup,
   deleteSessions,
   rpcOk,
@@ -113,6 +114,23 @@ describe('session_overview', () => {
       expect(data).toBeNull();
       expect(error.code).toBe('42501');
     }
+    // Not signed in (anon key only): no execute grant at all.
+    const { data, error } = await anonClient().rpc('session_overview', { p_session: session.id });
+    expect(data).toBeNull();
+    expect(error).not.toBeNull();
+  });
+
+  it('접속이 끊긴 학생이 잡은 덩어리는 잡은 사람을 보이지 않는다 (서버 held_by_other 와 같은 기준)', async () => {
+    const { session, groupIds, students } = await startedClass();
+    const cell = 'select cluster_id from public.pieces where group_id = $1 and "row" = 0 and col = $2';
+    await sql('update public.pieces set on_board = true, owner_id = null where group_id = $1 and "row" = 0 and col < 2', [groupIds[0]]);
+    await sql(`update public.clusters set grabbed_by = $2, grabbed_at = now() where id = (${cell.replace('$2', '0')})`, [groupIds[0], students[0].userId]);
+    await sql(`update public.clusters set grabbed_by = $2, grabbed_at = now() where id = (${cell.replace('$2', '1')})`, [groupIds[0], students[1].userId]);
+    await sql("update public.members set last_seen = now() - interval '20 seconds' where user_id = $1", [students[1].userId]);
+    await sql('update public.members set last_seen = now() where user_id = $1', [students[0].userId]);
+    const overview = await rpcOk(teacher1.client, 'session_overview', { p_session: session.id });
+    const held = Object.fromEntries(overview.groups[0].clusters.map((c) => [c.pieces[0], c.held_by]));
+    expect(held).toEqual({ 0: students[0].userId, 1: null });
   });
 
   it('수업을 끝내면 상태는 ended, 학생 행은 0개다', async () => {

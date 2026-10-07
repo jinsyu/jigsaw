@@ -124,18 +124,31 @@ describe('학생 읽기', () => {
 });
 
 describe('교사 읽기', () => {
+  // Reads are narrowed to this file's two sessions: the shared test teacher may own other
+  // sessions at the same time (E2E or other DB tests running against the same stack).
   it('자기 수업과 그 모둠·학생·조각 전체를 읽는다', async () => {
     const { client } = teacher1;
-    const { data: sessions } = await client.from('sessions').select('id');
+    const both = [sessionA.id, sessionB.id];
+    const { data: sessions } = await client.from('sessions').select('id').in('id', both);
     expect(idsOf(sessions)).toEqual([sessionA.id]);
-    const { data: groups } = await client.from('groups').select('id');
+    const { data: groups } = await client.from('groups').select('id').in('session_id', both);
     expect(idsOf(groups)).toEqual(sorted([a1.id, a2.id]));
-    const { data: members } = await client.from('members').select('user_id');
+    const { data: members } = await client.from('members').select('user_id').in('session_id', both);
     expect(members.map((m) => m.user_id).sort()).toEqual(
       [s1.userId, s5.userId, s2.userId, s4.userId].sort(),
     );
-    const { data: clusters } = await client.from('clusters').select('id');
+    const { data: clusters } = await client.from('clusters').select('id').in('group_id', [a1.id, a2.id, b1.id]);
     expect(idsOf(clusters)).toEqual(sorted([...clusterIdsOf(a1), ...clusterIdsOf(a2)]));
+  });
+
+  it('전체 목록에도 자기 수업은 있고 다른 교사의 수업은 없다', async () => {
+    const { data: sessions } = await teacher1.client.from('sessions').select('id');
+    expect(idsOf(sessions)).toContain(sessionA.id);
+    expect(idsOf(sessions)).not.toContain(sessionB.id);
+    const { data: groups } = await teacher1.client.from('groups').select('id');
+    expect(idsOf(groups)).not.toContain(b1.id);
+    const { data: members } = await teacher1.client.from('members').select('user_id');
+    expect(members.map((m) => m.user_id)).not.toContain(s3.userId);
   });
 
   it('다른 교사의 수업은 읽지 못한다', async () => {

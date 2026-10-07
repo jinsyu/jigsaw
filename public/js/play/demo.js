@@ -7,6 +7,7 @@
 import { PIECE_COUNTS, gridFor, layoutFor } from '../puzzle/geometry.js';
 import { createLocalStore, shuffledPieces } from '../store/local-store.js';
 import { mountPlayScreen } from './play-screen.js';
+import { exposeTestHook } from '../test-hooks.js';
 
 const BUILTIN_INDEX = '/images/builtin/index.json';
 const DEFAULT_PICTURE_KEY = 'sea';
@@ -70,12 +71,12 @@ export async function startDemo(main) {
   const picture = await loadDemoPicture(demoPictureKey(location.search));
   const store = createDemoStore(demoPieceCount(location.search), demoHints(location.search), picture);
   const screen = await mountPlayScreen(main, store);
-  // Test and demo hook: read-only view of the state and the board camera.
-  window.__puzzleDemo = {
+  // Test hook (local stack only, test-hooks.js): read-only view of the state and the camera.
+  exposeTestHook('__puzzleDemo', {
     state: () => store.getState(),
     camera: () => screen.board.camera,
     preview: () => screen.board.preview,
     animating: () => screen.board.animating,
     boardToClient: (x, y) => screen.board.boardToClient(x, y),
-  };
+  });
 }

@@ -12,6 +12,7 @@ import { hintsFromSession } from '../store/puzzle-store.js';
 import { openRemoteStore } from '../store/remote-store.js';
 import { createSupabaseApi } from '../store/supabase-api.js';
 import { renderCelebration } from './celebrate.js';
+import { exposeTestHook } from '../test-hooks.js';
 
 export const REDISTRIBUTE_MS = 20_000;
 const BUILTIN_INDEX = '/images/builtin/index.json';
@@ -171,8 +172,8 @@ export async function openPuzzle({ client, main, sessionId, group, userId, mates
   document.addEventListener('visibilitychange', onVisible);
   window.addEventListener('online', onVisible);
 
-  // Test hook (like window.__puzzleDemo): read-only state and the board camera.
-  window.__puzzle = {
+  // Test hook (local stack only, test-hooks.js): read-only state and the board camera.
+  const removeHook = exposeTestHook('__puzzle', {
     state: () => store.getState(),
     camera: () => screen?.board.camera ?? null,
     boardToClient: (x, y) => screen?.board.boardToClient(x, y) ?? null,
@@ -180,7 +181,7 @@ export async function openPuzzle({ client, main, sessionId, group, userId, mates
     holders: () => screen?.board.holders ?? [],
     redistribute,
     resync: () => store.resync(),
-  };
+  });
 
   return {
     store,
@@ -199,7 +200,7 @@ export async function openPuzzle({ client, main, sessionId, group, userId, mates
       screen?.destroy();
       store.dispose();
       picture.revoke();
-      delete window.__puzzle;
+      removeHook();
     },
   };
 }

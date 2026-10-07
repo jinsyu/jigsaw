@@ -15,7 +15,10 @@ const MAX_DPR = 2;
 const SPRITE_STEP_MS = 5;
 const SLIDE_MS = 450;
 // A finished board zooms in on the frame (mockup: the completed picture, bigger).
-const DONE_MARGIN = 0.14;
+const DONE_MARGIN = 0.08;
+// CSS px kept free under a finished picture for the '완성 · 9분 12초' badge (teacher.css
+// .t-ov-badge: bottom 14px + about 40px tall; 20px + 46px in the big view), so it never covers it.
+const BADGE_ROOM = { mini: 64, zoom: 84 };
 const SHADOW_ALPHA = 0.2;
 
 const easeOut = (t) => 1 - (1 - t) ** 3;
@@ -114,8 +117,10 @@ export function createBoardCanvas(host, art, kind) {
       : { x0: 0, y0: 0, x1: layout.boardWidth, y1: layout.boardHeight };
     const w = rect.x1 - rect.x0;
     const h = rect.y1 - rect.y0;
-    const scale = Math.min(size.w / w, size.h / h) || 1;
-    cam = { scale, x: (size.w - w * scale) / 2 - rect.x0 * scale, y: (size.h - h * scale) / 2 - rect.y0 * scale };
+    const room = state.done ? Math.min(BADGE_ROOM[kind] ?? 0, size.h * 0.4) : 0;
+    const areaH = Math.max(1, size.h - room);
+    const scale = Math.min(size.w / w, areaH / h) || 1;
+    cam = { scale, x: (size.w - w * scale) / 2 - rect.x0 * scale, y: (areaH - h * scale) / 2 - rect.y0 * scale };
     frameLayer.setScale(scale, size.dpr);
     art.want(kind, scale * size.dpr);
   }

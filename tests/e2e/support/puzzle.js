@@ -1,4 +1,4 @@
-// E2E helpers for a student's puzzle screen (same moves as coop.spec.js): real touch through
+// E2E helpers for a student's puzzle screen (coop.spec.js, overview.spec.js): real touch through
 // CDP on touch projects, the mouse otherwise, and the screen's read-only test hook.
 import { expect } from '@playwright/test';
 
@@ -9,7 +9,8 @@ export function makeInput(page, testInfo) {
   const touch = async (type, points) =>
     (await session()).send('Input.dispatchTouchEvent', { type, touchPoints: points.map(([x, y], id) => ({ x, y, id })) });
 
-  async function drag(path, steps = 6) {
+  // Presses along `path` and keeps holding; resolves to a function that lifts the finger.
+  async function hold(path, steps = 6) {
     const [start, ...rest] = path;
     if (hasTouch) await touch('touchStart', [start]);
     else {
@@ -25,8 +26,10 @@ export function makeInput(page, testInfo) {
       }
       prev = point;
     }
-    if (hasTouch) await touch('touchEnd', []);
-    else await page.mouse.up();
+    return async () => {
+      if (hasTouch) await touch('touchEnd', []);
+      else await page.mouse.up();
+    };
   }
 
   async function pinch(centre, d0, d1, steps = 8) {
@@ -39,12 +42,12 @@ export function makeInput(page, testInfo) {
     await touch('touchEnd', []);
   }
 
-  return { hasTouch, drag, pinch };
+  return { hasTouch, hold, pinch, drag: async (path, steps) => (await hold(path, steps))() };
 }
 
 export const puzzleState = (page) => page.evaluate(() => window.__puzzle.state());
-const toClient = (page, x, y) => page.evaluate(([bx, by]) => window.__puzzle.boardToClient(bx, by), [x, y]);
-const boardBox = (page) => page.locator('.pz-canvas').boundingBox();
+export const toClient = (page, x, y) => page.evaluate(([bx, by]) => window.__puzzle.boardToClient(bx, by), [x, y]);
+export const boardBox = (page) => page.locator('.pz-canvas').boundingBox();
 
 export async function frameOrigin(page) {
   const { layout } = await puzzleState(page);
@@ -71,16 +74,21 @@ export async function showFrame(page, input) {
   }
 }
 
-// Drags tray piece `index` so that its picture origin lands on (ox, oy): its place in the frame.
+// Client point at the centre of piece `cell` of a cluster whose picture origin is (x, y).
+export async function cellPoint(page, x, y, [col, row]) {
+  const { layout } = await puzzleState(page);
+  return toClient(page, x + (col + 0.5) * layout.pw, y + (row + 0.5) * layout.ph);
+}
+
+// Drags tray piece `index` so that its picture origin lands on (ox, oy) (its place in the
+// frame when (ox, oy) is the frame origin).
 export async function dragFromTray(page, input, index, ox, oy) {
   const { layout } = await puzzleState(page);
   const tile = page.locator(`.pz-tile[data-piece="${index}"]`);
   await tile.scrollIntoViewIfNeeded();
   const box = await tile.boundingBox();
   const start = [box.x + box.width / 2, box.y + box.height / 2];
-  const col = index % layout.cols;
-  const row = Math.floor(index / layout.cols);
-  const target = await toClient(page, ox + (col + 0.5) * layout.pw, oy + (row + 0.5) * layout.ph);
+  const target = await cellPoint(page, ox, oy, [index % layout.cols, Math.floor(index / layout.cols)]);
   const board = await boardBox(page);
   const out = board.y + board.height < box.y ? [start[0], start[1] - 40] : [start[0] - 40, start[1]];
   await input.drag([start, out, [target.x, target.y]]);

@@ -33,6 +33,7 @@ import { presenceNames } from '../student/presence.js';
 import { loadPicture } from '../play/picture.js';
 import { layoutFor } from '../puzzle/geometry.js';
 import { hintsFromSession } from '../store/puzzle-store.js';
+import { exposeTestHook } from '../test-hooks.js';
 
 // After this many failed reads in a row the screen says the data may be old.
 const FAILS_BEFORE_WARNING = 2;
@@ -698,11 +699,11 @@ export function showOverview(main, ctx, { session, picture, builtins, onEnded })
 
   poll();
   loadBoards();
-  // Test hook: the last model (read only).
-  window.__overview = { model: () => model, poll };
+  // Test hook (local stack only, test-hooks.js): the last model, read only.
+  const removeHook = exposeTestHook('__overview', { model: () => model });
   return () => {
     stop();
-    delete window.__overview;
+    removeHook();
   };
 }
 

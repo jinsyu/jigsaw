@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { expect, test } from '@playwright/test';
 import { pickConfig } from '../../public/js/config.js';
@@ -130,6 +131,21 @@ async function boardsDrawn(page) {
       return false;
     }),
   );
+}
+
+// The finished picture leaves room for the badge: the canvas is empty under the badge.
+async function badgeCoversNothing(page, cardLocator) {
+  return cardLocator.evaluate((el) => {
+    const canvas = el.querySelector('canvas');
+    const badge = el.querySelector('.t-ov-badge').getBoundingClientRect();
+    const box = canvas.getBoundingClientRect();
+    const k = canvas.width / box.width;
+    const x = Math.floor((badge.left - box.left) * k);
+    const y = Math.floor((badge.top - box.top) * k);
+    const data = canvas.getContext('2d').getImageData(x, y, Math.ceil(badge.width * k), Math.ceil(badge.height * k)).data;
+    for (let i = 3; i < data.length; i += 4) if (data[i] > 0) return false;
+    return true;
+  });
 }
 
 // Board state written straight into the database: `locked` pieces in the frame, `loose`
@@ -407,6 +423,7 @@ test('the overview looks like the mockup: 6 groups on a 1920 x 1080 whiteboard a
     await expect(page.locator('.t-ov-card')).toHaveCount(6);
     await expect(card(page, 3)).toHaveClass(/is-done/);
     await expect(card(page, 3).locator('.t-ov-badge')).toHaveText('완성 · 9분 12초');
+    await expect.poll(() => badgeCoversNothing(page, card(page, 3)), { message: `badge over the picture (${size.name})` }).toBe(true);
     await expect(page.locator('.t-ov-done')).toHaveText('완성 1 / 6모둠');
     await expect(page.locator('.t-ov-avg')).toHaveText('평균 진행률 57%'); // 62 37 100 16 50 75
     // 도윤 was here when the page opened, then left: the name stays, with the time away.
@@ -438,6 +455,12 @@ test('the overview looks like the mockup: 6 groups on a 1920 x 1080 whiteboard a
       await expect.poll(() => page.locator('.t-ov-zoom canvas').evaluate((c) => c.width)).toBeGreaterThan(1000);
       await page.waitForTimeout(500);
       await page.screenshot({ path: testInfo.outputPath('overview-whiteboard-zoom.png') });
+      await page.keyboard.press('Escape');
+      await card(page, 3).getByRole('button', { name: '3모둠 크게 보기' }).click();
+      const zoomDone = page.locator('.t-ov-zoom');
+      await expect.poll(() => badgeCoversNothing(page, zoomDone), { message: 'badge over the big picture' }).toBe(true);
+      await page.waitForTimeout(400);
+      await page.screenshot({ path: testInfo.outputPath('overview-whiteboard-zoom-done.png') });
       await page.keyboard.press('Escape');
       await page.getByRole('button', { name: '모둠 편성' }).click();
       await expect(page.getByRole('dialog', { name: '모둠 편성' })).toBeVisible();
@@ -477,6 +500,51 @@ test('reduced motion: no progress transitions or badge pop (boards jump instead 
   }));
   expect(styles).toEqual({ bar: '0s', badge: 'none' });
   await context.close();
+});
+
+// ---------- a class with the teacher's own picture ----------
+
+test("a class with the teacher's own picture: the boards cut it from the private bucket", async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-1440', 'one size is enough');
+  test.setTimeout(120_000);
+  const { client } = await teacherSession();
+  const { data: image, error: rowError } = await client.from('images').insert({ width: 1800, height: 1200 }).select().single();
+  if (rowError) throw rowError;
+  try {
+    const bytes = readFileSync(new URL('../../public/images/builtin/sea.webp', import.meta.url));
+    const { error: uploadError } = await client.storage.from('images').upload(image.path, bytes, { contentType: 'image/webp' });
+    if (uploadError) throw uploadError;
+    const session = await createClass({ pieces: 12, groups: 2, key: null, aspect: null, hints: { p_image_id: image.id, p_hint_underlay: true } });
+    for (const [g, groupId] of session.groupIds.entries()) {
+      const s = await nodeStudent(session.code, NAMES[g][0]);
+      await rpc(session.client, 'assign_member', { p_member: s.memberId, p_group: groupId });
+    }
+    await rpc(session.client, 'start_session', { p_session: session.id });
+    const grid = (await sql('select cols, rows, aspect from public.sessions where id = $1', [session.id])).rows[0];
+    await seedBoard(session.groupIds[0], grid, { locked: 5, loose: 4 });
+
+    const context = await browser.newContext({ ...testInfo.project.use });
+    await watchCsp(context);
+    await signInPage(context);
+    const page = await context.newPage();
+    const errors = watch(page, 'teacher', testInfo);
+    const downloads = [];
+    page.on('request', (r) => r.url().includes(`/storage/v1/object/images/${image.path}`) && downloads.push(r.url()));
+    await page.goto(`/teacher/sessions/${session.id}`);
+    await expect(page.locator('.t-ov-card')).toHaveCount(2);
+    await expect(page.locator('.pill.t-summary')).toHaveText('내 그림 · 12조각');
+    await expect.poll(() => boardsDrawn(page)).toBe(true);
+    expect(downloads.length).toBe(1);
+    await expect(progress(page, 1)).toHaveAttribute('aria-valuetext', '12조각 중 5조각 (41%)');
+    await page.screenshot({ path: testInfo.outputPath('overview-own-picture.png') });
+    expect(await violations(page)).toEqual([]);
+    expect(errors).toEqual([]);
+    await context.close();
+  } finally {
+    await client.storage.from('images').remove([image.path]);
+    await sql('delete from public.sessions where image_id = $1', [image.id]);
+    await client.from('images').delete().eq('id', image.id);
+  }
 });
 
 // ---------- performance on a slow whiteboard PC ----------
