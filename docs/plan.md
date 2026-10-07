@@ -30,7 +30,7 @@
   - `supabase/seed.sql`: 시험용 교사 계정. `tests/db/` 공용 도우미(교사·학생 클라이언트 만들기, service 키는 `npx supabase status -o env` 에서 읽고 저장소에 커밋하지 않음).
   - 시험: 다른 모둠·다른 수업 행 읽기·쓰기 거부, 학생이 테이블 직접 update 거부, 다른 모둠 채널 구독 거부, members 에 이름 열이 없음.
 
-- [ ] T4: 수업 흐름 RPC + 자동 정리 — DoD: D3, D4, D5, D14
+- [x] T4: 수업 흐름 RPC + 자동 정리 — DoD: D3, D4, D5, D14
   - `create_session`(열린 수업 사이에서 겹치지 않는 6자리 코드, 시드), `join_session(code)`(틀린 코드·닫힌 수업 → 정해진 오류 코드, 같은 uid 재입장은 기존 행 반환), `assign_member(member, group|null)`, `randomize_groups`, `start_session`, `end_session`.
   - `start_session`: 모둠마다 조각·덩어리 생성, 모둠원 수로 무작위 고르게 나누기(최대 1개 차이), 색 번호 부여, `realtime.send` 로 `session:<id>` 에 시작 알림.
   - 시작 후 배정된 학생은 상자 없음. 시작 후 다른 모둠으로 옮긴 학생의 상자 조각은 원래 모둠 접속자에게 나눈다.
@@ -130,3 +130,9 @@
 - **T5**: Supabase 이미지는 `extra_float_digits = 0` 이라 float8 → JSON·text 가 15자리로 잘린다. T3 마이그레이션이 API 역할에 `extra_float_digits = 1` 을 걸었지만, float8 을 JSON·text 로 만드는 함수(realtime.send 내용 등)는 `set extra_float_digits = 1` 을 직접 붙인다.
 - **T9**: Presence 키는 클라이언트가 정한다 → 대기실 이름은 members 와 대조하고, Presence 키를 그대로 믿지 않는다.
 - **T14**: `supabase config push` 금지(로컬 auth 설정이 원격에 올라감), seed 원격 적용 금지, 이메일 공급자 끄기(구글만), 익명 가입 한도 상향, 공개 Realtime 채널 접근 끄기(비공개만), `extra_float_digits` alter role 이 원격에 적용됐는지 확인.
+
+### T4 리뷰 참고사항 (T5 에서 반드시 처리)
+1. `private.deal_tray` 의 moved update WHERE 에 `not p.on_board` 와 기대 주인 조건을 다시 넣거나, 모둠 행 `for update` 잠금을 T5·T6 과 공유한다 — 교사 이동 중 학생 `take_from_tray` 와 경쟁하면 판 위 조각에 주인이 다시 생긴다(reviewer 가 두 연결로 재현). T5 에서 시험으로 막는다.
+2. `join_session`: 수업 종료로 익명 계정이 삭제된 뒤 남은 JWT 로 호출하면 원시 FK 오류(23503)가 난다 → 시작할 때 `auth.users` 존재를 확인하고, 없으면 정해진 오류(`account_gone`)를 돌려준다. T9 화면은 이를 받으면 익명 로그인을 다시 한다.
+3. `assign_member` 주석(343행 근처)과 실제 응답(`member_not_found` / `forbidden`)이 어긋난다 → 주석 또는 응답을 정리한다.
+4. 참고: cleanup 의 24시간 자동 종료는 `end` 방송·잡기 해제가 없다 → 화면은 수업 상태 조회로 종료를 감지한다(T11·T12). `start_session` 은 색 번호를 다시 매기지만 `groups` 방송이 없다 → 화면은 `start` 를 받으면 members 를 다시 읽는다(T9·T11). 내장 그림 `p_aspect` 범위 제한(예 1/2000~2000)을 검토한다.

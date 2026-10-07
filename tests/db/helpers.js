@@ -173,6 +173,30 @@ export function subscribe(client, topic, { isPrivate = true, presenceKey } = {})
   });
 }
 
+// Right after the stack starts, Realtime opens its database stream lazily on the first
+// private join, so the first messages can be missed. Sends a 'warmup' broadcast until the
+// subscription sees it, then drops the warm-up messages from `received`.
+export async function warmUp(subscription, topic) {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    await sql("select realtime.send('{}'::jsonb, 'warmup', $1, true)", [topic]);
+    const seen = await waitFor(
+      () => subscription.received.some((m) => m.event === 'warmup'),
+      { timeout: 1000 },
+    );
+    if (seen) break;
+  }
+  await sleep(200);
+  const rest = subscription.received.filter((m) => m.event !== 'warmup');
+  subscription.received.splice(0, subscription.received.length, ...rest);
+}
+
+// Calls an RPC and throws on error (for setup steps that must succeed).
+export async function rpcOk(client, fn, args) {
+  const { data, error } = await client.rpc(fn, args);
+  if (error) throw new Error(`${fn}: ${error.code} ${error.message}`);
+  return data;
+}
+
 // Leaves every channel on every client (call between tests so a topic can be joined again).
 export async function leaveAllChannels() {
   for (const client of openClients) await client.removeAllChannels();
