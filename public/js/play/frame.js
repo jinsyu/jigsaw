@@ -2,16 +2,10 @@
 // drawn faintly where the picture goes, so even an empty board shows where
 // pieces belong.
 import { traceOutline } from '../puzzle/geometry.js';
+import { frameOrigin } from '../puzzle/snap.js';
 
-// Frame origin T: the picture centred on the board.
-// TODO(T5): use snap.frameOrigin(layout) here once T5 is merged, so drawing and
-// snapping share one definition.
-export function frameOrigin(layout) {
-  return {
-    x: (layout.boardWidth - layout.width) / 2,
-    y: (layout.boardHeight - layout.height) / 2,
-  };
-}
+// The frame is drawn exactly where pieces snap in and lock (snap.js rule 6).
+export { frameOrigin };
 
 export function frameRect(layout) {
   const { x, y } = frameOrigin(layout);

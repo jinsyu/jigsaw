@@ -10,6 +10,7 @@ const freezeCluster = (c) =>
     x: c.x,
     y: c.y,
     z: c.z,
+    locked: c.locked === true,
     heldBy: c.heldBy,
     pieces: Object.freeze(c.pieces.map((cell) => Object.freeze([cell[0], cell[1]]))),
   });
@@ -126,6 +127,7 @@ export function createLocalStore({
   async function grab(clusterId) {
     const cluster = findCluster(clusterId);
     if (!cluster) return { ok: false, reason: 'not-found' };
+    if (cluster.locked) return { ok: false, reason: 'locked' };
     if (cluster.heldBy && cluster.heldBy !== me) return { ok: false, reason: 'held', heldBy: cluster.heldBy };
     cluster.heldBy = me;
     cluster.z = ++zTop;
@@ -136,10 +138,11 @@ export function createLocalStore({
   async function drop(clusterId, x, y) {
     const dropped = findCluster(clusterId);
     if (!dropped) return { ok: false, reason: 'not-found' };
+    if (dropped.locked) return { ok: false, reason: 'locked' };
     if (dropped.heldBy !== me) return { ok: false, reason: 'not-held' };
     if (!Number.isFinite(x) || !Number.isFinite(y)) return { ok: false, reason: 'bad-position' };
 
-    const plain = clusters.map((c) => ({ id: c.id, x: c.x, y: c.y, pieces: c.pieces }));
+    const plain = clusters.map((c) => ({ id: c.id, x: c.x, y: c.y, locked: c.locked, pieces: c.pieces }));
     const result = resolveDrop(layout, plain, { id: clusterId, x, y });
     const topZ = dropped.z;
     const absorbed = new Set(result.absorbed);
@@ -148,7 +151,13 @@ export function createLocalStore({
       .filter((c) => !absorbed.has(c.id))
       .map((c) => {
         const next = after.get(c.id);
-        return { ...c, x: next.x, y: next.y, pieces: next.pieces.map(([col, row]) => [col, row]) };
+        return {
+          ...c,
+          x: next.x,
+          y: next.y,
+          locked: next.locked,
+          pieces: next.pieces.map(([col, row]) => [col, row]),
+        };
       });
     const survivor = findCluster(result.id);
     survivor.heldBy = null;

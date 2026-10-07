@@ -1,19 +1,25 @@
 {
-  "version": 1,
-  "description": "놓기(drop) 맞춤 판정 공용 사례 표. JS(public/js/puzzle/snap.js resolveDrop)와 SQL(T5 drop 판정 함수)이 모든 사례에서 같은 결과를 내야 한다.",
-  "defaultTolerance": 30,
+  "version": 2,
+  "description": "놓기(drop)·꺼내기(take) 맞춤 판정 공용 사례 표. JS(public/js/puzzle/snap.js resolveDropWithHolds)와 SQL(private.resolve_drop + private.held_by_other, public.drop·public.take_from_tray RPC)이 모든 사례에서 같은 결과를 내야 한다.",
+  "defaultTolerance": 40,
   "rules": [
     "좌표: 완성 그림 너비 = cols x 100, 높이 = (cols x 100) / aspect (aspect = 그림 가로/세로, float8). 조각 칸 pw = 100, ph = 높이 / rows.",
     "판: [0, boardWidth] x [0, boardHeight], boardWidth = 너비 x sqrt(2), boardHeight = 높이 x sqrt(2). 모든 계산은 float8(배정밀도)로 한다.",
-    "덩어리 위치 (x, y) = 완성 그림 원점이 판 위에 놓인 자리. 조각 (col, row)는 (x + col x pw, y + row x ph)에 그려진다.",
+    "틀(완성 자리) 원점 T = ((boardWidth - 너비) / 2, (boardHeight - 높이) / 2). 판 가운데. 화면은 이 자리에 조각 선을 흐리게 그린다.",
+    "덩어리 위치 (x, y) = 완성 그림 원점이 판 위에 놓인 자리. 조각 (col, row)는 (x + col x pw, y + row x ph)에 그려진다. locked = 제자리(T)에 고정된 덩어리(없으면 false).",
     "1단계 판 경계 고정: 놓은 덩어리의 조각 칸(혹 제외) 범위 minCol..maxCol, minRow..maxRow로 x를 [0 - minCol x pw, boardWidth - (maxCol + 1) x pw], y를 [0 - minRow x ph, boardHeight - (maxRow + 1) x ph] 안으로 자른다. 놓은 덩어리에만, 합치기 전에 한 번만 적용한다. 합친 결과 위치는 다시 자르지 않는다.",
-    "2단계 후보: 현재 덩어리(처음엔 놓은 덩어리)와 다른 덩어리 c 중, 가로·세로로 맞닿는 조각 쌍(|dCol| + |dRow| = 1)이 하나라도 있고 dx = c.x - cur.x, dy = c.y - cur.y 일 때 dx*dx + dy*dy <= tol*tol 인 것. 대각선은 이웃이 아니다. 경계값은 포함(<=).",
+    "2단계 후보: 현재 덩어리(처음엔 놓은 덩어리)와 다른 덩어리 c 중, 가로·세로로 맞닿는 조각 쌍(|dCol| + |dRow| = 1)이 하나라도 있고 dx = c.x - cur.x, dy = c.y - cur.y 일 때 dx*dx + dy*dy <= tol*tol 인 것. 대각선은 이웃이 아니다. 경계값은 포함(<=). 고정된 덩어리도 후보다(자석처럼 붙는다).",
     "3단계 하나 고르기: 후보 중 dx*dx + dy*dy 가 가장 작은 것, 같으면 id 가 작은 것 하나만 합친다.",
-    "4단계 합치기: 조각 수가 많은 쪽(같으면 id 작은 쪽)이 기준. 합친 덩어리는 기준의 id 와 위치(x, y)를 갖고, 다른 쪽은 사라진다(absorbed 에 순서대로 기록).",
+    "4단계 합치기: 둘 중 한쪽만 고정이면 고정된 쪽이 기준. 그 밖에는(둘 다 고정이거나 둘 다 아니면) 조각 수가 많은 쪽(같으면 id 작은 쪽)이 기준. 합친 덩어리는 기준의 id 와 위치(x, y)를 갖고, 둘 중 하나라도 고정이면 고정이다. 다른 쪽은 사라진다(absorbed 에 순서대로 기록).",
     "5단계 연쇄: 합친 덩어리를 현재 덩어리로 삼아 2단계부터 반복한다. 후보가 없으면 끝. 놓은 덩어리에서 이어지는 합치기만 본다(다른 덩어리끼리는 검사하지 않는다).",
-    "진행률: placed = 조각이 2개 이상인 덩어리에 속한 조각 수, total = cols x rows, complete = 한 덩어리가 모든 조각을 가짐.",
-    "입력 clusters 는 판 위 덩어리만 담는다(상자 안 조각 제외). drop.id 덩어리의 원래 x, y 는 무시하고 drop.x, drop.y 를 쓴다.",
-    "기대값: id·x·y = 놓은 조각들이 최종으로 속한 덩어리, clusters = 최종 판 위 덩어리 전체(id 오름차순, pieces 는 row 다음 col 오름차순). 위치 비교는 1e-9 오차 허용."
+    "6단계 제자리 붙기: 연쇄가 끝난 덩어리가 고정이 아니고 dx = T.x - x, dy = T.y - y 일 때 dx*dx + dy*dy <= tol*tol 이면 (x, y) = T 로 옮기고 고정한다. 옮긴 뒤 다시 이웃을 찾지 않는다.",
+    "허용 거리 tol 기본값은 40(조각 너비 100의 40%). 이웃 합치기와 제자리 붙기에 같은 tol 을 쓴다.",
+    "진행률: placed = 고정된 덩어리에 속한 조각 수, total = cols x rows, complete = 모든 조각이 고정(placed = total).",
+    "입력 clusters 는 판 위 덩어리만 담는다(상자 안 조각 제외). drop.id 덩어리의 원래 x, y 는 무시하고 drop.x, drop.y 를 쓴다. 놓은 덩어리는 고정이 아니다(고정된 덩어리는 잡을 수 없다).",
+    "상자에서 꺼내기(take_from_tray)는 그 조각 하나짜리 덩어리를 놓기와 똑같이 1~6단계로 판정한다.",
+    "잡기 잠금(합치기 후보에서 빼기): 덩어리에 heldBy(잡은 학생)·heldMsAgo(잡은 지 몇 ms)가 있으면, heldBy 가 있고 놓는 학생(by, 없으면 'me')과 다르고 heldMsAgo < 10000 이고 heldBy 가 online 목록에 있을 때만 '다른 학생이 잡고 있는 덩어리'다. 그런 덩어리는 2단계 후보에서 빠지지만 판에는 그대로 남아 clusters·진행률에 들어간다. 10000ms 가 지났거나 잡은 학생이 끊겼거나(online 에 없음) 내가 잡은 덩어리는 보통 덩어리와 같다.",
+    "잡기(grab): 고정된 덩어리는 누구도 못 잡는다(locked). 다른 학생이 잡고 있는 덩어리(위 기준)도 못 잡는다(held). 그 밖에는 잡는다.",
+    "기대값: id·x·y·locked = 놓은 조각들이 최종으로 속한 덩어리, clusters = 최종 판 위 덩어리 전체(id 오름차순, pieces 는 row 다음 col 오름차순). 위치 비교는 1e-9 오차 허용."
   ],
   "cases": [
     {
@@ -21,7 +27,7 @@
       "note": "이웃 조각이 없으면 놓은 자리에 그대로 둔다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
           { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
           { "id": 2, "x": 0, "y": 0, "pieces": [[3, 2]] }
@@ -29,10 +35,10 @@
         "drop": { "id": 2, "x": 50, "y": 20 }
       },
       "expected": {
-        "id": 2, "x": 50, "y": 20, "absorbed": [],
+        "id": 2, "x": 50, "y": 20, "locked": false, "absorbed": [],
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 50, "y": 20, "pieces": [[3, 2]] }
+          { "id": 1, "x": 100, "y": 100, "locked": false, "pieces": [[0, 0]] },
+          { "id": 2, "x": 50, "y": 20, "locked": false, "pieces": [[3, 2]] }
         ],
         "placed": 0, "total": 12, "complete": false
       }
@@ -42,19 +48,19 @@
       "note": "크기가 같으면 id 작은 덩어리(가만히 있던 쪽) 위치로 붙는다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 0, "y": 0, "pieces": [[1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]] },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 0]] }
         ],
-        "drop": { "id": 2, "x": 110, "y": 95 }
+        "drop": { "id": 2, "x": 210, "y": 145 }
       },
       "expected": {
-        "id": 1, "x": 100, "y": 100, "absorbed": [2],
+        "id": 1, "x": 200, "y": 150, "locked": false, "absorbed": [2],
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0], [1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0], [1, 0]] }
         ],
-        "placed": 2, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
@@ -62,19 +68,19 @@
       "note": "크기가 같고 놓은 쪽 id 가 작으면 놓은 자리가 기준이 된다(놓은 쪽 우선 규칙은 없다)",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 0, "y": 0, "pieces": [[1, 0]] },
-          { "id": 2, "x": 100, "y": 100, "pieces": [[0, 0]] }
+          { "id": 1, "x": 100, "y": 50, "pieces": [[1, 0]] },
+          { "id": 2, "x": 200, "y": 150, "pieces": [[0, 0]] }
         ],
-        "drop": { "id": 1, "x": 110, "y": 95 }
+        "drop": { "id": 1, "x": 210, "y": 145 }
       },
       "expected": {
-        "id": 1, "x": 110, "y": 95, "absorbed": [2],
+        "id": 1, "x": 210, "y": 145, "locked": false, "absorbed": [2],
         "clusters": [
-          { "id": 1, "x": 110, "y": 95, "pieces": [[0, 0], [1, 0]] }
+          { "id": 1, "x": 210, "y": 145, "locked": false, "pieces": [[0, 0], [1, 0]] }
         ],
-        "placed": 2, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
@@ -82,19 +88,19 @@
       "note": "가만히 있던 덩어리가 더 크면 그 id·위치를 쓴다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 0, "y": 0, "pieces": [[2, 1]] },
-          { "id": 5, "x": 100, "y": 100, "pieces": [[0, 1], [1, 1]] }
+          { "id": 1, "x": 100, "y": 50, "pieces": [[2, 1]] },
+          { "id": 5, "x": 200, "y": 150, "pieces": [[0, 1], [1, 1]] }
         ],
-        "drop": { "id": 1, "x": 85, "y": 110 }
+        "drop": { "id": 1, "x": 185, "y": 160 }
       },
       "expected": {
-        "id": 5, "x": 100, "y": 100, "absorbed": [1],
+        "id": 5, "x": 200, "y": 150, "locked": false, "absorbed": [1],
         "clusters": [
-          { "id": 5, "x": 100, "y": 100, "pieces": [[0, 1], [1, 1], [2, 1]] }
+          { "id": 5, "x": 200, "y": 150, "locked": false, "pieces": [[0, 1], [1, 1], [2, 1]] }
         ],
-        "placed": 3, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
@@ -102,99 +108,99 @@
       "note": "놓은 덩어리가 더 크면 id 가 커도 놓은 자리가 기준이 된다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 3, "x": 0, "y": 0, "pieces": [[1, 0], [1, 1]] }
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]] },
+          { "id": 3, "x": 100, "y": 50, "pieces": [[1, 0], [1, 1]] }
         ],
-        "drop": { "id": 3, "x": 120, "y": 80 }
+        "drop": { "id": 3, "x": 220, "y": 130 }
       },
       "expected": {
-        "id": 3, "x": 120, "y": 80, "absorbed": [1],
+        "id": 3, "x": 220, "y": 130, "locked": false, "absorbed": [1],
         "clusters": [
-          { "id": 3, "x": 120, "y": 80, "pieces": [[0, 0], [1, 0], [1, 1]] }
+          { "id": 3, "x": 220, "y": 130, "locked": false, "pieces": [[0, 0], [1, 0], [1, 1]] }
         ],
-        "placed": 3, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
       "name": "boundary-just-inside",
-      "note": "원점 차이 29.999 (허용 거리 30 바로 안) → 붙는다",
+      "note": "원점 차이 39.999 (허용 거리 40 바로 안) → 붙는다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 0, "y": 0, "pieces": [[1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]] },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 0]] }
         ],
-        "drop": { "id": 2, "x": 129.999, "y": 100 }
+        "drop": { "id": 2, "x": 239.999, "y": 150 }
       },
       "expected": {
-        "id": 1, "x": 100, "y": 100, "absorbed": [2],
+        "id": 1, "x": 200, "y": 150, "locked": false, "absorbed": [2],
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0], [1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0], [1, 0]] }
         ],
-        "placed": 2, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
       "name": "boundary-just-outside",
-      "note": "원점 차이 30.001 (허용 거리 30 바로 밖) → 붙지 않는다",
+      "note": "원점 차이 40.001 (허용 거리 40 바로 밖) → 붙지 않는다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 0, "y": 0, "pieces": [[1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]] },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 0]] }
         ],
-        "drop": { "id": 2, "x": 130.001, "y": 100 }
+        "drop": { "id": 2, "x": 240.001, "y": 150 }
       },
       "expected": {
-        "id": 2, "x": 130.001, "y": 100, "absorbed": [],
+        "id": 2, "x": 240.001, "y": 150, "locked": false, "absorbed": [],
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 130.001, "y": 100, "pieces": [[1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0]] },
+          { "id": 2, "x": 240.001, "y": 150, "locked": false, "pieces": [[1, 0]] }
         ],
         "placed": 0, "total": 12, "complete": false
       }
     },
     {
       "name": "boundary-exact-is-inclusive",
-      "note": "dx 18, dy 24 → 거리 정확히 30 (정수라 오차 없음). 경계 포함(<=)이라 붙는다",
+      "note": "dx 24, dy 32 → 거리 정확히 40 (정수라 오차 없음). 경계 포함(<=)이라 붙는다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 0, "y": 0, "pieces": [[1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]] },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 0]] }
         ],
-        "drop": { "id": 2, "x": 118, "y": 124 }
+        "drop": { "id": 2, "x": 224, "y": 182 }
       },
       "expected": {
-        "id": 1, "x": 100, "y": 100, "absorbed": [2],
+        "id": 1, "x": 200, "y": 150, "locked": false, "absorbed": [2],
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0], [1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0], [1, 0]] }
         ],
-        "placed": 2, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
       "name": "distance-is-euclidean",
-      "note": "dx 25, dy 25 는 축마다 30 안이지만 거리 약 35.4 (dx*dx + dy*dy = 1250 > 900)라 붙지 않는다",
+      "note": "dx 30, dy 30 은 축마다 40 안이지만 거리 약 42.4 (dx*dx + dy*dy = 1800 > 1600)라 붙지 않는다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 0, "y": 0, "pieces": [[1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]] },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 0]] }
         ],
-        "drop": { "id": 2, "x": 125, "y": 125 }
+        "drop": { "id": 2, "x": 230, "y": 180 }
       },
       "expected": {
-        "id": 2, "x": 125, "y": 125, "absorbed": [],
+        "id": 2, "x": 230, "y": 180, "locked": false, "absorbed": [],
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 125, "y": 125, "pieces": [[1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0]] },
+          { "id": 2, "x": 230, "y": 180, "locked": false, "pieces": [[1, 0]] }
         ],
         "placed": 0, "total": 12, "complete": false
       }
@@ -204,18 +210,18 @@
       "note": "대각선 조각은 원점이 같아도 붙지 않는다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 0, "y": 0, "pieces": [[1, 1]] }
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]] },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 1]] }
         ],
-        "drop": { "id": 2, "x": 100, "y": 100 }
+        "drop": { "id": 2, "x": 200, "y": 150 }
       },
       "expected": {
-        "id": 2, "x": 100, "y": 100, "absorbed": [],
+        "id": 2, "x": 200, "y": 150, "locked": false, "absorbed": [],
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 100, "y": 100, "pieces": [[1, 1]] }
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0]] },
+          { "id": 2, "x": 200, "y": 150, "locked": false, "pieces": [[1, 1]] }
         ],
         "placed": 0, "total": 12, "complete": false
       }
@@ -225,18 +231,18 @@
       "note": "한 칸 떨어진 같은 줄 조각은 원점이 같아도 붙지 않는다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 0, "y": 0, "pieces": [[2, 0]] }
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]] },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[2, 0]] }
         ],
-        "drop": { "id": 2, "x": 100, "y": 100 }
+        "drop": { "id": 2, "x": 200, "y": 150 }
       },
       "expected": {
-        "id": 2, "x": 100, "y": 100, "absorbed": [],
+        "id": 2, "x": 200, "y": 150, "locked": false, "absorbed": [],
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 100, "y": 100, "pieces": [[2, 0]] }
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0]] },
+          { "id": 2, "x": 200, "y": 150, "locked": false, "pieces": [[2, 0]] }
         ],
         "placed": 0, "total": 12, "complete": false
       }
@@ -248,16 +254,16 @@
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
         "tolerance": 10,
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 0, "y": 0, "pieces": [[1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]] },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 0]] }
         ],
-        "drop": { "id": 2, "x": 110, "y": 95 }
+        "drop": { "id": 2, "x": 210, "y": 145 }
       },
       "expected": {
-        "id": 2, "x": 110, "y": 95, "absorbed": [],
+        "id": 2, "x": 210, "y": 145, "locked": false, "absorbed": [],
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 110, "y": 95, "pieces": [[1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0]] },
+          { "id": 2, "x": 210, "y": 145, "locked": false, "pieces": [[1, 0]] }
         ],
         "placed": 0, "total": 12, "complete": false
       }
@@ -267,20 +273,20 @@
       "note": "양옆 두 덩어리가 모두 가까우면 가까운 쪽부터 차례로 둘 다 합친다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 105, "y": 100, "pieces": [[2, 0]] },
-          { "id": 3, "x": 0, "y": 0, "pieces": [[1, 0]] }
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]] },
+          { "id": 2, "x": 205, "y": 150, "pieces": [[2, 0]] },
+          { "id": 3, "x": 100, "y": 50, "pieces": [[1, 0]] }
         ],
-        "drop": { "id": 3, "x": 102, "y": 100 }
+        "drop": { "id": 3, "x": 202, "y": 150 }
       },
       "expected": {
-        "id": 1, "x": 100, "y": 100, "absorbed": [3, 2],
+        "id": 1, "x": 200, "y": 150, "locked": false, "absorbed": [3, 2],
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0], [1, 0], [2, 0]] }
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0], [1, 0], [2, 0]] }
         ],
-        "placed": 3, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
@@ -288,64 +294,64 @@
       "note": "처음엔 멀던 덩어리(거리 50)도 합친 뒤 위치가 옮겨져 가까워지면(거리 25) 이어서 합친다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 2, "x": 75, "y": 100, "pieces": [[1, 0]] },
-          { "id": 4, "x": 100, "y": 100, "pieces": [[3, 0], [3, 1]] },
-          { "id": 9, "x": 0, "y": 0, "pieces": [[2, 0]] }
+          { "id": 2, "x": 175, "y": 150, "pieces": [[1, 0]] },
+          { "id": 4, "x": 200, "y": 150, "pieces": [[3, 0], [3, 1]] },
+          { "id": 9, "x": 100, "y": 50, "pieces": [[2, 0]] }
         ],
-        "drop": { "id": 9, "x": 125, "y": 100 }
+        "drop": { "id": 9, "x": 225, "y": 150 }
       },
       "expected": {
-        "id": 4, "x": 100, "y": 100, "absorbed": [9, 2],
+        "id": 4, "x": 200, "y": 150, "locked": false, "absorbed": [9, 2],
         "clusters": [
-          { "id": 4, "x": 100, "y": 100, "pieces": [[1, 0], [2, 0], [3, 0], [3, 1]] }
+          { "id": 4, "x": 200, "y": 150, "locked": false, "pieces": [[1, 0], [2, 0], [3, 0], [3, 1]] }
         ],
-        "placed": 4, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
       "name": "closest-first-not-id-first",
-      "note": "가까운 덩어리(id 4, 거리 20)를 먼저 합친다. id 순이었다면 id 3(거리 25)이 먼저였다. 합친 뒤 id 3 은 45 떨어져 남는다",
+      "note": "가까운 덩어리(id 4, 거리 20)를 먼저 합친다. id 순이었다면 id 3(거리 25)이 먼저였다. 합친 뒤 id 3 은 45 떨어져 남는다(허용 거리 40 밖)",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 3, "x": 75, "y": 100, "pieces": [[2, 0]] },
-          { "id": 4, "x": 120, "y": 100, "pieces": [[0, 0]] },
-          { "id": 5, "x": 0, "y": 0, "pieces": [[1, 0]] }
+          { "id": 3, "x": 175, "y": 150, "pieces": [[2, 0]] },
+          { "id": 4, "x": 220, "y": 150, "pieces": [[0, 0]] },
+          { "id": 5, "x": 100, "y": 50, "pieces": [[1, 0]] }
         ],
-        "drop": { "id": 5, "x": 100, "y": 100 }
+        "drop": { "id": 5, "x": 200, "y": 150 }
       },
       "expected": {
-        "id": 4, "x": 120, "y": 100, "absorbed": [5],
+        "id": 4, "x": 220, "y": 150, "locked": false, "absorbed": [5],
         "clusters": [
-          { "id": 3, "x": 75, "y": 100, "pieces": [[2, 0]] },
-          { "id": 4, "x": 120, "y": 100, "pieces": [[0, 0], [1, 0]] }
+          { "id": 3, "x": 175, "y": 150, "locked": false, "pieces": [[2, 0]] },
+          { "id": 4, "x": 220, "y": 150, "locked": false, "pieces": [[0, 0], [1, 0]] }
         ],
-        "placed": 2, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
       "name": "distance-tie-smaller-id-first",
-      "note": "두 후보 거리가 같으면(20) id 작은 쪽(3)을 먼저 합친다. 합친 뒤 id 4 는 40 떨어져 남는다",
+      "note": "두 후보 거리가 같으면(22) id 작은 쪽(3)을 먼저 합친다. 합친 뒤 id 4 는 44 떨어져 남는다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 3, "x": 80, "y": 100, "pieces": [[2, 0]] },
-          { "id": 4, "x": 120, "y": 100, "pieces": [[0, 0]] },
-          { "id": 5, "x": 0, "y": 0, "pieces": [[1, 0]] }
+          { "id": 3, "x": 178, "y": 150, "pieces": [[2, 0]] },
+          { "id": 4, "x": 222, "y": 150, "pieces": [[0, 0]] },
+          { "id": 5, "x": 100, "y": 50, "pieces": [[1, 0]] }
         ],
-        "drop": { "id": 5, "x": 100, "y": 100 }
+        "drop": { "id": 5, "x": 200, "y": 150 }
       },
       "expected": {
-        "id": 3, "x": 80, "y": 100, "absorbed": [5],
+        "id": 3, "x": 178, "y": 150, "locked": false, "absorbed": [5],
         "clusters": [
-          { "id": 3, "x": 80, "y": 100, "pieces": [[1, 0], [2, 0]] },
-          { "id": 4, "x": 120, "y": 100, "pieces": [[0, 0]] }
+          { "id": 3, "x": 178, "y": 150, "locked": false, "pieces": [[1, 0], [2, 0]] },
+          { "id": 4, "x": 222, "y": 150, "locked": false, "pieces": [[0, 0]] }
         ],
-        "placed": 2, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
@@ -353,16 +359,16 @@
       "note": "판 오른쪽 아래 밖에 놓으면 조각 칸이 판 안에 들도록 x = boardWidth - 400, y = boardHeight - 300 으로 자른다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
           { "id": 1, "x": 0, "y": 0, "pieces": [[3, 2]] }
         ],
         "drop": { "id": 1, "x": 1000, "y": 1000 }
       },
       "expected": {
-        "id": 1, "x": 165.68542494923804, "y": 124.26406871192853, "absorbed": [],
+        "id": 1, "x": 165.68542494923804, "y": 124.26406871192853, "locked": false, "absorbed": [],
         "clusters": [
-          { "id": 1, "x": 165.68542494923804, "y": 124.26406871192853, "pieces": [[3, 2]] }
+          { "id": 1, "x": 165.68542494923804, "y": 124.26406871192853, "locked": false, "pieces": [[3, 2]] }
         ],
         "placed": 0, "total": 12, "complete": false
       }
@@ -372,16 +378,16 @@
       "note": "판 왼쪽 위 밖에 놓으면 x = 0 - 2 x 100, y = 0 - 1 x 100 으로 자른다(원점은 판 밖이어도 조각 칸은 판 안)",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
           { "id": 1, "x": 0, "y": 0, "pieces": [[2, 1]] }
         ],
         "drop": { "id": 1, "x": -500, "y": -500 }
       },
       "expected": {
-        "id": 1, "x": -200, "y": -100, "absorbed": [],
+        "id": 1, "x": -200, "y": -100, "locked": false, "absorbed": [],
         "clusters": [
-          { "id": 1, "x": -200, "y": -100, "pieces": [[2, 1]] }
+          { "id": 1, "x": -200, "y": -100, "locked": false, "pieces": [[2, 1]] }
         ],
         "placed": 0, "total": 12, "complete": false
       }
@@ -391,58 +397,58 @@
       "note": "여러 조각 덩어리는 조각 칸 전체 범위(col 1~2, row 0~1)로 자른다: x = boardWidth - 300, y = 0",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
           { "id": 1, "x": 0, "y": 0, "pieces": [[1, 0], [2, 0], [1, 1]] }
         ],
         "drop": { "id": 1, "x": 400, "y": -10 }
       },
       "expected": {
-        "id": 1, "x": 265.68542494923804, "y": 0, "absorbed": [],
+        "id": 1, "x": 265.68542494923804, "y": 0, "locked": false, "absorbed": [],
         "clusters": [
-          { "id": 1, "x": 265.68542494923804, "y": 0, "pieces": [[1, 0], [2, 0], [1, 1]] }
+          { "id": 1, "x": 265.68542494923804, "y": 0, "locked": false, "pieces": [[1, 0], [2, 0], [1, 1]] }
         ],
-        "placed": 3, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
       "name": "clamp-before-merge",
-      "note": "(-40, 5)에 놓으면 그대로는 거리 약 40.3 으로 밖이지만, 먼저 (0, 5)로 잘린 뒤 판정해 거리 5 로 붙는다",
+      "note": "(-45, 5)에 놓으면 그대로는 거리 약 45.3 으로 밖이지만, 먼저 (0, 5)로 잘린 뒤 판정해 거리 5 로 붙는다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
           { "id": 2, "x": 0, "y": 0, "pieces": [[1, 0]] },
           { "id": 7, "x": 300, "y": 300, "pieces": [[0, 0]] }
         ],
-        "drop": { "id": 7, "x": -40, "y": 5 }
+        "drop": { "id": 7, "x": -45, "y": 5 }
       },
       "expected": {
-        "id": 2, "x": 0, "y": 0, "absorbed": [7],
+        "id": 2, "x": 0, "y": 0, "locked": false, "absorbed": [7],
         "clusters": [
-          { "id": 2, "x": 0, "y": 0, "pieces": [[0, 0], [1, 0]] }
+          { "id": 2, "x": 0, "y": 0, "locked": false, "pieces": [[0, 0], [1, 0]] }
         ],
-        "placed": 2, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
-      "name": "last-piece-completes",
-      "note": "마지막 조각이 붙어 한 덩어리가 모든 조각을 가지면 완성",
+      "name": "all-joined-away-from-frame-is-not-complete",
+      "note": "모든 조각이 한 덩어리가 되어도 틀(T)에서 40 넘게 떨어져 있으면(약 77) 고정되지 않아 완성이 아니다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 50, "y": 60, "pieces": [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2]] },
+          { "id": 1, "x": 150, "y": 100, "pieces": [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2]] },
           { "id": 12, "x": 0, "y": 0, "pieces": [[3, 2]] }
         ],
-        "drop": { "id": 12, "x": 60, "y": 55 }
+        "drop": { "id": 12, "x": 155, "y": 95 }
       },
       "expected": {
-        "id": 1, "x": 50, "y": 60, "absorbed": [12],
+        "id": 1, "x": 150, "y": 100, "locked": false, "absorbed": [12],
         "clusters": [
-          { "id": 1, "x": 50, "y": 60, "pieces": [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2], [3, 2]] }
+          { "id": 1, "x": 150, "y": 100, "locked": false, "pieces": [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2], [3, 2]] }
         ],
-        "placed": 12, "total": 12, "complete": true
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
@@ -450,7 +456,7 @@
       "note": "놓은 덩어리와 관계없는 두 덩어리(1, 2)는 서로 맞는 자리여도 이번 놓기에서 합치지 않는다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
           { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
           { "id": 2, "x": 100, "y": 100, "pieces": [[1, 0]] },
@@ -459,11 +465,11 @@
         "drop": { "id": 3, "x": 10, "y": 10 }
       },
       "expected": {
-        "id": 3, "x": 10, "y": 10, "absorbed": [],
+        "id": 3, "x": 10, "y": 10, "locked": false, "absorbed": [],
         "clusters": [
-          { "id": 1, "x": 100, "y": 100, "pieces": [[0, 0]] },
-          { "id": 2, "x": 100, "y": 100, "pieces": [[1, 0]] },
-          { "id": 3, "x": 10, "y": 10, "pieces": [[3, 2]] }
+          { "id": 1, "x": 100, "y": 100, "locked": false, "pieces": [[0, 0]] },
+          { "id": 2, "x": 100, "y": 100, "locked": false, "pieces": [[1, 0]] },
+          { "id": 3, "x": 10, "y": 10, "locked": false, "pieces": [[3, 2]] }
         ],
         "placed": 0, "total": 12, "complete": false
       }
@@ -473,19 +479,19 @@
       "note": "세로 그림(3x4)에서 위아래 이웃이 붙는다",
       "input": {
         "grid": { "cols": 3, "rows": 4, "aspect": 0.75 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 50, "y": 50, "pieces": [[0, 0]] },
-          { "id": 2, "x": 0, "y": 0, "pieces": [[0, 1]] }
+          { "id": 1, "x": 150, "y": 150, "pieces": [[0, 0]] },
+          { "id": 2, "x": 100, "y": 100, "pieces": [[0, 1]] }
         ],
-        "drop": { "id": 2, "x": 40, "y": 70 }
+        "drop": { "id": 2, "x": 140, "y": 170 }
       },
       "expected": {
-        "id": 1, "x": 50, "y": 50, "absorbed": [2],
+        "id": 1, "x": 150, "y": 150, "locked": false, "absorbed": [2],
         "clusters": [
-          { "id": 1, "x": 50, "y": 50, "pieces": [[0, 0], [0, 1]] }
+          { "id": 1, "x": 150, "y": 150, "locked": false, "pieces": [[0, 0], [0, 1]] }
         ],
-        "placed": 2, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
@@ -493,16 +499,16 @@
       "note": "세로 그림(3x4, 너비 300·높이 400)의 판 밖 놓기: x = boardWidth - 300, y = boardHeight - 400",
       "input": {
         "grid": { "cols": 3, "rows": 4, "aspect": 0.75 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
           { "id": 1, "x": 0, "y": 0, "pieces": [[2, 3]] }
         ],
         "drop": { "id": 1, "x": 999, "y": 999 }
       },
       "expected": {
-        "id": 1, "x": 124.26406871192853, "y": 165.68542494923804, "absorbed": [],
+        "id": 1, "x": 124.26406871192853, "y": 165.68542494923804, "locked": false, "absorbed": [],
         "clusters": [
-          { "id": 1, "x": 124.26406871192853, "y": 165.68542494923804, "pieces": [[2, 3]] }
+          { "id": 1, "x": 124.26406871192853, "y": 165.68542494923804, "locked": false, "pieces": [[2, 3]] }
         ],
         "placed": 0, "total": 12, "complete": false
       }
@@ -512,19 +518,19 @@
       "note": "가로로 긴 그림(aspect 2, ph = 200/3)에서 아래로 벗어난 조각을 y = boardHeight - 3 x ph 로 자른 뒤 위 조각(거리 약 22.8)에 붙인다",
       "input": {
         "grid": { "cols": 4, "rows": 3, "aspect": 2 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
-          { "id": 1, "x": 100, "y": 60, "pieces": [[0, 1]] },
+          { "id": 1, "x": 300, "y": 60, "pieces": [[0, 1]] },
           { "id": 2, "x": 0, "y": 0, "pieces": [[0, 2]] }
         ],
-        "drop": { "id": 2, "x": 100, "y": 300 }
+        "drop": { "id": 2, "x": 300, "y": 300 }
       },
       "expected": {
-        "id": 1, "x": 100, "y": 60, "absorbed": [2],
+        "id": 1, "x": 300, "y": 60, "locked": false, "absorbed": [2],
         "clusters": [
-          { "id": 1, "x": 100, "y": 60, "pieces": [[0, 1], [0, 2]] }
+          { "id": 1, "x": 300, "y": 60, "locked": false, "pieces": [[0, 1], [0, 2]] }
         ],
-        "placed": 2, "total": 12, "complete": false
+        "placed": 0, "total": 12, "complete": false
       }
     },
     {
@@ -532,7 +538,7 @@
       "note": "24조각(6x4)에서 2x2 덩어리를 놓아 가까운 2조각 덩어리(id 3)부터, 이어서 1조각(id 6)까지 합친다. 놓은 덩어리가 계속 가장 커서 기준이 된다",
       "input": {
         "grid": { "cols": 6, "rows": 4, "aspect": 1.5 },
-        "tolerance": 30,
+        "tolerance": 40,
         "clusters": [
           { "id": 3, "x": 200, "y": 200, "pieces": [[4, 1], [4, 2]] },
           { "id": 6, "x": 230, "y": 200, "pieces": [[1, 1]] },
@@ -541,11 +547,410 @@
         "drop": { "id": 8, "x": 210, "y": 190 }
       },
       "expected": {
-        "id": 8, "x": 210, "y": 190, "absorbed": [3, 6],
+        "id": 8, "x": 210, "y": 190, "locked": false, "absorbed": [3, 6],
         "clusters": [
-          { "id": 8, "x": 210, "y": 190, "pieces": [[1, 1], [2, 1], [3, 1], [4, 1], [2, 2], [3, 2], [4, 2]] }
+          { "id": 8, "x": 210, "y": 190, "locked": false, "pieces": [[1, 1], [2, 1], [3, 1], [4, 1], [2, 2], [3, 2], [4, 2]] }
         ],
-        "placed": 7, "total": 24, "complete": false
+        "placed": 0, "total": 24, "complete": false
+      }
+    },
+    {
+      "name": "held-by-other-is-not-a-candidate",
+      "note": "다른 학생(amy, 접속 중)이 2초 전에 잡은 덩어리는 거리 5 로 가까워도 붙지 않는다. 판에는 그대로 남는다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "by": "me",
+        "online": ["me", "amy"],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]], "heldBy": "amy", "heldMsAgo": 2000 },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 0]] }
+        ],
+        "drop": { "id": 2, "x": 205, "y": 150 }
+      },
+      "expected": {
+        "id": 2, "x": 205, "y": 150, "locked": false, "absorbed": [],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0]] },
+          { "id": 2, "x": 205, "y": 150, "locked": false, "pieces": [[1, 0]] }
+        ],
+        "placed": 0, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "held-just-under-10s-is-skipped",
+      "note": "잡은 지 9999ms 는 아직 잠겨 있어 붙지 않는다(경계 바로 안)",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "by": "me",
+        "online": ["me", "amy"],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]], "heldBy": "amy", "heldMsAgo": 9999 },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 0]] }
+        ],
+        "drop": { "id": 2, "x": 205, "y": 150 }
+      },
+      "expected": {
+        "id": 2, "x": 205, "y": 150, "locked": false, "absorbed": [],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0]] },
+          { "id": 2, "x": 205, "y": 150, "locked": false, "pieces": [[1, 0]] }
+        ],
+        "placed": 0, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "held-10s-ago-is-free",
+      "note": "잡은 지 정확히 10000ms 가 지나면 잠금이 풀려 보통 덩어리처럼 붙는다(크기 같음 → id 1 기준)",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "by": "me",
+        "online": ["me", "amy"],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]], "heldBy": "amy", "heldMsAgo": 10000 },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 0]] }
+        ],
+        "drop": { "id": 2, "x": 205, "y": 150 }
+      },
+      "expected": {
+        "id": 1, "x": 200, "y": 150, "locked": false, "absorbed": [2],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0], [1, 0]] }
+        ],
+        "placed": 0, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "holder-offline-is-free",
+      "note": "잡은 학생이 끊겼으면(online 에 없음) 1초 전에 잡았어도 붙는다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "by": "me",
+        "online": ["me"],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]], "heldBy": "amy", "heldMsAgo": 1000 },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 0]] }
+        ],
+        "drop": { "id": 2, "x": 205, "y": 150 }
+      },
+      "expected": {
+        "id": 1, "x": 200, "y": 150, "locked": false, "absorbed": [2],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0], [1, 0]] }
+        ],
+        "placed": 0, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "held-by-me-merges",
+      "note": "내가 잡고 있는 다른 덩어리는 잠금이 아니다(붙는다)",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "by": "me",
+        "online": ["me", "amy"],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]], "heldBy": "me", "heldMsAgo": 1000 },
+          { "id": 2, "x": 100, "y": 50, "pieces": [[1, 0]] }
+        ],
+        "drop": { "id": 2, "x": 205, "y": 150 }
+      },
+      "expected": {
+        "id": 1, "x": 200, "y": 150, "locked": false, "absorbed": [2],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0], [1, 0]] }
+        ],
+        "placed": 0, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "held-closer-skipped-picks-next",
+      "note": "가장 가까운 후보(id 4, 거리 15)는 amy 가 잡고 있어 빠지고, 다음 후보(id 3, 거리 20)와 붙는다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "by": "me",
+        "online": ["me", "amy"],
+        "clusters": [
+          { "id": 3, "x": 180, "y": 150, "pieces": [[2, 0]] },
+          { "id": 4, "x": 215, "y": 150, "pieces": [[0, 0]], "heldBy": "amy", "heldMsAgo": 500 },
+          { "id": 5, "x": 100, "y": 50, "pieces": [[1, 0]] }
+        ],
+        "drop": { "id": 5, "x": 200, "y": 150 }
+      },
+      "expected": {
+        "id": 3, "x": 180, "y": 150, "locked": false, "absorbed": [5],
+        "clusters": [
+          { "id": 3, "x": 180, "y": 150, "locked": false, "pieces": [[1, 0], [2, 0]] },
+          { "id": 4, "x": 215, "y": 150, "locked": false, "pieces": [[0, 0]] }
+        ],
+        "placed": 0, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "held-cluster-blocks-chain",
+      "note": "id 1 과 붙은 뒤 연쇄로 붙을 자리(거리 0)의 id 2 는 amy 가 잡고 있어 붙지 않고 판에 그대로 남는다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "by": "me",
+        "online": ["me", "amy"],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "pieces": [[0, 0]] },
+          { "id": 2, "x": 200, "y": 150, "pieces": [[2, 0], [3, 0]], "heldBy": "amy", "heldMsAgo": 3000 },
+          { "id": 3, "x": 100, "y": 50, "pieces": [[1, 0]] }
+        ],
+        "drop": { "id": 3, "x": 210, "y": 140 }
+      },
+      "expected": {
+        "id": 1, "x": 200, "y": 150, "locked": false, "absorbed": [3],
+        "clusters": [
+          { "id": 1, "x": 200, "y": 150, "locked": false, "pieces": [[0, 0], [1, 0]] },
+          { "id": 2, "x": 200, "y": 150, "locked": false, "pieces": [[2, 0], [3, 0]] }
+        ],
+        "placed": 0, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "snap-into-frame",
+      "note": "틀 원점 T = ((boardWidth - 400)/2, (boardHeight - 300)/2) 에서 거리 약 36.1 (dx 20, dy -30) 이면 T 로 옮기고 고정한다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 6, "x": 0, "y": 0, "pieces": [[1, 1]] }
+        ],
+        "drop": { "id": 6, "x": 102.84271247461902, "y": 32.132034355964265 }
+      },
+      "expected": {
+        "id": 6, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "absorbed": [],
+        "clusters": [
+          { "id": 6, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[1, 1]] }
+        ],
+        "placed": 1, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "frame-boundary-just-inside",
+      "note": "T 에서 x 로 39.999 → 제자리에 붙는다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 6, "x": 0, "y": 0, "pieces": [[1, 1]] }
+        ],
+        "drop": { "id": 6, "x": 122.84171247461902, "y": 62.132034355964265 }
+      },
+      "expected": {
+        "id": 6, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "absorbed": [],
+        "clusters": [
+          { "id": 6, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[1, 1]] }
+        ],
+        "placed": 1, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "frame-boundary-just-outside",
+      "note": "T 에서 x 로 40.001 → 붙지 않고 놓은 자리에 남는다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 6, "x": 0, "y": 0, "pieces": [[1, 1]] }
+        ],
+        "drop": { "id": 6, "x": 122.84371247461902, "y": 62.132034355964265 }
+      },
+      "expected": {
+        "id": 6, "x": 122.84371247461902, "y": 62.132034355964265, "locked": false, "absorbed": [],
+        "clusters": [
+          { "id": 6, "x": 122.84371247461902, "y": 62.132034355964265, "locked": false, "pieces": [[1, 1]] }
+        ],
+        "placed": 0, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "frame-boundary-exact-is-inclusive",
+      "note": "T 에서 dx 24, dy 32 → 거리 정확히 40 (T + 24, T + 32 를 float8 로 더해도 뺄셈이 정확해 dx*dx + dy*dy = 1600). 경계 포함(<=)이라 제자리에 붙는다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 6, "x": 0, "y": 0, "pieces": [[1, 1]] }
+        ],
+        "drop": { "id": 6, "x": 106.84271247461902, "y": 94.13203435596427 }
+      },
+      "expected": {
+        "id": 6, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "absorbed": [],
+        "clusters": [
+          { "id": 6, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[1, 1]] }
+        ],
+        "placed": 1, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "locked-anchor-wins-over-bigger",
+      "note": "놓은 덩어리(3조각)가 더 커도 고정된 덩어리(1조각, T)가 기준이 된다. 결과는 T 에 고정",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 1, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[0, 0]] },
+          { "id": 7, "x": 0, "y": 0, "pieces": [[1, 0], [2, 0], [1, 1]] }
+        ],
+        "drop": { "id": 7, "x": 92.84271247461902, "y": 67.13203435596427 }
+      },
+      "expected": {
+        "id": 1, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "absorbed": [7],
+        "clusters": [
+          { "id": 1, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[0, 0], [1, 0], [2, 0], [1, 1]] }
+        ],
+        "placed": 4, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "locked-anchor-wins-over-smaller-id",
+      "note": "크기가 같고 놓은 쪽 id(2)가 작아도 고정된 쪽(id 5)이 기준이 된다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 2, "x": 0, "y": 0, "pieces": [[1, 0]] },
+          { "id": 5, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[0, 0]] }
+        ],
+        "drop": { "id": 2, "x": 67.84271247461902, "y": 72.13203435596427 }
+      },
+      "expected": {
+        "id": 5, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "absorbed": [2],
+        "clusters": [
+          { "id": 5, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[0, 0], [1, 0]] }
+        ],
+        "placed": 2, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "chain-then-frame",
+      "note": "놓은 자리(T 에서 약 65)는 틀에서 멀지만, 먼저 2조각 덩어리(id 3, T 에서 약 39.1)에 붙고 그 위치가 T 에 가까워 제자리로 옮겨 고정한다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 3, "x": 112.84271247461902, "y": 87.13203435596427, "pieces": [[2, 0], [3, 0]] },
+          { "id": 9, "x": 0, "y": 0, "pieces": [[1, 0]] }
+        ],
+        "drop": { "id": 9, "x": 142.84271247461902, "y": 87.13203435596427 }
+      },
+      "expected": {
+        "id": 3, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "absorbed": [9],
+        "clusters": [
+          { "id": 3, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[1, 0], [2, 0], [3, 0]] }
+        ],
+        "placed": 3, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "frame-does-not-rechain",
+      "note": "제자리로 옮긴 뒤에는 다시 이웃을 찾지 않는다. 놓은 자리에서 45 떨어진 id 4 는 T 에서는 15 거리지만 그대로 남는다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 4, "x": 67.84271247461902, "y": 62.132034355964265, "pieces": [[2, 1]] },
+          { "id": 6, "x": 0, "y": 0, "pieces": [[1, 1]] }
+        ],
+        "drop": { "id": 6, "x": 112.84271247461902, "y": 62.132034355964265 }
+      },
+      "expected": {
+        "id": 6, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "absorbed": [],
+        "clusters": [
+          { "id": 4, "x": 67.84271247461902, "y": 62.132034355964265, "locked": false, "pieces": [[2, 1]] },
+          { "id": 6, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[1, 1]] }
+        ],
+        "placed": 1, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "both-locked-use-size-rule",
+      "note": "고정된 두 덩어리끼리 합칠 때는 원래 규칙(조각 많은 쪽): 거리 같음 → id 1 과 먼저 붙고(고정 쪽 기준), 이어서 3조각 고정 덩어리 id 2 가 기준이 된다",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 1, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[0, 0]] },
+          { "id": 2, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[2, 0], [3, 0], [3, 1]] },
+          { "id": 9, "x": 0, "y": 0, "pieces": [[1, 0]] }
+        ],
+        "drop": { "id": 9, "x": 92.84271247461902, "y": 62.132034355964265 }
+      },
+      "expected": {
+        "id": 2, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "absorbed": [9, 1],
+        "clusters": [
+          { "id": 2, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1]] }
+        ],
+        "placed": 5, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "locked-neighbour-attracts",
+      "note": "고정된 이웃(id 1, T)에 거리 약 36.1 로 놓으면 자석처럼 붙고 고정된다. 고정 안 된 다른 덩어리(id 3)는 그대로다. 진행률은 고정된 조각만 센다(id 3 의 두 조각은 제외)",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 1, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[0, 1]] },
+          { "id": 3, "x": 300, "y": 250, "pieces": [[2, 2], [3, 2]] },
+          { "id": 8, "x": 0, "y": 0, "pieces": [[0, 2]] }
+        ],
+        "drop": { "id": 8, "x": 102.84271247461902, "y": 32.132034355964265 }
+      },
+      "expected": {
+        "id": 1, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "absorbed": [8],
+        "clusters": [
+          { "id": 1, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[0, 1], [0, 2]] },
+          { "id": 3, "x": 300, "y": 250, "locked": false, "pieces": [[2, 2], [3, 2]] }
+        ],
+        "placed": 2, "total": 12, "complete": false
+      }
+    },
+    {
+      "name": "last-piece-completes",
+      "note": "고정된 11조각 덩어리(T) 옆에 마지막 조각을 놓으면 붙어서 모든 조각이 고정 → 완성",
+      "input": {
+        "grid": { "cols": 4, "rows": 3, "aspect": 1.3333333333333333 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 1, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2]] },
+          { "id": 12, "x": 0, "y": 0, "pieces": [[3, 2]] }
+        ],
+        "drop": { "id": 12, "x": 92.84271247461902, "y": 57.132034355964265 }
+      },
+      "expected": {
+        "id": 1, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "absorbed": [12],
+        "clusters": [
+          { "id": 1, "x": 82.84271247461902, "y": 62.132034355964265, "locked": true, "pieces": [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2], [3, 2]] }
+        ],
+        "placed": 12, "total": 12, "complete": true
+      }
+    },
+    {
+      "name": "portrait-snap-into-frame",
+      "note": "세로 그림(3x4) 틀 T = ((boardWidth - 300)/2, (boardHeight - 400)/2) 근처(거리 약 11.2)에 놓으면 고정",
+      "input": {
+        "grid": { "cols": 3, "rows": 4, "aspect": 0.75 },
+        "tolerance": 40,
+        "clusters": [
+          { "id": 2, "x": 0, "y": 0, "pieces": [[1, 2]] }
+        ],
+        "drop": { "id": 2, "x": 72.13203435596427, "y": 87.84271247461902 }
+      },
+      "expected": {
+        "id": 2, "x": 62.132034355964265, "y": 82.84271247461902, "locked": true, "absorbed": [],
+        "clusters": [
+          { "id": 2, "x": 62.132034355964265, "y": 82.84271247461902, "locked": true, "pieces": [[1, 2]] }
+        ],
+        "placed": 1, "total": 12, "complete": false
       }
     }
   ]

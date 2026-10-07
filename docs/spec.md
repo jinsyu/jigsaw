@@ -73,7 +73,7 @@ Supabase (Postgres + Auth + Storage + Realtime).
 | `sessions` | DB | 교사, 코드, 그림(내장 키 또는 images id), 조각 수, 시드, 상태(대기·진행·종료) | 종료 후 30일 뒤 삭제 |
 | `groups` | DB | 수업, 모둠 번호, 완성 시각 | 수업과 함께 |
 | `members` | DB | 학생 익명 uid, 수업, 모둠, 색 번호, 마지막 신호 시각. **이름 없음** | 수업 종료 시 삭제(늦어도 24시간 뒤 자동) |
-| `clusters` | DB | 붙은 덩어리: 모둠, 판 위 위치(x, y = 완성 그림 원점의 위치), z 순서, 잡은 uid, 잡은 시각 | 수업과 함께 |
+| `clusters` | DB | 붙은 덩어리: 모둠, 판 위 위치(x, y = 완성 그림 원점의 위치), z 순서, 제자리 고정 여부(locked), 잡은 uid, 잡은 시각 | 수업과 함께 |
 | `pieces` | DB | 조각 번호(행·열), 속한 덩어리, 상자 주인 uid, 판 위 여부 | 수업과 함께 |
 | 학생 이름 | Realtime Presence(메모리), 학생 기기 localStorage | 화면 표시용 | 저장하지 않음 |
 | 내장 그림 | 정적 파일(Vercel) | 약 20장, 출처·라이선스 표기 | — |

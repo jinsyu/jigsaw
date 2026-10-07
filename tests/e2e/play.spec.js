@@ -442,9 +442,10 @@ test('take pieces from the tray, snap them together and complete the picture', a
   expect(s.clusters).toHaveLength(1);
   expect(s.clusters[0].x).toBeCloseTo(ox, 0);
 
-  // 2. Its neighbour 45 units off: too far to snap (tolerance 30).
+  // 2. Its neighbour 45 units off: too far to snap (tolerance 40). The first piece sits
+  //    exactly on the frame, so it is locked and already counts as placed.
   await dragFromTray(page, input, neighbour, ox + 45, oy);
-  await expect(page.locator('.pz-count')).toHaveText('0 / 24');
+  await expect(page.locator('.pz-count')).toHaveText('1 / 24');
   expect((await state(page)).clusters).toHaveLength(2);
 
   // 3. Drag the neighbour on the board onto its place: it snaps.
@@ -474,6 +475,23 @@ test('take pieces from the tray, snap them together and complete the picture', a
   expect(s.completedAt).not.toBeNull();
   await expectNoHorizontalOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('play-complete.png') });
+  expect(errors).toEqual([]);
+});
+
+test('a piece dropped near its drawn place in the frame snaps onto it and locks', async ({ page }, testInfo) => {
+  const errors = await openDemo(page);
+  const hasTouch = testInfo.project.use.hasTouch === true;
+  const input = makeInput(page, hasTouch);
+  const { layout, tray } = await state(page);
+  // The drawn frame (same formula the frame pixel test samples).
+  const ox = (layout.boardWidth - layout.width) / 2;
+  const oy = (layout.boardHeight - layout.height) / 2;
+  await dragFromTray(page, input, tray[0], ox + 20, oy - 15); // 25 units off, inside the tolerance
+  await expect(page.locator('.pz-count')).toHaveText('1 / 24');
+  const [cluster] = (await state(page)).clusters;
+  expect(cluster.locked).toBe(true);
+  expect(cluster.x).toBe(ox);
+  expect(cluster.y).toBe(oy);
   expect(errors).toEqual([]);
 });
 

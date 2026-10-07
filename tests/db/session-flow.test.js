@@ -260,6 +260,14 @@ describe('join_session', () => {
     expect((await rpcOk(student.client, 'join_session', { p_code: session.code })).ok).toBe(true);
   });
 
+  it('수업 종료로 지워진 익명 계정의 남은 토큰으로 들어오면 account_gone 을 돌려준다', async () => {
+    const student = await studentClient();
+    await sql('delete from auth.users where id = $1', [student.userId]);
+    const { data, error } = await student.client.rpc('join_session', { p_code: session.code });
+    expect(error).toBeNull();
+    expect(data).toEqual({ ok: false, error: 'account_gone' });
+  });
+
   it('교사 계정은 학생으로 들어올 수 없다', async () => {
     const { error } = await teacher2.client.rpc('join_session', { p_code: session.code });
     expect(error).toMatchObject({ code: FORBIDDEN });
@@ -309,6 +317,19 @@ describe('assign_member · randomize_groups', () => {
 
     const { rows } = await sql('select group_id from public.members where id = $1', [student.memberId]);
     expect(rows[0].group_id).toBeNull();
+  });
+
+  it('없는 학생 번호: 교사는 member_not_found, 학생은 forbidden', async () => {
+    const [student] = await joinStudents((await openSession()).code, 1);
+    const missing = 9_000_000_000;
+    expect((await teacher1.client.rpc('assign_member', { p_member: missing, p_group: null })).error).toMatchObject({
+      code: INVALID,
+      message: 'member_not_found',
+    });
+    expect((await student.client.rpc('assign_member', { p_member: missing, p_group: null })).error).toMatchObject({
+      code: FORBIDDEN,
+      message: 'forbidden',
+    });
   });
 
   it('무작위로 나누기: 13명 → 6모둠에 3·2·2·2·2·2명, 모둠 안 색 번호는 0부터 겹치지 않게', async () => {

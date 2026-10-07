@@ -1,7 +1,7 @@
 // Board camera: screen = board * scale + (x, y), in CSS pixels of the board view.
 // Pure functions so the gesture maths can be unit tested.
 
-import { frameOrigin } from './frame.js';
+import { frameOrigin } from '../puzzle/snap.js';
 
 export const VIEW_PADDING = 12;
 // Pieces smaller than this on screen are hard to grab with a finger (mockup phone: ~66px).
