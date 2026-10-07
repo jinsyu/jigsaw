@@ -62,6 +62,7 @@ const ICONS = {
   warn: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/>',
   arrow: '<path d="M9 6l6 6-6 6"/>',
   back: '<path d="M15 6l-6 6 6 6"/>',
+  down: '<path d="M6 9l6 6 6-6"/>',
   image: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.6"/>',
   refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/>',
   shuffle: '<path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>',

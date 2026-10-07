@@ -181,38 +181,65 @@ export function renderCreate(main, ctx) {
 
   // The settings scroll inside the panel on wide screens; '수업 열기' stays in view at the
   // bottom of the panel (wide) or of the screen (narrow).
+  const hintsField = h(
+    'fieldset',
+    { class: 't-field t-hints', id: 't-hints', 'aria-describedby': 't-hints-note' },
+    h('legend', { class: 't-step' }, h('i', { 'aria-hidden': 'true' }, '4'), '도움 설정'),
+    h('p', { class: 't-note t-hints-note', id: 't-hints-note' }, '학년과 목적에 맞게 골라요. 이 수업의 모든 모둠에 똑같이 적용돼요.'),
+    h('figure', { class: 't-frame-look' }, frameMini, h('figcaption', {}, '학생 판 가운데 틀은 이렇게 보여요')),
+    h('ul', { class: 't-switches' }, hintSwitches),
+  );
+  // Wide screens: the settings scroll inside the panel. While more is below, the bottom
+  // fades and a small button points to the help settings.
+  const moreButton = h(
+    'button',
+    { class: 't-side-more', type: 'button', hidden: true, 'aria-controls': 't-hints', onclick: () => scrollToHints() },
+    '아래에 도움 설정이 있어요',
+    icon('down', 16),
+  );
+  const sideBody = h(
+    'div',
+    { class: 't-side-body' },
+    h('div', {}, h('div', { class: 't-lbl' }, previewTitle, previewNote), preview, credit),
+    h(
+      'fieldset',
+      { class: 't-field' },
+      h('legend', { class: 't-step' }, h('i', { 'aria-hidden': 'true' }, '2'), '조각 수'),
+      pieceSeg,
+      pieceNote,
+    ),
+    h(
+      'div',
+      { class: 't-field' },
+      h('label', { class: 't-step', for: 't-group-count' }, h('i', { 'aria-hidden': 'true' }, '3'), '모둠 수'),
+      h('div', { class: 't-stepper' }, minus, groupInput, plus),
+      h('p', { class: 't-note', id: 't-group-note' }, '모둠마다 따로 퍼즐이 열려요. 모둠당 4~6명이 알맞아요.'),
+    ),
+    hintsField,
+  );
   const side = h(
     'aside',
     { class: 'card t-side', 'aria-label': '수업 설정' },
-    h(
-      'div',
-      { class: 't-side-body' },
-      h('div', {}, h('div', { class: 't-lbl' }, previewTitle, previewNote), preview, credit),
-      h(
-        'fieldset',
-        { class: 't-field' },
-        h('legend', { class: 't-step' }, h('i', { 'aria-hidden': 'true' }, '2'), '조각 수'),
-        pieceSeg,
-        pieceNote,
-      ),
-      h(
-        'div',
-        { class: 't-field' },
-        h('label', { class: 't-step', for: 't-group-count' }, h('i', { 'aria-hidden': 'true' }, '3'), '모둠 수'),
-        h('div', { class: 't-stepper' }, minus, groupInput, plus),
-        h('p', { class: 't-note', id: 't-group-note' }, '모둠마다 따로 퍼즐이 열려요. 모둠당 4~6명이 알맞아요.'),
-      ),
-      h(
-        'fieldset',
-        { class: 't-field t-hints', 'aria-describedby': 't-hints-note' },
-        h('legend', { class: 't-step' }, h('i', { 'aria-hidden': 'true' }, '4'), '도움 설정'),
-        h('p', { class: 't-note t-hints-note', id: 't-hints-note' }, '학년과 목적에 맞게 골라요. 이 수업의 모든 모둠에 똑같이 적용돼요.'),
-        h('figure', { class: 't-frame-look' }, frameMini, h('figcaption', {}, '학생 판 가운데 틀은 이렇게 보여요')),
-        h('ul', { class: 't-switches' }, hintSwitches),
-      ),
-    ),
+    // The button floats over the faded bottom of the list, so the list keeps its height.
+    h('div', { class: 't-side-scroll' }, sideBody, moreButton),
     h('div', { class: 't-side-foot' }, error, openButton),
   );
+
+  function updateMore() {
+    const more = sideBody.scrollHeight - sideBody.clientHeight - sideBody.scrollTop > 4;
+    sideBody.classList.toggle('has-more', more);
+    moreButton.hidden = !more;
+  }
+  function scrollToHints() {
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const top = hintsField.offsetTop - sideBody.offsetTop - 8;
+    sideBody.scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' });
+    hintsField.querySelector('input')?.focus({ preventScroll: true });
+  }
+  sideBody.addEventListener('scroll', updateMore, { passive: true });
+  const sideObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(updateMore) : null;
+  sideObserver?.observe(sideBody);
+  sideObserver?.observe(hintsField);
 
   main.append(
     h(
@@ -261,6 +288,7 @@ export function renderCreate(main, ctx) {
     previewTitle.textContent = state.picture.title;
     preview.replaceChildren(previewSvg(state.picture, state.pieceCount));
     credit.replaceChildren(...creditLine(state.picture));
+    updateMore(); // the preview and source line change the list height
   }
 
   function updateFrameMini() {
@@ -429,6 +457,7 @@ export function renderCreate(main, ctx) {
   showMine();
   return () => {
     alive = false;
+    sideObserver?.disconnect();
   };
 }
 
@@ -469,7 +498,12 @@ function categoryChips(cards, grid) {
       buttons[i].setAttribute('aria-pressed', String(c === category));
       buttons[i].tabIndex = c === category ? 0 : -1;
     });
-    for (const card of cards) card.node.hidden = card.category !== category;
+    for (const card of cards) {
+      card.node.hidden = card.category !== category;
+      // A lazy image that was hidden waits for layout before loading: ask for it now.
+      const img = card.node.querySelector('img');
+      if (!card.node.hidden && img?.loading === 'lazy') img.loading = 'eager';
+    }
     grid.setAttribute('aria-label', `내장 그림: ${category}`);
     buttons[categories.indexOf(category)].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
   }
