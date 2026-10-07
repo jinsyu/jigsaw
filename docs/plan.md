@@ -37,7 +37,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
   - 검증: `tests/unit/node-import.test.js`(Vitest `environment: node` 로 퍼즐 모듈 import·`resolveDropWithHolds` 실행)를 추가하고, 기존 단위·DB·E2E 시험을 HEAD 상태에서 모두 통과시킨다(전환 중 기준선).
   - 결과: 보관 브랜치 `archive/t14a-browser-direct`(커밋 `a399116`, 원격 푸시). 다시 적용한 변경 0건(퍼즐·자석 모듈 변경도 SQL 함수 이름 주석뿐이라 버림). 퍼즐 모듈은 이미 Node 에서 import 되어 코드 수정 없음. D7 완료 표시는 서버 `drop` 경로로 증명하는 T15 에서 한다.
 
-- [ ] T15: 서버 퍼즐 엔진(모둠 판 상태, 순수 로직) — DoD: D5, D6, D7, D8, D9, D10
+- [x] T15: 서버 퍼즐 엔진(모둠 판 상태, 순수 로직) — DoD: D5, D6, D7, D8, D9, D10
   - `server/package.json`(type module, Node 24, 의존성은 이 태스크에서는 없음), `server/src/engine/board.js`: 모둠 하나의 판 상태(덩어리·조각·상자 주인·잡기·접속)와 동작 `takeFromTray`·`grab`·`drop`·`release`·`memberOnline/Offline`·`tick(now)`. 판정은 `public/js/puzzle/snap.js`·`geometry.js` 를 import 해서 쓴다(복사 금지).
   - 조각 나누기(`shuffledPieces` 등)는 `local-store.js` 에서 공용 모듈(예: `public/js/puzzle/deal.js`)로 옮겨 화면 데모 저장소와 서버가 같이 쓴다.
   - 규칙: 먼저 도착한 잡기만 성공, 고정 덩어리 잡기 거부, 남의 상자 조각 거부, 잡은 채 10초 무동작 또는 끊김 → 놓임, 끊긴 지 1분 → 상자 남은 조각을 접속 중인 모둠원에게 고르게(늦게 온 학생 포함, 접속자 없으면 안 나눔, 한 번만), 같은 학생이 1분 안에 돌아오면 상자 그대로, 모든 조각 고정 → 완성 시각. 잡기 연장 상한(처음 잡은 뒤 최대 60초, 넘으면 놓임)을 둔다.

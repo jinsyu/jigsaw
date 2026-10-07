@@ -1,8 +1,10 @@
 // In-memory PuzzleStore (see puzzle-store.js). Used by the solo demo and as the
 // reference behaviour for the Supabase store: the same snap.js rules decide drops.
 import { clampPosition, progress as progressOf, resolveDrop } from '../puzzle/snap.js';
-import { rng } from '../puzzle/geometry.js';
 import { cellOfPiece, normalizeHints } from './puzzle-store.js';
+
+// Moved to puzzle/deal.js (shared with the rt server); kept here for existing importers.
+export { shuffledPieces } from '../puzzle/deal.js';
 
 const freezeCluster = (c) =>
   Object.freeze({
@@ -14,17 +16,6 @@ const freezeCluster = (c) =>
     heldBy: c.heldBy,
     pieces: Object.freeze(c.pieces.map((cell) => Object.freeze([cell[0], cell[1]]))),
   });
-
-// Deterministic shuffle so a demo always deals the same tray order.
-export function shuffledPieces(count, seed) {
-  const next = rng(seed);
-  const order = Array.from({ length: count }, (_, i) => i);
-  for (let i = order.length - 1; i > 0; i--) {
-    const j = Math.floor(next() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]];
-  }
-  return order;
-}
 
 /**
  * @param {object} options

@@ -10,6 +10,7 @@ import { expectCaseResult, table } from '../fixtures/snap-case.js';
 const SHARED_MODULES = [
   'public/js/puzzle/geometry.js',
   'public/js/puzzle/snap.js',
+  'public/js/puzzle/deal.js',
   'public/js/store/puzzle-store.js',
   'public/js/store/local-store.js',
   'public/js/play/magnet.js',
