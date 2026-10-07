@@ -28,6 +28,9 @@ const SNAP_MS = 130;
 const FLASH_MS = 420;
 const LOCK_FLASH_MS = 700;
 const SHAKE_MS = 360;
+// prefers-reduced-motion: pieces and the view jump instead of sliding, flashes are
+// short and do not grow, and a refused locked piece is outlined instead of shaken.
+const CALM_FLASH_MS = 260;
 const SHAKE_PX = 4;
 const REVEAL_MS = 320;
 const REVEAL_PAD_PX = 12;
@@ -45,6 +48,7 @@ const COLORS = {
   dot: 'rgba(120, 100, 70, 0.2)',
   flash: 'rgba(255, 255, 255, 0.95)',
   lockGlow: '255, 196, 0',
+  refused: 'rgba(30, 36, 51, 0.55)',
   ghostLine: 'rgba(31, 157, 85, 0.6)',
   placeFill: 'rgba(31, 157, 85, 0.16)',
   placeLine: 'rgba(31, 157, 85, 0.85)',
@@ -52,6 +56,11 @@ const COLORS = {
 };
 
 const easeOut = (t) => 1 - (1 - t) ** 3;
+let motionQuery;
+function calm() {
+  motionQuery ??= window.matchMedia?.('(prefers-reduced-motion: reduce)') ?? null;
+  return motionQuery?.matches === true;
+}
 
 export function createBoardView(
   host,
@@ -78,8 +87,8 @@ export function createBoardView(
   let order = []; // [{ id, indices, locked }]: locked ones first, then by z
   let lastClusters = [];
   let locked = null; // Set of locked piece indexes (null until the first clusters arrive)
-  let flashes = []; // [{ indices, t0, kind: 'snap' | 'lock' }]
-  let shakes = []; // [{ id, t0 }] locked clusters wiggling
+  let flashes = []; // [{ indices, t0, dur, kind: 'snap' | 'lock', calm }]
+  let shakes = []; // [{ id, t0, calm }] refused locked clusters (wiggle, or outline when calm)
   let drag = null; // { id, pointerId, indices, offX, offY, x, y, startX, startY, from }
   let hover = null; // a tray piece over the board: { index, x, y }
   let magnet = null; // { key, preview, pull } for the current drag or hover
@@ -205,11 +214,12 @@ export function createBoardView(
   }
 
   function drawFlashes(c, now) {
-    flashes = flashes.filter((f) => now - f.t0 < (f.kind === 'lock' ? LOCK_FLASH_MS : FLASH_MS));
+    flashes = flashes.filter((f) => now - f.t0 < f.dur);
     for (const f of flashes) {
       if (now < f.t0) continue; // starts once the snap slide is nearly done
       const lock = f.kind === 'lock';
-      const t = (now - f.t0) / (lock ? LOCK_FLASH_MS : FLASH_MS);
+      const t = (now - f.t0) / f.dur;
+      const grow = f.calm ? 0 : t;
       for (const i of f.indices) {
         const p = display.get(i);
         if (!p) continue;
@@ -217,16 +227,16 @@ export function createBoardView(
         c.translate(p.x, p.y);
         if (lock) {
           // A short warm glint over the piece, then a golden ring that fades.
-          c.globalAlpha = 0.55 * (1 - t) ** 2;
+          c.globalAlpha = (f.calm ? 0.25 : 0.55) * (1 - t) ** 2;
           c.fillStyle = COLORS.flash;
           c.fill(sprites.paths[i]);
           c.globalAlpha = 1 - t;
           c.strokeStyle = `rgb(${COLORS.lockGlow})`;
-          c.lineWidth = (3 + 7 * t) / cam.scale;
+          c.lineWidth = (3 + 7 * grow) / cam.scale;
         } else {
           c.globalAlpha = 1 - t;
           c.strokeStyle = COLORS.flash;
-          c.lineWidth = (2 + 4 * t) / cam.scale;
+          c.lineWidth = (2 + 4 * grow) / cam.scale;
         }
         c.stroke(sprites.paths[i]);
         c.restore();
@@ -237,7 +247,7 @@ export function createBoardView(
 
   function shakeOffset(id, now) {
     const s = shakes.find((k) => k.id === id);
-    if (!s) return 0;
+    if (!s || s.calm) return 0;
     const t = (now - s.t0) / SHAKE_MS;
     return (Math.sin(t * Math.PI * 6) * SHAKE_PX * (1 - t)) / cam.scale;
   }
@@ -273,6 +283,16 @@ export function createBoardView(
       if (cluster.id === skipId) continue;
       const dx = shakes.length ? shakeOffset(cluster.id, now) : 0;
       drawCluster(c, cluster.indices, cluster.locked ? 'locked' : 'resting', dx, 0);
+      if (shakes.some((s) => s.calm && s.id === cluster.id)) outlineCluster(c, cluster.indices);
+    }
+  }
+
+  function outlineCluster(c, indices) {
+    c.strokeStyle = COLORS.refused;
+    c.lineWidth = 2.5 / cam.scale;
+    for (const i of indices) {
+      const p = display.get(i);
+      strokeAt(c, sprites.paths[i], p.x, p.y);
     }
   }
 
@@ -352,6 +372,12 @@ export function createBoardView(
   // ---------- state from the store ----------
 
   function tween(p, x, y, dur) {
+    if (calm()) {
+      p.x = p.toX = x;
+      p.y = p.toY = y;
+      p.t0 = undefined;
+      return;
+    }
     if (p.toX === x && p.toY === y) return;
     p.fromX = p.x;
     p.fromY = p.y;
@@ -361,6 +387,14 @@ export function createBoardView(
     p.dur = dur;
   }
 
+  function pushFlash(indices, kind) {
+    const quiet = calm();
+    const dur = quiet ? CALM_FLASH_MS : kind === 'lock' ? LOCK_FLASH_MS : FLASH_MS;
+    // Starts once the snap slide is nearly done (no slide when calm).
+    const t0 = performance.now() + (quiet ? 0 : SNAP_MS * 0.6);
+    flashes.push({ indices, t0, dur, kind, calm: quiet });
+  }
+
   function trackLocks(clusters) {
     const now = new Set();
     for (const c of clusters) {
@@ -368,7 +402,7 @@ export function createBoardView(
     }
     if (locked) {
       const fresh = [...now].filter((i) => !locked.has(i));
-      if (fresh.length) flashes.push({ indices: fresh, t0: performance.now() + SNAP_MS * 0.6, kind: 'lock' });
+      if (fresh.length) pushFlash(fresh, 'lock');
     }
     locked = now;
   }
@@ -421,7 +455,7 @@ export function createBoardView(
       const p = display.get(i);
       if (p) tween(p, x, y, snapped ? SNAP_MS : SLIDE_MS);
     }
-    if (snapped && !locks) flashes.push({ indices, t0: performance.now() + SNAP_MS * 0.6, kind: 'snap' });
+    if (snapped && !locks) pushFlash(indices, 'snap');
     invalidate();
   }
 
@@ -429,8 +463,13 @@ export function createBoardView(
   function reveal(rect) {
     const target = revealCamera(cam, view, layout, rect, REVEAL_PAD_PX);
     if (target.x === cam.x && target.y === cam.y) return;
-    camTween = { from: { ...cam }, to: target, t0: performance.now() };
     userMoved = true;
+    if (calm()) {
+      camTween = null;
+      cam = target;
+    } else {
+      camTween = { from: { ...cam }, to: target, t0: performance.now() };
+    }
     invalidate();
   }
 
@@ -572,7 +611,7 @@ export function createBoardView(
     lockedPress.fired = true;
     const { id } = lockedPress.cluster;
     shakes = shakes.filter((s) => s.id !== id);
-    shakes.push({ id, t0: performance.now() });
+    shakes.push({ id, t0: performance.now(), calm: calm() });
     invalidate();
     onLockedPress?.();
   }
@@ -707,6 +746,10 @@ export function createBoardView(
     hoverFromTray,
     get camera() {
       return { ...(camTween ? camTween.to : cam) };
+    },
+    // Running slides and view moves (for tests: none when reduced motion is asked for).
+    get animating() {
+      return { slides: [...display.values()].filter((p) => p.t0 !== undefined).length, panning: camTween !== null };
     },
     // What the drag preview shows right now (for tests and the screen): null or a snapPreview().
     get preview() {

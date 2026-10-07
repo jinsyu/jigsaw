@@ -15,6 +15,11 @@
  * @property {number} z        Drawing order, larger is on top.
  * @property {Cell[]} pieces
  * @property {string|null} heldBy  uid of the member holding it, or null.
+ * @property {number|null} [heldAt]  When heldBy grabbed it (ms since epoch), or null.
+ *   Remote stores pass the server's grab time (clusters.grabbed_at): holds are judged
+ *   by time like the server does (snap.js isHeldByOther, 10 s). Without heldAt the
+ *   screen treats a hold as fresh.
+ * @property {boolean} [locked]  In the frame for good: cannot be grabbed (snap.js rule 6).
  *
  * @typedef {object} Member
  * @property {string} uid

@@ -13,8 +13,12 @@ const STEP = { top: [0, -1], right: [1, 0], bottom: [0, 1], left: [-1, 0] };
 const keyOf = ([col, row]) => `${col},${row}`;
 
 /**
- * resolveDropWithHolds on a store snapshot. Snapshots may not carry heldAt: a hold
- * without a time counts as fresh (the server drops stale holds on its own).
+ * resolveDropWithHolds on a store snapshot, with the store's heldAt (grab time, ms).
+ * The server never clears a hold: private.held_by_other() only compares the grab
+ * time with now (10 s) and checks the holder is online. A snapshot without heldAt
+ * cannot be dated, so its hold counts as fresh (left out of merges), which can only
+ * differ from the server for a hold older than 10 s. Stores should pass heldAt
+ * (see puzzle-store.js).
  * @param {object} layout
  * @param {Array<{ id: number, x: number, y: number, pieces: number[][], locked?: boolean, heldBy?: string|null, heldAt?: number }>} clusters
  * @param {{ id: number, x: number, y: number }} drop

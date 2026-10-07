@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
 
-// Student puzzle screen, solo demo (/play?demo=1): in-memory store, 24 pieces (6 x 4).
+// Student puzzle screen, solo demo (/play?demo=1): in-memory store, 24 pieces (6 x 4)
+// unless &pieces= asks for 12, 48 or 70.
 // Touch projects drive real touch input through CDP; the desktop project uses the mouse.
 
-async function openDemo(page) {
+async function openDemo(page, pieces = null) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/play?demo=1');
+  await page.goto(pieces ? `/play?demo=1&pieces=${pieces}` : '/play?demo=1');
   await expect(page.locator('main[data-ready="true"]')).toBeVisible();
   return errors;
 }
@@ -632,17 +633,16 @@ test('a piece locked in the frame stays put, wiggles and says so', async ({ page
   expect(errors).toEqual([]);
 });
 
-test('tapping out all 24 pieces never covers the frame', async ({ page }, testInfo) => {
-  test.setTimeout(60_000);
-  const errors = await openDemo(page);
+async function tapOutEverything(page, testInfo, pieces, shot) {
+  const errors = await openDemo(page, pieces);
   const { layout, ox, oy } = await framePlace(page);
-  for (let left = 24; left > 0; left--) {
+  for (let left = pieces; left > 0; left--) {
     await page.locator('.pz-tile').first().click();
     await expect(page.locator('.pz-tile')).toHaveCount(left - 1);
   }
   await page.waitForTimeout(500);
   const { clusters, progress } = await state(page);
-  expect(clusters).toHaveLength(24); // nothing snapped by accident
+  expect(clusters).toHaveLength(pieces); // nothing snapped by accident
   expect(progress.placed).toBe(0);
   for (const c of clusters) {
     const [col, row] = c.pieces[0];
@@ -653,7 +653,85 @@ test('tapping out all 24 pieces never covers the frame', async ({ page }, testIn
     expect((w * h) / (layout.pw * layout.ph)).toBeLessThanOrEqual(0.2 + 1e-9);
   }
   await expectNoHorizontalOverflow(page);
-  await page.screenshot({ path: testInfo.outputPath('play-all-out.png') });
+  await page.screenshot({ path: testInfo.outputPath(shot) });
+  expect(errors).toEqual([]);
+}
+
+test('tapping out all 24 pieces never covers the frame', async ({ page }, testInfo) => {
+  test.setTimeout(60_000);
+  await tapOutEverything(page, testInfo, 24, 'play-all-out.png');
+});
+
+test('70 pieces: tapping out all of them never covers the frame (piles on the board edge)', async ({ page }, testInfo) => {
+  test.skip(!['phone-390', 'tablet-1024'].includes(testInfo.project.name), 'one phone and one tablet');
+  test.setTimeout(180_000);
+  await tapOutEverything(page, testInfo, 70, 'play-70-all-out.png');
+  // The whole board, zoomed out, for the board size decision.
+  const input = makeInput(page, true);
+  for (let k = 0; k < 3; k++) await zoom(page, input, true, 0.4);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: testInfo.outputPath('play-70-all-out-whole-board.png') });
+});
+
+for (const pieces of [48, 70]) {
+  test(`${pieces} pieces: first view, frame and tray`, async ({ page }, testInfo) => {
+    const errors = await openDemo(page, pieces);
+    await expect(page.locator('.pz-count')).toHaveText(`0 / ${pieces}`);
+    await expect(page.locator('.pz-tile')).toHaveCount(pieces);
+    const { layout, ox, oy } = await framePlace(page);
+    expect(layout.cols * layout.rows).toBe(pieces);
+    // Frame centred, pieces big enough to touch.
+    const box = await boardBox(page);
+    const mid = await toClient(page, ox + layout.width / 2, oy + layout.height / 2);
+    expect(Math.abs(mid.x - (box.x + box.width / 2))).toBeLessThanOrEqual(1);
+    expect(Math.abs(mid.y - (box.y + box.height / 2))).toBeLessThanOrEqual(1);
+    expect(layout.pw * (await camera(page)).scale).toBeGreaterThanOrEqual(44);
+    const px = await framePixels(page);
+    expect(px.fill.max - px.seam.min).toBeGreaterThanOrEqual(25);
+    // Every tile gets its picture.
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          [...document.querySelectorAll('.pz-tile canvas')].every((c) => {
+            const d = c.getContext('2d').getImageData(c.width / 2, c.height / 2, 1, 1).data;
+            return d[3] > 0;
+          }),
+        ),
+      )
+      .toBe(true);
+    // A tapped piece lands next to the frame.
+    await page.locator('.pz-tile').first().click();
+    await expect(page.locator('.pz-tile')).toHaveCount(pieces - 1);
+    await expectNoHorizontalOverflow(page);
+    await page.screenshot({ path: testInfo.outputPath(`play-${pieces}.png`) });
+    expect(errors).toEqual([]);
+  });
+}
+
+test('reduced motion: pieces and the view jump instead of sliding', async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const errors = await openDemo(page);
+  const hasTouch = testInfo.project.use.hasTouch === true;
+  const input = makeInput(page, hasTouch);
+  const animating = () => demo(page, () => window.__puzzleDemo.animating());
+  const { ox, oy } = await framePlace(page);
+
+  // A drop near the frame: already in place on the next frame, no slide.
+  await dragFromTray(page, input, (await state(page)).tray[0], ox + 20, oy + 15);
+  await expect(page.locator('.pz-count')).toHaveText('1 / 24');
+  expect(await animating()).toEqual({ slides: 0, panning: false });
+
+  // Tapping pieces out: when one goes beside the screen, the view jumps there.
+  let before = await camera(page);
+  for (let k = 0; k < 23; k++) {
+    await page.locator('.pz-tile').first().click();
+    const now = await animating();
+    expect(now).toEqual({ slides: 0, panning: false });
+    const cam = await camera(page);
+    if (cam.x !== before.x || cam.y !== before.y) break;
+    before = cam;
+  }
+  await page.screenshot({ path: testInfo.outputPath('play-reduced-motion.png') });
   expect(errors).toEqual([]);
 });
 
@@ -696,49 +774,51 @@ test('tapping a tray piece puts it on a visible free spot next to the frame', as
   await page.screenshot({ path: testInfo.outputPath('play-tapped.png') });
 });
 
-test('gestures stay smooth on a 4x slower CPU (no long tasks)', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.use.hasTouch !== true, 'touch gestures only');
-  await openDemo(page);
-  const input = makeInput(page, true);
-  // Put a few pieces on the board first so drags and pans have something to draw.
-  for (let k = 0; k < 6; k++) await page.locator('.pz-tile').first().click();
-  await page.waitForTimeout(500);
+for (const pieces of [24, 70]) {
+  test(`gestures stay smooth on a 4x slower CPU (no long tasks), ${pieces} pieces`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.use.hasTouch !== true, 'touch gestures only');
+    await openDemo(page, pieces);
+    const input = makeInput(page, true);
+    // Put a few pieces on the board first so drags and pans have something to draw.
+    for (let k = 0; k < 6; k++) await page.locator('.pz-tile').first().click();
+    await page.waitForTimeout(500);
 
-  const cdp = await page.context().newCDPSession(page);
-  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
-  await page.evaluate(() => {
-    window.__longTasks = [];
-    new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) window.__longTasks.push(Math.round(entry.duration));
-    }).observe({ type: 'longtask' });
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+    await page.evaluate(() => {
+      window.__longTasks = [];
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) window.__longTasks.push(Math.round(entry.duration));
+      }).observe({ type: 'longtask' });
+    });
+
+    // Drags that show the magnet preview on every move: from the tray into the frame,
+    // then a board piece onto its place.
+    const { ox, oy } = await framePlace(page);
+    await dragFromTray(page, input, (await state(page)).tray[0], ox + 20, oy + 15);
+    const loose = (await state(page)).clusters.find((c) => !c.locked);
+    const from = await pieceCentre(page, loose);
+    const { layout: lay } = await state(page);
+    const [lc, lr] = loose.pieces[0];
+    const home = await toClient(page, ox + 15 + (lc + 0.5) * lay.pw, oy - 10 + (lr + 0.5) * lay.ph);
+    await input.drag([[from.x, from.y], [home.x, home.y]], 30);
+
+    const box = await boardBox(page);
+    const centre = [box.x + box.width / 2, box.y + box.height / 2];
+    await input.pinch(centre, 80, 220, 20);
+    await input.twoFingerPan(centre, -60, 40, 120, 20);
+    const { clusters, layout } = await state(page);
+    const top = clusters.filter((c) => !c.locked).at(-1);
+    const [col, row] = top.pieces[0];
+    const at = await toClient(page, top.x + (col + 0.5) * layout.pw, top.y + (row + 0.5) * layout.ph);
+    await input.drag([[at.x, at.y], [at.x + 50, at.y - 70]], 20);
+    await dragFromTray(page, input, (await state(page)).tray[0], 300, 150);
+    await page.waitForTimeout(800); // sprite refresh after the zoom runs in small steps
+    const longTasks = await page.evaluate(() => window.__longTasks);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+
+    testInfo.annotations.push({ type: 'long tasks (ms, 4x CPU)', description: JSON.stringify(longTasks) });
+    console.log(`[${testInfo.project.name}] ${pieces} pieces: long tasks during gestures at 4x CPU:`, longTasks);
+    expect(longTasks.filter((ms) => ms > 50)).toEqual([]);
   });
-
-  // Drags that show the magnet preview on every move: from the tray into the frame,
-  // then a board piece onto its place.
-  const { ox, oy } = await framePlace(page);
-  await dragFromTray(page, input, (await state(page)).tray[0], ox + 20, oy + 15);
-  const loose = (await state(page)).clusters.find((c) => !c.locked);
-  const from = await pieceCentre(page, loose);
-  const { layout: lay } = await state(page);
-  const [lc, lr] = loose.pieces[0];
-  const home = await toClient(page, ox + 15 + (lc + 0.5) * lay.pw, oy - 10 + (lr + 0.5) * lay.ph);
-  await input.drag([[from.x, from.y], [home.x, home.y]], 30);
-
-  const box = await boardBox(page);
-  const centre = [box.x + box.width / 2, box.y + box.height / 2];
-  await input.pinch(centre, 80, 220, 20);
-  await input.twoFingerPan(centre, -60, 40, 120, 20);
-  const { clusters, layout } = await state(page);
-  const top = clusters.filter((c) => !c.locked).at(-1);
-  const [col, row] = top.pieces[0];
-  const at = await toClient(page, top.x + (col + 0.5) * layout.pw, top.y + (row + 0.5) * layout.ph);
-  await input.drag([[at.x, at.y], [at.x + 50, at.y - 70]], 20);
-  await dragFromTray(page, input, (await state(page)).tray[0], 300, 150);
-  await page.waitForTimeout(800); // sprite refresh after the zoom runs in small steps
-  const longTasks = await page.evaluate(() => window.__longTasks);
-  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
-
-  testInfo.annotations.push({ type: 'long tasks (ms, 4x CPU)', description: JSON.stringify(longTasks) });
-  console.log(`[${testInfo.project.name}] long tasks during gestures at 4x CPU:`, longTasks);
-  expect(longTasks.filter((ms) => ms > 50)).toEqual([]);
-});
+}

@@ -1,17 +1,24 @@
-// /play?demo=1 — solo 24-piece puzzle on the built-in sea picture, kept in memory.
+// /play?demo=1 — solo puzzle on the built-in sea picture, kept in memory.
+// &pieces=12|24|48|70 picks the piece count (default 24).
 // For development and demonstrations only: no server, nothing is saved.
-import { gridFor, layoutFor } from '../puzzle/geometry.js';
+import { PIECE_COUNTS, gridFor, layoutFor } from '../puzzle/geometry.js';
 import { createLocalStore, shuffledPieces } from '../store/local-store.js';
 import { mountPlayScreen } from './play-screen.js';
 
 const PICTURE = { src: '/images/demo/sea.svg', width: 600, height: 400 };
-const PIECE_COUNT = 24;
+const DEFAULT_PIECES = 24;
 const SEED = 42;
 const ME = 'demo';
 
-export function createDemoStore() {
+// Piece count from the page address; anything but a supported count gives the default.
+export function demoPieceCount(search) {
+  const n = Number(new URLSearchParams(search).get('pieces'));
+  return PIECE_COUNTS.includes(n) ? n : DEFAULT_PIECES;
+}
+
+export function createDemoStore(pieceCount = DEFAULT_PIECES) {
   const aspect = PICTURE.width / PICTURE.height;
-  const { cols, rows } = gridFor(PIECE_COUNT, aspect);
+  const { cols, rows } = gridFor(pieceCount, aspect);
   return createLocalStore({
     layout: layoutFor(cols, rows, aspect),
     seed: SEED,
@@ -19,18 +26,19 @@ export function createDemoStore() {
     groupName: '혼자 연습',
     me: ME,
     members: [{ uid: ME, name: '나', color: 0 }],
-    trays: { [ME]: shuffledPieces(PIECE_COUNT, SEED) },
+    trays: { [ME]: shuffledPieces(pieceCount, SEED) },
   });
 }
 
 export async function startDemo(main) {
-  const store = createDemoStore();
+  const store = createDemoStore(demoPieceCount(location.search));
   const screen = await mountPlayScreen(main, store);
   // Test and demo hook: read-only view of the state and the board camera.
   window.__puzzleDemo = {
     state: () => store.getState(),
     camera: () => screen.board.camera,
     preview: () => screen.board.preview,
+    animating: () => screen.board.animating,
     boardToClient: (x, y) => screen.board.boardToClient(x, y),
   };
 }
