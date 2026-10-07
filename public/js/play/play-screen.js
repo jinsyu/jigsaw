@@ -2,6 +2,7 @@
 // changes puzzle data only through a PuzzleStore, so the in-memory demo store
 // and the Supabase store (T11) plug in the same way.
 import { makePuzzle } from '../puzzle/geometry.js';
+import { HOLD_MS, isHeldByOther } from '../puzzle/snap.js';
 import { cellOfPiece, isPuzzleStore, normalizeHints, pieceOfCell } from '../store/puzzle-store.js';
 import { createBoardView } from './board-view.js';
 import { frameRect } from './frame.js';
@@ -19,6 +20,10 @@ const LOCKED_TEXT = '이미 맞춘 조각이에요';
 // A tapped piece put beside the screen is brought into view with its tabs.
 const REVEAL_TAB = 0.3;
 const TOAST_MS = 2600;
+// A piece that keeps moving renews its hold on the server before the 10 s run out.
+const RENEW_MS = 6000;
+// Friends' holds run out after HOLD_MS without a message: look again this often.
+const HOLDER_TICK_MS = 1000;
 
 // Same piece outline as the mockup icon (iconPiece): centre piece of a 3 x 3 puzzle, seed 5.
 const ICON_PATH = makePuzzle({ cols: 3, rows: 3, width: 300, height: 300 }, 5).at(1, 1).d;
@@ -129,12 +134,29 @@ function setupDialog(ui) {
   });
 }
 
+// Clusters friends are holding now (same test as the server): id -> { color, name }.
+function friendHolds(state, now) {
+  const byUid = new Map(state.members.map((m) => [m.uid, m]));
+  const isOnline = (uid) => byUid.get(uid)?.online === true;
+  const holders = new Map();
+  for (const c of state.clusters) {
+    // Without heldAt a hold counts as fresh (puzzle-store.js).
+    const held = { ...c, heldAt: c.heldAt ?? now };
+    if (!isHeldByOther(held, state.me, now, isOnline)) continue;
+    const m = byUid.get(c.heldBy);
+    holders.set(c.id, { color: MEMBER_COLORS[m.color % MEMBER_COLORS.length], name: m.name || '친구' });
+  }
+  return holders;
+}
+
 /**
  * Mounts the puzzle screen into `main` and resolves with a small handle once ready.
  * @param {HTMLElement} main
  * @param {import('../store/puzzle-store.js').PuzzleStore} store
+ * @param {{ onComplete?: (state) => void }} [options]
+ *   onComplete: called once when every piece is in the frame (instead of the toast).
  */
-export async function mountPlayScreen(main, store) {
+export async function mountPlayScreen(main, store, { onComplete } = {}) {
   if (!isPuzzleStore(store)) throw new TypeError('mountPlayScreen needs a PuzzleStore');
   document.documentElement.classList.add('is-play');
   const ui = buildLayout(main);
@@ -259,6 +281,9 @@ export async function mountPlayScreen(main, store) {
     predict: hints.preview ? previewDrop : null,
     predictTray: hints.preview ? previewTray : null,
     frameLook: { outline: hints.outline, underlay: hints.underlay ? picture : null },
+    holdMs: HOLD_MS,
+    renewMs: RENEW_MS,
+    onHoldRenew: (clusterId) => store.grab(clusterId).catch((error) => console.error(error)),
     onLockedPress: () => showToast(LOCKED_TEXT),
     onDrop: (clusterId, x, y) => settleAction(dropCluster(clusterId, x, y, pendingGrab)),
     onZoom() {
@@ -342,8 +367,21 @@ export async function mountPlayScreen(main, store) {
   });
 
   let wasComplete = state.progress.complete;
+  let shownMembers = null;
+  let holderTimer = 0;
+  function showHolders() {
+    const holders = friendHolds(state, Date.now());
+    board.setHolders(holders);
+    clearTimeout(holderTimer);
+    if (holders.size) holderTimer = setTimeout(showHolders, HOLDER_TICK_MS);
+  }
+
   function render(next) {
     state = next;
+    if (state.members !== shownMembers) {
+      renderMembers(ui, state);
+      shownMembers = state.members;
+    }
     const { placed, total, complete } = state.progress;
     ui.fill.style.width = `${(100 * placed) / total}%`;
     ui.bar.setAttribute('aria-valuenow', String(placed));
@@ -357,13 +395,23 @@ export async function mountPlayScreen(main, store) {
     ui.tray.classList.toggle('is-empty', state.tray.length === 0);
     tray.setPieces(state.tray);
     board.setClusters(state.clusters);
-    if (complete && !wasComplete) showToast('모든 조각이 맞았어요!', { sticky: true, tone: 'ok' });
+    showHolders();
+    if (complete && !wasComplete) {
+      if (onComplete) queueMicrotask(() => onComplete(state));
+      else showToast('모든 조각이 맞았어요!', { sticky: true, tone: 'ok' });
+    }
     wasComplete = complete;
   }
 
-  renderMembers(ui, state);
   render(state);
   const unsubscribe = store.subscribe((next) => render(next));
+  // Leaving the page (or losing the network) lets go of a held piece (spec rule 6).
+  const letGo = () => {
+    if (document.visibilityState === 'hidden' || !navigator.onLine) board.releaseDrag();
+  };
+  document.addEventListener('visibilitychange', letGo);
+  window.addEventListener('offline', letGo);
+  window.addEventListener('pagehide', board.releaseDrag);
   ui.status.remove();
   main.removeAttribute('aria-busy');
   main.dataset.ready = 'true';
@@ -372,6 +420,10 @@ export async function mountPlayScreen(main, store) {
     board,
     destroy() {
       unsubscribe();
+      clearTimeout(holderTimer);
+      document.removeEventListener('visibilitychange', letGo);
+      window.removeEventListener('offline', letGo);
+      window.removeEventListener('pagehide', board.releaseDrag);
       board.destroy();
       document.documentElement.classList.remove('is-play');
     },

@@ -3,16 +3,21 @@
 // - 'groups' / 'start': read my members row, my group and my groupmates again. start_session
 //   renumbers colours without a 'groups' broadcast, so 'start' re-reads too (T4 review).
 // - 'end', or my members row disappearing: the class is over.
+// - Every REFRESH_MS the same read again, in case a broadcast was missed.
 // heartbeat() every 5 seconds keeps members.last_seen fresh while waiting, so trays dealt at
 // the start are not taken for a student who was simply waiting (T6: gone after 1 minute).
-// This screen joins no group:<id> channel; the puzzle screen (T11) does, and must leave the old
-// group's channel and join the new one when a 'groups' broadcast moves this student.
+// This module joins no group:<id> channel; the puzzle (student/puzzle.js) does, and leaves the
+// old group's channel for the new one when a 'groups' broadcast moves this student.
+// beat() lets the puzzle send a heartbeat first when the page comes back (before
+// redistribute_stale, T6 review); onBeat hears the server time of every answer.
 import { presenceNames } from './presence.js';
 
 const HEARTBEAT_MS = 5000;
+// Broadcasts can be missed (a reconnect at the wrong moment): read the class again this often.
+const REFRESH_MS = 15000;
 const CONNECT_GRACE_MS = 5000;
 
-export function connectClass({ client, sessionId, memberId, userId, name, onChange, onEnded }) {
+export function connectClass({ client, sessionId, memberId, userId, name, onChange, onEnded, onBeat = () => {} }) {
   let stopped = false;
   let myName = name;
   let connection = 'connecting';
@@ -27,6 +32,7 @@ export function connectClass({ client, sessionId, memberId, userId, name, onChan
     const { names } = presenceNames(presence, snapshot.mateRows);
     const mates = snapshot.mateRows.map((row) => ({
       id: row.id,
+      uid: row.user_id,
       color: row.color,
       me: row.id === memberId,
       online: row.id === memberId || names.has(row.id),
@@ -96,11 +102,22 @@ export function connectClass({ client, sessionId, memberId, userId, name, onChan
     return running;
   }
 
-  async function beat() {
-    if (stopped || document.visibilityState === 'hidden') return;
-    const { data, error } = await client.rpc('heartbeat');
-    if (error) console.error(error);
-    else if (data?.ok === false) refresh(); // not in an open class any more
+  // One heartbeat at a time; callers during one share it.
+  let beating = null;
+  function beat() {
+    if (stopped || document.visibilityState === 'hidden') return Promise.resolve();
+    beating ??= (async () => {
+      const sentAt = Date.now();
+      const { data, error } = await client.rpc('heartbeat');
+      if (error) console.error(error);
+      else if (data?.ok === false) refresh(); // not in an open class any more
+      else if (data?.last_seen) onBeat(data.last_seen, sentAt, Date.now());
+    })()
+      .catch((error) => console.error(error))
+      .finally(() => {
+        beating = null;
+      });
+    return beating;
   }
 
   function setConnection(next) {
@@ -141,6 +158,9 @@ export function connectClass({ client, sessionId, memberId, userId, name, onChan
     });
 
   const heartbeatTimer = setInterval(beat, HEARTBEAT_MS);
+  const refreshTimer = setInterval(() => {
+    if (document.visibilityState !== 'hidden') refresh();
+  }, REFRESH_MS);
   function onVisible() {
     if (document.visibilityState !== 'visible') return;
     beat();
@@ -155,12 +175,15 @@ export function connectClass({ client, sessionId, memberId, userId, name, onChan
     stopped = true;
     clearTimeout(graceTimer);
     clearInterval(heartbeatTimer);
+    clearInterval(refreshTimer);
     document.removeEventListener('visibilitychange', onVisible);
     window.removeEventListener('online', onVisible);
     client.removeChannel(channel).catch(() => {});
   }
 
   return {
+    beat,
+    refresh,
     rename(next) {
       myName = next;
       emit();
