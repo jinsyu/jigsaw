@@ -37,7 +37,9 @@
  * @typedef {object} PuzzleState  Read-only snapshot. A new object is created on every change.
  * @property {object} layout   geometry.layoutFor() result.
  * @property {number} seed     Shape seed (sessions.seed).
- * @property {{ src: string, width: number, height: number }} picture
+ * @property {{ src: string, width: number, height: number, credit?: string }} picture
+ *   credit: the source line of an outside built-in picture (index.json credit), shown under
+ *   the completed picture. Leave it out for self-made and teachers' own pictures.
  * @property {string} groupName
  * @property {string} me       uid of this device's member.
  * @property {Member[]} members

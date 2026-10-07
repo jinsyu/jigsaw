@@ -46,7 +46,9 @@ export async function loadDemoPicture(key) {
   const response = await fetch(BUILTIN_INDEX);
   if (!response.ok) throw new Error(`built-in pictures: ${response.status}`);
   const found = (await response.json()).images.find((image) => image.key === key);
-  return found ? { src: found.src, width: found.width, height: found.height } : DEFAULT_PICTURE;
+  if (!found) return DEFAULT_PICTURE;
+  const picture = { src: found.src, width: found.width, height: found.height };
+  return found.category === '자체 제작' ? picture : { ...picture, credit: found.credit };
 }
 
 export function createDemoStore(pieceCount = DEFAULT_PIECES, hints = {}, picture = DEFAULT_PICTURE) {

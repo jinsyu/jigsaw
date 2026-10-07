@@ -116,7 +116,7 @@ test('D1: a teacher picks a picture, piece count and groups, opens the class, an
 
   // Picture: the first built-in is chosen and previewed with the real 24-piece cut.
   const pictures = page.getByRole('radiogroup', { name: '내장 그림' }).getByRole('radio');
-  await expect(pictures).toHaveCount(50); // public/images/builtin/index.json
+  await expect(pictures).toHaveCount(20); // the first category (자체 제작) is shown
   await expect(pictures.first()).toBeChecked();
   const preview = page.locator('.t-preview svg');
   await expect(preview).toHaveAttribute('aria-label', /바다 친구들을 24조각\(가로 6, 세로 4\)/);

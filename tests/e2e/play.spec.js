@@ -759,6 +759,22 @@ for (const [key, shape] of [
   });
 }
 
+test('the completed picture shows the source line of an outside picture', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone-390' && testInfo.project.name !== 'desktop-1440', 'two sizes are enough');
+  const errors = await openDemo(page, { picture: 'starry-night' });
+  await page.getByRole('button', { name: '완성 그림 보기' }).click();
+  const dialog = page.getByRole('dialog', { name: '완성 그림' });
+  await expect(dialog.locator('.pz-credit')).toHaveText(/^별이 빛나는 밤, 빈센트 반 고흐, 1889 — 뉴욕 현대미술관/);
+  await expectNoHorizontalOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath('play-credit.png') });
+  await dialog.getByRole('button', { name: '닫기' }).click();
+  // A self-made picture has no source line.
+  await openDemo(page);
+  await page.getByRole('button', { name: '완성 그림 보기' }).click();
+  await expect(page.locator('.pz-credit')).toBeHidden();
+  expect(errors).toEqual([]);
+});
+
 test('reduced motion: pieces and the view jump instead of sliding', async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const errors = await openDemo(page);

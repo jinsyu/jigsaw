@@ -93,6 +93,8 @@ export function renderCreate(main, ctx) {
   const previewTitle = h('h2', { class: 't-preview-title' });
   const previewNote = h('small', {});
   const preview = h('div', { class: 't-preview' });
+  // Where the chosen picture comes from (outside pictures must show their source line).
+  const credit = h('p', { class: 't-credit', id: 't-credit' });
 
   const pieceNote = h('p', { class: 't-note', id: 't-piece-note' });
   const pieceSeg = h(
@@ -177,35 +179,39 @@ export function renderCreate(main, ctx) {
   const error = h('p', { class: 't-error', role: 'alert' });
   const openButton = h('button', { class: 'btn pri big t-open', type: 'button', onclick: open }, '수업 열기');
 
+  // The settings scroll inside the panel on wide screens; '수업 열기' stays in view at the
+  // bottom of the panel (wide) or of the screen (narrow).
   const side = h(
     'aside',
     { class: 'card t-side', 'aria-label': '수업 설정' },
-    h('div', {}, h('div', { class: 't-lbl' }, previewTitle, previewNote), preview),
-    h(
-      'fieldset',
-      { class: 't-field' },
-      h('legend', { class: 't-step' }, h('i', { 'aria-hidden': 'true' }, '2'), '조각 수'),
-      pieceSeg,
-      pieceNote,
-    ),
     h(
       'div',
-      { class: 't-field' },
-      h('label', { class: 't-step', for: 't-group-count' }, h('i', { 'aria-hidden': 'true' }, '3'), '모둠 수'),
-      h('div', { class: 't-stepper' }, minus, groupInput, plus),
-      h('p', { class: 't-note', id: 't-group-note' }, '모둠마다 따로 퍼즐이 열려요. 모둠당 4~6명이 알맞아요.'),
+      { class: 't-side-body' },
+      h('div', {}, h('div', { class: 't-lbl' }, previewTitle, previewNote), preview, credit),
+      h(
+        'fieldset',
+        { class: 't-field' },
+        h('legend', { class: 't-step' }, h('i', { 'aria-hidden': 'true' }, '2'), '조각 수'),
+        pieceSeg,
+        pieceNote,
+      ),
+      h(
+        'div',
+        { class: 't-field' },
+        h('label', { class: 't-step', for: 't-group-count' }, h('i', { 'aria-hidden': 'true' }, '3'), '모둠 수'),
+        h('div', { class: 't-stepper' }, minus, groupInput, plus),
+        h('p', { class: 't-note', id: 't-group-note' }, '모둠마다 따로 퍼즐이 열려요. 모둠당 4~6명이 알맞아요.'),
+      ),
+      h(
+        'fieldset',
+        { class: 't-field t-hints', 'aria-describedby': 't-hints-note' },
+        h('legend', { class: 't-step' }, h('i', { 'aria-hidden': 'true' }, '4'), '도움 설정'),
+        h('p', { class: 't-note t-hints-note', id: 't-hints-note' }, '학년과 목적에 맞게 골라요. 이 수업의 모든 모둠에 똑같이 적용돼요.'),
+        h('figure', { class: 't-frame-look' }, frameMini, h('figcaption', {}, '학생 판 가운데 틀은 이렇게 보여요')),
+        h('ul', { class: 't-switches' }, hintSwitches),
+      ),
     ),
-    h(
-      'fieldset',
-      { class: 't-field t-hints', 'aria-describedby': 't-hints-note' },
-      h('legend', { class: 't-step' }, h('i', { 'aria-hidden': 'true' }, '4'), '도움 설정'),
-      h('p', { class: 't-note t-hints-note', id: 't-hints-note' }, '학년과 목적에 맞게 골라요. 이 수업의 모든 모둠에 똑같이 적용돼요.'),
-      h('figure', { class: 't-frame-look' }, frameMini, h('figcaption', {}, '학생 판 가운데 틀은 이렇게 보여요')),
-      h('ul', { class: 't-switches' }, hintSwitches),
-    ),
-    h('div', { class: 'spacer' }),
-    error,
-    openButton,
+    h('div', { class: 't-side-foot' }, error, openButton),
   );
 
   main.append(
@@ -247,12 +253,14 @@ export function renderCreate(main, ctx) {
     previewNote.textContent = `${state.pieceCount}조각 미리보기`;
     updateFrameMini();
     if (!state.picture) {
+      credit.replaceChildren();
       previewTitle.textContent = '그림을 골라 주세요';
       preview.replaceChildren(h('span', { class: 't-preview-empty' }, icon('image', 32)));
       return;
     }
     previewTitle.textContent = state.picture.title;
     preview.replaceChildren(previewSvg(state.picture, state.pieceCount));
+    credit.replaceChildren(...creditLine(state.picture));
   }
 
   function updateFrameMini() {
@@ -282,24 +290,34 @@ export function renderCreate(main, ctx) {
         const pictures = builtins.map((b) => ({
           value: `builtin:${b.key}`,
           title: b.title,
-          detail: b.category,
+          category: b.category,
+          detail: cardDetail(b),
           thumb: b.thumb,
-          picture: { builtinKey: b.key, aspect: b.width / b.height, title: b.title, width: b.width, height: b.height, src: b.src },
+          picture: {
+            builtinKey: b.key,
+            aspect: b.width / b.height,
+            title: b.title,
+            width: b.width,
+            height: b.height,
+            src: b.src,
+            selfMade: b.category === SELF_MADE,
+            credit: b.credit,
+            sourceUrl: b.source?.url ?? null,
+            licenseName: b.license?.name ?? null,
+            licenseUrl: b.license?.url ?? null,
+          },
         }));
-        panel.replaceChildren(
-          h(
-            'div',
-            { class: 't-pics', role: 'radiogroup', 'aria-label': '내장 그림' },
-            pictures.map((p) =>
-              pictureCard({
-                src: p.thumb,
-                title: p.title,
-                detail: p.detail,
-                radio: choiceRadio(p.value, p.picture, p === pictures[0] && !state.picture),
-              }),
-            ),
-          ),
-        );
+        const cards = pictures.map((p) => ({
+          category: p.category,
+          node: pictureCard({
+            src: p.thumb,
+            title: p.title,
+            detail: p.detail,
+            radio: choiceRadio(p.value, p.picture, p === pictures[0] && !state.picture),
+          }),
+        }));
+        const grid = h('div', { class: 't-pics', role: 'radiogroup', 'aria-label': '내장 그림', id: 't-builtin-grid' }, cards.map((c) => c.node));
+        panel.replaceChildren(categoryChips(cards, grid), grid);
         if (!state.picture && first) choosePicture(pictures[0].picture);
       })
       .catch((err) => {
@@ -412,6 +430,70 @@ export function renderCreate(main, ctx) {
   return () => {
     alive = false;
   };
+}
+
+const SELF_MADE = '자체 제작';
+const CATEGORY_ORDER = [SELF_MADE, '명화', '우리 그림', '사진', '삽화'];
+
+// Card note: the theme for self-made scenes, the artist and year for outside pictures.
+export function cardDetail(builtin) {
+  if (builtin.category === SELF_MADE) return builtin.topic ?? SELF_MADE;
+  return [builtin.source?.author, builtin.year].filter(Boolean).join(', ');
+}
+
+// Category chips above the built-in pictures: a group of toggle buttons (one pressed),
+// arrow keys move between them, and the row scrolls sideways on narrow screens.
+function categoryChips(cards, grid) {
+  const categories = CATEGORY_ORDER.filter((c) => cards.some((card) => card.category === c));
+  const buttons = categories.map((category) =>
+    h(
+      'button',
+      { class: 't-chip-filter', type: 'button', 'aria-controls': grid.id, onclick: () => show(category) },
+      category,
+      h('em', {}, String(cards.filter((card) => card.category === category).length)),
+    ),
+  );
+  const group = h('div', { class: 't-chips-filter', role: 'group', 'aria-label': '내장 그림 분류' }, buttons);
+  group.addEventListener('keydown', (event) => {
+    const at = buttons.indexOf(document.activeElement);
+    if (at < 0) return;
+    const next = { ArrowRight: at + 1, ArrowLeft: at - 1, Home: 0, End: buttons.length - 1 }[event.key];
+    if (next === undefined) return;
+    event.preventDefault();
+    const i = (next + buttons.length) % buttons.length;
+    show(categories[i]);
+    buttons[i].focus();
+  });
+  function show(category) {
+    categories.forEach((c, i) => {
+      buttons[i].setAttribute('aria-pressed', String(c === category));
+      buttons[i].tabIndex = c === category ? 0 : -1;
+    });
+    for (const card of cards) card.node.hidden = card.category !== category;
+    grid.setAttribute('aria-label', `내장 그림: ${category}`);
+    buttons[categories.indexOf(category)].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }
+  show(categories[0]);
+  return group;
+}
+
+// Source line under the preview: outside pictures name the work, maker, holder and licence,
+// with links to the original and the licence.
+function creditLine(picture) {
+  if (picture.selfMade) return ['함께 퍼즐이 직접 그린 그림이에요.'];
+  if (!picture.credit) return [];
+  const link = (href, text) => h('a', { href, target: '_blank', rel: 'noopener noreferrer' }, text);
+  return [
+    picture.credit,
+    ' ',
+    h(
+      'span',
+      { class: 't-credit-links' },
+      picture.sourceUrl ? link(picture.sourceUrl, '원본') : null,
+      picture.sourceUrl && picture.licenseUrl ? ' · ' : null,
+      picture.licenseUrl ? link(picture.licenseUrl, '라이선스') : null,
+    ),
+  ];
 }
 
 function previewSvg(picture, pieceCount) {
