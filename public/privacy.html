@@ -75,7 +75,7 @@
       <li>학생 활동 기록(누가 몇 조각을 맞췄는지 등)은 남기지 않습니다.</li>
       <li>쿠키로 사용자를 추적하지 않습니다. 로그인 상태와 '다시 들어오기'를 위해 브라우저 저장소(localStorage)를 씁니다.</li>
       <li>IP 주소는 실시간 서버가 지나친 요청을 막는 데(요청 수 제한)만 메모리에서 쓰고, 저장하거나 서버 기록에 남기지 않습니다.</li>
-      <li>실시간 서버는 시작·오류·요청 수 같은 운영 기록만 14일 동안 남깁니다. 학생 이름, 접속 열쇠, IP 주소는 남기지 않습니다.</li>
+      <li>실시간 서버는 시작·오류·요청 수 같은 운영 기록만 14일 동안 남기고, 서버 스냅숏(7일 보관)에 담긴 사본까지 합하면 최대 21일 뒤에 지워집니다. 학생 이름, 접속 열쇠, IP 주소는 남기지 않습니다.</li>
       <li>웹사이트 파일을 전달하는 호스팅 업체(Vercel)는 접속 기록(IP 주소, 접속 시각 등)을 짧은 기간 자동으로 남길 수 있습니다.</li>
     </ul>
   </section>
@@ -88,6 +88,7 @@
       <li><strong>자동 정리</strong>: 끝난 수업의 기록은 30일 뒤 자동으로 지워집니다.</li>
       <li><strong>학생 기기의 이름</strong>: 브라우저의 사이트 데이터(방문 기록·저장소)를 지우면 함께 지워집니다.</li>
       <li><strong>교사 탈퇴</strong>: 아래 문의처로 요청하면 함께 퍼즐의 데이터(함께 퍼즐 시작 기록, 올린 그림 파일, 수업 기록)를 모두 지웁니다. 다른 교실 앱과 함께 쓰는 구글 로그인 계정과 교사 이름은 그대로 두며, 계정까지 지우기를 원하면 함께 알려 주세요.</li>
+      <li><strong>백업</strong>: 위 방법으로 지운 함께 퍼즐 데이터도 사고에 대비한 데이터베이스 백업에 최대 14일 남고, 그 백업 파일이 서버 스냅숏(7일 보관)에 함께 담기므로 모두 합해 최대 21일 뒤에 자동으로 지워집니다. 백업은 복구할 때만 씁니다.</li>
     </ul>
   </section>
 
@@ -100,7 +101,7 @@
         <tbody>
           <tr><th scope="row">Amazon Web Services(AWS Lightsail)</th><td data-label="맡기는 일">실시간 서버(퍼즐 판정·동기화, 수업 진행)</td><td data-label="다루는 정보">퍼즐 진행, 수업 중 학생 이름과 접속 상태(메모리에서만, 저장하지 않음), 요청 수 제한용 IP 주소(메모리에서만), 운영 기록(14일)</td><td data-label="처리 장소">AWS Lightsail 서울</td></tr>
           <tr><th scope="row">Supabase Inc.</th><td data-label="맡기는 일">데이터베이스, 교사 로그인 확인, 그림 저장소</td><td data-label="다루는 정보">교사 계정·이름, 올린 그림, 수업 정보, 학생 번호·모둠 배정(이름 없음)</td><td data-label="처리 장소">Supabase 서울(AWS 서울 지역)</td></tr>
-          <tr><th scope="row">Vercel Inc.</th><td data-label="맡기는 일">웹사이트 파일 전달(호스팅)</td><td data-label="다루는 정보">접속 기록(IP 주소 등)</td><td data-label="처리 장소">Vercel(서울 지역 우선, 전 세계 전송망을 거칠 수 있음)</td></tr>
+          <tr><th scope="row">Vercel Inc.</th><td data-label="맡기는 일">웹사이트 파일 전달(호스팅)</td><td data-label="다루는 정보">접속 기록(IP 주소 등)</td><td data-label="처리 장소">Vercel(전 세계 전송망)</td></tr>
           <tr><th scope="row">jsDelivr</th><td data-label="맡기는 일">글꼴(Pretendard) 파일 전달</td><td data-label="다루는 정보">글꼴을 받을 때의 접속 기록(IP 주소 등)</td><td data-label="처리 장소">전 세계 전송망</td></tr>
           <tr><th scope="row">Google LLC</th><td data-label="맡기는 일">교사 구글 로그인</td><td data-label="다루는 정보">교사가 로그인할 때의 구글 계정 정보</td><td data-label="처리 장소">구글 서버</td></tr>
         </tbody>

@@ -1,0 +1,26 @@
+# /etc/caddy/Caddyfile for the jigsaw rt server, installed by scripts/rt/setup.sh (docs/ops.md).
+# Client IP addresses are not stored (spec data table, privacy policy):
+# - No `log` directive in the site block: Caddy keeps no access log.
+# - Caddy's default log still records errors (for example a 502 while the server restarts) with
+#   the request; the filter below drops the client address, port and request headers from it
+#   and keeps the error itself.
+# No `trusted_proxies`: Caddy ignores an X-Forwarded-For sent by the client and sets it to the
+# real client address, which the server reads with RT_TRUST_PROXY=1.
+# HTTPS certificates are automatic. WebSocket and long polling pass through reverse_proxy.
+{
+	log {
+		format filter {
+			wrap json
+			fields {
+				request>remote_ip delete
+				request>client_ip delete
+				request>remote_port delete
+				request>headers delete
+			}
+		}
+	}
+}
+
+rt.gyosil.app {
+	reverse_proxy 127.0.0.1:3400
+}

@@ -22,7 +22,8 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
 
   it('IP addresses: only in memory for request limits, never logged; server logs kept 14 days', () => {
     expect(text).toContain('IP 주소는 실시간 서버가 지나친 요청을 막는 데(요청 수 제한)만 메모리에서 쓰고');
-    expect(text).toContain('14일');
+    expect(text).toContain('운영 기록만 14일 동안 남기고, 서버 스냅숏(7일 보관)에 담긴 사본까지 합하면 최대 21일 뒤에 지워집니다');
+    expect(text).toContain('학생 이름, 접속 열쇠, IP 주소는 남기지 않습니다');
   });
 
   it('gives the retention periods of the spec data table', () => {
@@ -43,13 +44,20 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
   it('names the places of processing (D15): Vercel, AWS Lightsail Seoul, Supabase Seoul', () => {
     expect(text).toContain('AWS Lightsail 서울');
     expect(text).toContain('Supabase 서울');
-    expect(text).toContain('Vercel(서울 지역 우선');
+    // Static files are served from Vercel's worldwide network, not from one region.
+    expect(text).toContain('Vercel(전 세계 전송망)');
+    expect(text).not.toContain('서울 지역 우선');
     expect(html).not.toContain('data-todo="server-region"');
   });
 
   it('teacher withdrawal deletes the jigsaw data only, not the shared gyosil account', () => {
     expect(text).toContain('함께 퍼즐의 데이터(함께 퍼즐 시작 기록, 올린 그림 파일, 수업 기록)를 모두 지웁니다');
     expect(text).toContain('다른 교실 앱과 함께 쓰는 구글 로그인 계정과 교사 이름은 그대로 두며');
+  });
+
+  it('says deleted data stays in the DB backup (14 days), which the 7-day server snapshots also hold: 21 days at most', () => {
+    expect(text).toContain('데이터베이스 백업에 최대 14일 남고, 그 백업 파일이 서버 스냅숏(7일 보관)에 함께 담기므로 모두 합해 최대 21일 뒤에 자동으로 지워집니다');
+    expect(text).not.toContain('서버 스냅숏(최대 7일)에는');
   });
 
   it('jsDelivr serves the font only (no script from a CDN)', () => {

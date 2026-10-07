@@ -1,0 +1,21 @@
+# Daily pg_dump of the jigsaw schema (scripts/db/backup.sh), started by jigsaw-backup.timer.
+# The database URL is in /etc/jigsaw-backup.env (root:root, 600); see docs/ops.md.
+[Unit]
+Description=jigsaw schema backup (pg_dump)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=jigsaw-rt
+Group=jigsaw-rt
+EnvironmentFile=/etc/jigsaw-backup.env
+Environment=BACKUP_DIR=/var/backups/jigsaw
+ExecStart=/bin/bash /opt/jigsaw/scripts/db/backup.sh
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/backups/jigsaw
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes

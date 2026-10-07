@@ -1,0 +1,53 @@
+# systemd unit of the jigsaw rt server (rt.gyosil.app). Installed by scripts/rt/setup.sh as
+# /etc/systemd/system/jigsaw-rt.service; see docs/ops.md.
+[Unit]
+Description=jigsaw rt server (rt.gyosil.app)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jigsaw-rt
+Group=jigsaw-rt
+WorkingDirectory=/opt/jigsaw/server
+EnvironmentFile=/etc/jigsaw-rt.env
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=3400
+# 1 GB machine with 1 GB swap: Caddy and the system keep the rest.
+Environment=NODE_OPTIONS=--max-old-space-size=512
+# Values in EnvironmentFile override Environment=; this one is removed last whatever the file
+# says, so the local test hooks can never be on here.
+UnsetEnvironment=RT_TEST_HOOKS
+ExecStart=/usr/bin/node /opt/jigsaw/server/src/index.js
+Restart=always
+RestartSec=2
+# On SIGTERM the server stops taking requests and finishes its pending saves (up to three
+# flush rounds against Supabase, normally well under a second each). 30 s leaves room for a slow
+# database; after that systemd sends SIGKILL and at most the last 2 s of board moves are lost.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+SyslogIdentifier=jigsaw-rt
+
+# The server only reads its code and talks to the network.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

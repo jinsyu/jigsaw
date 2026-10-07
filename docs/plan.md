@@ -175,7 +175,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
     - 재시작 복구 E2E: 퍼즐 중 rt 서버를 죽였다 다시 띄우면 학생·교사 화면이 자동 재접속하고 판이 이어진다(D17).
     - `no-test-credentials`: service_role·시험 교사 값이 `public/` 에 없다(D16).
 
-- [ ] T24: 서버 설치·배포 스크립트와 운영 문서(로컬에서 작성·점검) — DoD: D16, D17
+- [x] T24: 서버 설치·배포 스크립트와 운영 문서(로컬에서 작성·점검) — DoD: D16, D17
   - `scripts/rt/setup.sh`(Ubuntu 24.04, 여러 번 실행해도 안전):
     - 사용자·폴더: 전용 사용자 `jigsaw-rt`, 저장소를 `/opt/jigsaw` 에 clone. 서버는 `server/` 만 실행한다.
     - 설치: Node 24(공식 저장소, 버전 고정), corepack pnpm.
@@ -203,7 +203,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
   - [사용자 작업] rt 서버
     - SSH 로 `scripts/rt/setup.sh` 실행.
     - `/etc/jigsaw-rt.env` 에 비밀값을 직접 입력: `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `SESSION_SECRET`(`openssl rand -hex 32`), `GOOGLE_CLIENT_ID`, `ALLOWED_ORIGINS=https://jigsaw.gyosil.app`.
-    - 서버가 저장소를 받을 수 있게 GitHub 접근을 준비(공개 저장소가 아니면 읽기 전용 deploy key).
+    - GitHub 접근 준비는 필요 없다: 저장소(jinsyu/jigsaw)가 공개로 확정되어 서버가 https 로 clone·pull 한다(deploy key 쓰지 않음, `docs/ops.md`).
     - Lightsail 자동 스냅숏 켜기.
     - (선택) UptimeRobot 으로 `https://rt.gyosil.app/health` 감시.
   - [사용자 작업] Vercel 프로젝트·`jigsaw.gyosil.app` 연결 확인(이미 되어 있으면 생략).
@@ -264,3 +264,10 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
 - **T23 결정 기록**:
   - (a) 실수 값 정밀도: Supabase Postgres 이미지는 `extra_float_digits = 0` 이라 Data API(서버의 supabase-js)를 거친 double precision 값이 15자리로 반올림된다(예전 마이그레이션의 `alter role … set extra_float_digits = 1` 이 이를 가리고 있었고, 삭제 뒤 재시작 복구 시험에서 `sessions.aspect` 가 달라져 드러남). 원격 gyosil 은 `alter role` 금지라 `sessions.aspect` 를 numeric 으로 바꾸는 마이그레이션 `20261010000000_jigsaw_aspect_numeric.sql` 을 추가했다(서버 코드 변경 없음, T25 의 migrate.sh 로 함께 적용). 앞으로 Data API 로 왕복하는 실수 값은 float8 대신 numeric 또는 jsonb 에 둔다. T23 시점 jigsaw 스키마의 실수 열은 `sessions.aspect`(numeric) 하나뿐이다(판 좌표는 `groups.board` jsonb).
   - (b) 정리 후보: `public/js/store/puzzle-store.js` 의 `hintsFromSession` 은 삭제된 `supabase-api.js` 만 쓰던 함수로, 지금은 단위 시험(`hints.test.js`)만 쓴다. 남겨 두고 나중에 정리한다.
+- **T24 결정 기록**:
+  - (a) 백업 접속 문자열은 `/etc/jigsaw-rt.env` 와 따로 `/etc/jigsaw-backup.env`(root 600)에 둔다(rt 서버 프로세스에 DB 비밀번호를 넘기지 않음). 백업은 `jigsaw-backup.timer`(매일 03:30 서울)가 `jigsaw-rt` 사용자로 `scripts/db/backup.sh` 를 실행하고, 파일은 `/var/backups/jigsaw`(700, 파일 600)에 14일 순환. 저장소가 공개라 GitHub Actions 아티팩트는 쓰지 않는다.
+  - (b) `/etc/jigsaw-rt.env` 틀은 `server/.env.example` 에서 만들고 비밀이 아닌 운영 고정값만 채운다: `NODE_ENV=production`, `HOST=127.0.0.1`, `PORT=3400`, `RT_TRUST_PROXY=1`, `ALLOWED_ORIGINS=https://jigsaw.gyosil.app`, `SUPABASE_URL=https://ozfzpyumnaaggrlevygz.supabase.co`. 유닛은 `RT_TEST_HOOKS` 를 마지막에 지운다.
+  - (c) `/opt/jigsaw` 는 root 소유, 서비스 사용자 `jigsaw-rt` 는 코드를 읽기만 한다. `deploy.sh` 는 sudo 로 실행한다.
+  - (d) 백업 접속은 Supabase Session pooler(IPv4) 문자열을 쓴다(Direct connection 은 IPv6 전용).
+  - (e) `pg_dump` 클라이언트는 17(apt.postgresql.org). T25 에서 `select version();` 으로 원격 버전을 확인하고 더 높으면 `setup.sh` 의 `PG_CLIENT_MAJOR` 를 올린다.
+  - (f) journald 보관 14일(`MaxRetentionSec=14day`, `MaxFileSec=1day`, `ForwardToSyslog=no`)은 서버 전체 journal 에 적용한다. Ubuntu 의 `/usr/lib/systemd/journald.conf.d/syslog.conf` 가 `ForwardToSyslog=yes` 를 넣고 설정 조각은 파일 이름 순으로 적용되므로 파일 이름을 `zz-jigsaw.conf` 로 한다.

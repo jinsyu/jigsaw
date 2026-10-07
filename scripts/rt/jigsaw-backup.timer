@@ -1,0 +1,11 @@
+# Runs jigsaw-backup.service once a day at night (Seoul time); a missed run starts at boot.
+[Unit]
+Description=Daily jigsaw schema backup
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 Asia/Seoul
+RandomizedDelaySec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
