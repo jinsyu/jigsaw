@@ -32,13 +32,16 @@ export function membersFromMates(mates, seen = new Map()) {
 
 // Built-in key -> its file, or the teacher's picture from the private bucket as a blob: URL
 // (no expiring signed URL, and blob: is allowed by the CSP img-src everywhere).
+// Outside built-in pictures carry their credit line (same rule as play/demo.js: none for
+// our own drawings, '자체 제작', and none for teachers' pictures).
 async function loadPictureInfo(client, session) {
   if (session.builtin_key) {
     const response = await fetch(BUILTIN_INDEX);
     if (!response.ok) throw new Error(`built-in pictures: HTTP ${response.status}`);
     const found = (await response.json()).images.find((image) => image.key === session.builtin_key);
     if (!found) throw new Error(`unknown built-in picture: ${session.builtin_key}`);
-    return { src: found.src, width: found.width, height: found.height, revoke: () => {} };
+    const credit = found.category !== '자체 제작' && found.credit ? found.credit : undefined;
+    return { src: found.src, width: found.width, height: found.height, credit, revoke: () => {} };
   }
   if (!session.image_id) throw new Error('the session has no picture');
   const { data: image, error } = await client.from('images').select('path, width, height').eq('id', session.image_id).maybeSingle();
@@ -68,6 +71,7 @@ export async function openPuzzle({ client, main, sessionId, group, userId, mates
   let screen = null;
   let celebrated = false;
   let currentMates = mates;
+  let redistributeTimer = 0;
   const seenNames = new Map();
 
   const { data: session, error } = await client.from('sessions').select(SESSION_FIELDS).eq('id', sessionId).maybeSingle();
@@ -81,7 +85,12 @@ export async function openPuzzle({ client, main, sessionId, group, userId, mates
     me: userId,
     layout: layoutFor(session.cols, session.rows, session.aspect),
     seed: Number(session.seed),
-    picture: { src: picture.src, width: picture.width, height: picture.height },
+    picture: {
+      src: picture.src,
+      width: picture.width,
+      height: picture.height,
+      ...(picture.credit ? { credit: picture.credit } : {}),
+    },
     groupName: `${group.number}모둠`,
     hints: hintsFromSession(session),
     members: membersFromMates(mates, seenNames),
@@ -96,7 +105,7 @@ export async function openPuzzle({ client, main, sessionId, group, userId, mates
   // After time in the background this screen may count as gone itself: signal first.
   let mayBeStale = false;
   async function redistribute() {
-    if (disposed || document.visibilityState === 'hidden') return;
+    if (disposed || celebrated || document.visibilityState === 'hidden') return;
     if (mayBeStale) {
       await live.beat();
       mayBeStale = false;
@@ -106,9 +115,13 @@ export async function openPuzzle({ client, main, sessionId, group, userId, mates
     else if (data?.ok && data.pieces?.length) store.onEvent('tray', { pieces: data.pieces });
   }
 
+  // Once complete nothing on the board can change: stop the board reads and redistribution
+  // (heartbeat and the class reads in live.js go on, so the end of the class is still seen).
   function celebrate() {
     if (celebrated || disposed) return;
     celebrated = true;
+    clearInterval(redistributeTimer);
+    store.stopResync();
     const state = store.getState();
     screen?.destroy();
     screen = null;
@@ -132,6 +145,7 @@ export async function openPuzzle({ client, main, sessionId, group, userId, mates
     try {
       await live.beat();
       mayBeStale = false;
+      if (celebrated) return;
       await store.resync();
       await redistribute();
     } catch (cause) {
@@ -153,7 +167,7 @@ export async function openPuzzle({ client, main, sessionId, group, userId, mates
   const unsubscribe = store.subscribe((state) => {
     if (state.progress.complete) celebrate();
   });
-  const redistributeTimer = setInterval(() => redistribute().catch((e) => console.error(e)), REDISTRIBUTE_MS);
+  if (!celebrated) redistributeTimer = setInterval(() => redistribute().catch((e) => console.error(e)), REDISTRIBUTE_MS);
   document.addEventListener('visibilitychange', onVisible);
   window.addEventListener('online', onVisible);
 

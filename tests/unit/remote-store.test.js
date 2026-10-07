@@ -381,6 +381,14 @@ describe('createRemoteStore', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
+  it('stopResync ends the periodic board reads only', async () => {
+    const { store, api, timers: t } = await open();
+    store.stopResync();
+    expect(t.clearInterval).toHaveBeenCalledWith(2);
+    api.send('grab', { by: 'b', cluster_id: 20, z: 50, grabbed_at: '2026-10-07T00:00:06.000Z' });
+    expect(store.getState().clusters.at(-1)).toMatchObject({ id: 20, heldBy: 'b' });
+  });
+
   it('createRemoteStore does not load until asked', () => {
     const api = fakeApi(startBoard());
     createRemoteStore({ api, groupId: 9, me: ME, layout, seed: 7, picture: {}, groupName: '', startedAt: 0, timers: timers() });

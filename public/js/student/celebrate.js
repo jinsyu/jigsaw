@@ -47,7 +47,7 @@ function confetti() {
 
 /**
  * @param {HTMLElement} main
- * @param {{ groupNumber: number, names: string[], picture: { src, width, height },
+ * @param {{ groupNumber: number, names: string[], picture: { src, width, height, credit? },
  *           durationMs: number, pieceCount: number }} info
  */
 export function renderCelebration(main, { groupNumber, names, picture, durationMs, pieceCount }) {
@@ -64,6 +64,7 @@ export function renderCelebration(main, { groupNumber, names, picture, durationM
     heading,
     h('p', { class: 'sub' }, teamLine(names)),
     h('div', { class: 'st-done-img' }, img),
+    picture.credit ? h('p', { class: 'st-credit' }, picture.credit) : null,
     h(
       'dl',
       { class: 'st-stats' },

@@ -23,13 +23,13 @@ test.afterAll(async () => {
 
 // ---------- class set-up ----------
 
-async function createClass(pieces) {
+async function createClass(pieces, { key = 'sea', aspect = 1800 / 1200 } = {}) {
   const { client } = await teacherSession();
   const { data, error } = await client.rpc('create_session', {
     p_piece_count: pieces,
     p_group_count: 2,
-    p_builtin_key: 'sea',
-    p_aspect: 1800 / 1200,
+    p_builtin_key: key,
+    p_aspect: aspect,
   });
   if (error) throw error;
   createdSessions.push(data.id);
@@ -594,6 +594,44 @@ test('completion with reduced motion: no confetti or pop animation', async ({ br
   await expect(s.page.locator('.st-done .sub')).toHaveText('모둠 친구들과 함께 맞췄어요');
   await s.page.screenshot({ path: testInfo.outputPath('coop-complete-reduced.png') });
   expect(s.errors).toEqual([]);
+  await s.context.close();
+});
+
+test('an outside picture shows its credit, and a finished puzzle stops reading the board', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone-390', 'one size is enough');
+  test.setTimeout(120_000);
+  const index = JSON.parse(readFileSync(new URL('../../public/images/builtin/index.json', import.meta.url), 'utf8'));
+  const art = index.images.find((image) => image.key === 'starry-night');
+  expect(art.category).not.toBe('자체 제작');
+  const session = await createClass(12, { key: art.key, aspect: art.width / art.height });
+  const s = await joinStudent(browser, testInfo, session.code, '서아');
+  await startInOneGroup(session, [s]);
+  expect((await state(s.page)).picture.credit).toBe(art.credit);
+
+  // '완성 그림 보기' shows the picture with its source line.
+  await s.page.getByRole('button', { name: '완성 그림 보기' }).click();
+  const dialog = s.page.getByRole('dialog', { name: '완성 그림' });
+  await expect(dialog.locator('.pz-credit')).toHaveText(art.credit);
+  await s.page.screenshot({ path: testInfo.outputPath('coop-credit-dialog.png') });
+  await dialog.getByRole('button', { name: '닫기' }).click();
+
+  await showFrame(s);
+  const { ox, oy } = await frameOrigin(s.page);
+  for (const piece of (await state(s.page)).tray) await dragFromTray(s, piece, ox, oy);
+  await expect(s.page.getByRole('heading', { level: 1, name: '1모둠 완성!' })).toBeVisible({ timeout: 15000 });
+  await expect(s.page.locator('.st-credit')).toHaveText(art.credit);
+  await s.page.waitForTimeout(1200);
+  await s.page.screenshot({ path: testInfo.outputPath('coop-credit-complete.png'), fullPage: true });
+
+  // After the celebration: no board reads (15 s) or redistribution (20 s); heartbeat goes on.
+  const calls = [];
+  s.page.on('request', (r) => calls.push(r.url()));
+  await s.page.waitForTimeout(22_000);
+  expect(calls.filter((u) => u.includes('/rest/v1/groups') && u.includes('clusters'))).toEqual([]);
+  expect(calls.filter((u) => u.includes('/rpc/redistribute_stale'))).toEqual([]);
+  expect(calls.filter((u) => u.includes('/rpc/heartbeat')).length).toBeGreaterThanOrEqual(3);
+  expect(s.errors).toEqual([]);
+  expect(await s.page.evaluate(() => window.__cspViolations)).toEqual([]);
   await s.context.close();
 });
 

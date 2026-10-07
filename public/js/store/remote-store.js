@@ -503,6 +503,12 @@ export function createRemoteStore({
     emit({ type: 'members' });
   }
 
+  // The puzzle is done: no more periodic board reads (broadcasts still arrive).
+  function stopResync() {
+    timers.clearInterval(resyncTimer);
+    resyncTimer = 0;
+  }
+
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -523,6 +529,7 @@ export function createRemoteStore({
     // Beyond the PuzzleStore contract, for the class screen:
     connect,
     resync,
+    stopResync,
     setMembers,
     noteServerTime,
     onEvent,
