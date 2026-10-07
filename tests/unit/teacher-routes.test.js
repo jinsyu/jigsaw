@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseTeacherPath, sessionPath } from '../../public/js/teacher/routes.js';
+import { parseTeacherPath, sessionPath, teacherReturnPath } from '../../public/js/teacher/routes.js';
 
 describe('parseTeacherPath', () => {
   it.each([
@@ -19,5 +19,19 @@ describe('parseTeacherPath', () => {
 
   it('builds the lobby path of a session', () => {
     expect(sessionPath(7)).toBe('/teacher/sessions/7');
+  });
+});
+
+describe('teacherReturnPath', () => {
+  it.each([
+    ['/teacher/sessions/42', '', '/teacher/sessions/42'],
+    ['/teacher/new', '?code=abc&state=x', '/teacher/new'],
+    ['/teacher/images', '?tab=mine&error=1', '/teacher/images?tab=mine'],
+    ['/teacher', '', '/teacher'],
+    ['/join', '?code=123456', '/teacher'],
+    ['//evil.example/teacher', '', '/teacher'],
+    ['/teacher/../join', '', '/teacher'],
+  ])('%s%s -> %s', (path, search, expected) => {
+    expect(teacherReturnPath(path, search)).toBe(expected);
   });
 });

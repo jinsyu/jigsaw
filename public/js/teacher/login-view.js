@@ -1,5 +1,6 @@
 // Sign-in screen (Google only) and the "준비 중" screen for a host without Supabase settings.
 import { GOOGLE_MARK, h, pieceIcon, setTitle } from './dom.js';
+import { teacherReturnPath } from './routes.js';
 
 function brandLink() {
   return h('a', { class: 'brand t-login-brand', href: '/' }, pieceIcon(), '함께 퍼즐');
@@ -31,7 +32,8 @@ export function renderLogin(main, ctx, { error = '' } = {}) {
       message.textContent = '';
       const { error: oauthError } = await ctx.client.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${location.origin}/teacher` },
+        // Back to the page the sign-in started from (a lobby link, 새 수업, …).
+        options: { redirectTo: `${location.origin}${teacherReturnPath(location.pathname, location.search)}` },
       });
       if (oauthError) {
         console.error(oauthError);

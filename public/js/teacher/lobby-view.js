@@ -1,14 +1,33 @@
-// Session lobby (mockup teacher-lobby): the join address, the 6-digit code and a QR,
-// large enough to read from the back of the classroom on an interactive whiteboard.
-// The grouping panel on the right is filled in by T9 (names, drag into groups, start).
-import { endSession, getSession } from './data.js';
+// Session lobby (mockup teacher-lobby): the join address, the 6-digit code and a QR, large
+// enough to read from the back of the classroom on an interactive whiteboard, and the
+// 모둠 편성 panel: students appear by name as they join, the teacher drags them into groups
+// (or picks and places them with the keyboard), shuffles them, and starts the puzzles.
+//
+// Names come only from Presence on session:<id> and stay in this page's memory (spec D14).
+// Presence keys and payloads are set by the student's browser, so a name is shown only for
+// a members row of this session read from the database (student/presence.js).
+import { assignMember, endSession, getSession, listMembers, randomizeGroups, startSession } from './data.js';
 import { h, icon, setTitle } from './dom.js';
 import { formatCode, sessionSummary, statusLabel } from './format.js';
+import { createGroupingPanel } from './grouping.js';
 import { loadBuiltins, loadMyImages, sessionPicture } from './pictures.js';
 import { joinUrl, qrSvg } from './qr.js';
+import { applyGroupChanges, buildRoster } from './roster.js';
+import { presenceNames } from '../student/presence.js';
+
+const NETWORK_ERROR = /fetch|network|load failed/i;
+
+function actionError(error, fallback) {
+  if (!error?.code && NETWORK_ERROR.test(error?.message ?? '')) return '인터넷 연결을 확인하고 다시 해 주세요.';
+  if (error?.message === 'session_ended') return '이미 끝난 수업이에요.';
+  if (error?.message === 'session_not_waiting') return '이미 시작한 수업이에요.';
+  if (error?.code === '42501') return '선생님 계정으로 다시 로그인해 주세요.';
+  return fallback;
+}
 
 export function renderLobby(main, ctx, { sessionId }) {
   let alive = true;
+  let stopLive = null;
   ctx.setBar('lobby', { nodes: [] });
   setTitle('수업 대기실');
   main.append(h('p', { class: 't-loading', role: 'status' }, '수업을 불러오는 중이에요…'));
@@ -21,10 +40,11 @@ export function renderLobby(main, ctx, { sessionId }) {
       if (session.status === 'ended') {
         return showMessage(main, ctx, '이미 끝난 수업이에요', '이 코드로는 더 이상 들어올 수 없어요. 새 수업을 열어 주세요.', true);
       }
-      const builtins = await loadBuiltins();
+      const [builtins, members] = await Promise.all([loadBuiltins(), listMembers(ctx.client, session.id)]);
       const myImages = session.image_id ? await loadMyImages(ctx.client) : [];
       if (!alive) return;
-      showLobby(main, ctx, session, sessionPicture(session, builtins, myImages));
+      stopLive = showLobby(main, ctx, session, sessionPicture(session, builtins, myImages), members);
+      ctx.headingReady?.();
     } catch (error) {
       console.error(error);
       if (!alive) return;
@@ -41,11 +61,13 @@ export function renderLobby(main, ctx, { sessionId }) {
           ),
         ),
       );
+      ctx.headingReady?.();
     }
   }
   load();
   return () => {
     alive = false;
+    stopLive?.();
   };
 }
 
@@ -70,9 +92,10 @@ function showMessage(main, ctx, title, text, offerNew = false) {
       ),
     ),
   );
+  ctx.headingReady?.();
 }
 
-function showLobby(main, ctx, session, picture) {
+function showLobby(main, ctx, session, picture, initialMembers) {
   document.documentElement.classList.add('is-lobby');
   const summary = sessionSummary({ title: picture.title, pieceCount: session.piece_count, groupCount: session.groups.length });
   setTitle(`수업 코드 ${session.code}`);
@@ -88,6 +111,9 @@ function showLobby(main, ctx, session, picture) {
   });
 
   const url = joinUrl(location.origin, session.code);
+  const waitDot = h('i', { class: 'dot' });
+  const waitText = h('span', {});
+  const waitLine = h('p', { class: 't-join-wait', role: 'status' }, waitDot, waitText);
   const join = h(
     'section',
     { class: 'card t-join', 'aria-labelledby': 't-join-title' },
@@ -97,45 +123,226 @@ function showLobby(main, ctx, session, picture) {
     h('p', { class: 't-join-code', 'data-code': session.code }, h('span', { class: 'sr-only' }, '수업 코드 '), formatCode(session.code)),
     h('div', { class: 't-join-qr', 'data-url': url, html: qrSvg(url, `입장 QR 코드: ${url}`) }),
     h('p', { class: 't-join-note' }, 'QR 코드를 찍으면 코드를 넣지 않아도 돼요'),
-    h(
-      'p',
-      { class: 't-join-wait', role: 'status' },
-      h('i', { class: 'dot t-pulse' }),
-      session.status === 'playing' ? statusLabel('playing') : '학생들이 들어오기를 기다리고 있어요',
-    ),
+    waitLine,
   );
 
-  // Placeholder for T9: the names and group boxes appear here.
-  const grouping = h(
-    'section',
-    { class: 't-grouping', 'aria-labelledby': 't-grouping-title', 'data-slot': 'grouping' },
-    h(
-      'div',
-      { class: 't-grouping-head' },
-      h('h2', { id: 't-grouping-title' }, '모둠 편성'),
-      h('p', { class: 'sub' }, '이름을 모둠 칸으로 끌어 놓거나, 무작위로 나눠요.'),
-    ),
-    h(
-      'div',
-      { class: 'card t-pool' },
-      h('h3', {}, '아직 모둠이 없는 학생', h('span', {}, '0명')),
-      h('p', { class: 't-empty-line' }, '학생이 코드를 넣고 들어오면 여기에 이름이 나타나요.'),
-    ),
-    h(
-      'ul',
-      { class: 't-groups' },
-      session.groups.map((g) =>
-        h(
-          'li',
-          { class: 'card t-group' },
-          h('h3', {}, `${g.number}모둠`, h('span', {}, '0명')),
-          h('p', { class: 't-empty-line' }, '아직 학생이 없어요'),
-        ),
-      ),
-    ),
-  );
+  let status = session.status;
+  let members = initialMembers;
+  let presence = {};
+  let connection = 'connecting';
+  const seen = new Map(); // last name seen per member, this page only
+  const triedKeys = new Set();
+  let alive = true;
 
-  main.replaceChildren(h('div', { class: 't-lobby' }, join, grouping), dialog);
+  // Leaves the channel and drops the panel's listeners. Safe to call more than once.
+  function stop() {
+    if (!alive) return;
+    alive = false;
+    clearTimeout(grace);
+    panel.destroy();
+    ctx.client.removeChannel(channel).catch(() => {});
+  }
+
+  const panel = createGroupingPanel({
+    groups: session.groups,
+    onAssign: assign,
+    onRandomize: randomize,
+    onStart: start,
+  });
+  main.replaceChildren(h('div', { class: 't-lobby' }, join, panel.element), dialog);
+
+  function redraw() {
+    if (!alive) return;
+    const { names, unknownKeys } = presenceNames(presence, members);
+    for (const [id, name] of names) seen.set(id, name);
+    const roster = buildRoster({ members, groups: session.groups, online: names, seen });
+    panel.update(roster, { status });
+
+    const lost = connection === 'lost';
+    waitDot.className = `dot${roster.onlineCount || lost ? '' : ' t-pulse'}${lost ? ' is-lost' : ''}`;
+    waitText.textContent = lost
+      ? '연결이 끊겼어요. 다시 연결하는 중이에요…'
+      : roster.onlineCount
+        ? `${status === 'playing' ? `${statusLabel('playing')} · ` : ''}들어온 학생 ${roster.onlineCount}명`
+        : status === 'playing'
+          ? statusLabel('playing')
+          : '학생들이 들어오기를 기다리고 있어요';
+    // A Presence key we have no row for: most likely a student who just joined.
+    if (unknownKeys.some((key) => !triedKeys.has(key))) {
+      unknownKeys.forEach((key) => triedKeys.add(key));
+      reloadMembers();
+    }
+  }
+
+  let reloading = null;
+  let reloadAgain = false;
+  function reloadMembers() {
+    if (reloading) {
+      reloadAgain = true;
+      return reloading;
+    }
+    reloading = listMembers(ctx.client, session.id)
+      .then((rows) => {
+        members = rows;
+        redraw();
+      })
+      .catch((error) => console.error(error))
+      .finally(() => {
+        reloading = null;
+        if (reloadAgain && alive) {
+          reloadAgain = false;
+          reloadMembers();
+        }
+      });
+    return reloading;
+  }
+
+  function setMember(row) {
+    members = members.map((m) => (m.id === row.id ? { ...m, group_id: row.group_id, color: row.color } : m));
+  }
+
+  async function assign(memberId, groupId) {
+    const before = members.find((m) => m.id === memberId);
+    if (!before) return;
+    panel.clearError();
+    // Show the move at once; the server decides the colour.
+    setMember({ id: memberId, group_id: groupId, color: groupId === null ? null : before.color });
+    redraw();
+    try {
+      setMember(await assignMember(ctx.client, memberId, groupId));
+    } catch (error) {
+      console.error(error);
+      setMember(before);
+      panel.showError(actionError(error, '옮기지 못했어요. 다시 해 주세요.'));
+    }
+    redraw();
+  }
+
+  async function randomize() {
+    panel.clearError();
+    if (members.some((m) => m.group_id !== null)) {
+      const ok = await confirmDialog(main, {
+        title: '모둠을 다시 나눌까요?',
+        text: '지금 나눈 모둠은 사라지고, 모든 학생을 무작위로 다시 나눠요.',
+        confirm: '다시 나누기',
+      });
+      if (!ok) return;
+    }
+    panel.setBusy('randomize');
+    try {
+      const rows = await randomizeGroups(ctx.client, session.id);
+      members = members.map((m) => rows.find((r) => r.id === m.id) ?? m);
+      panel.announce('모든 학생을 무작위로 나눴어요.');
+    } catch (error) {
+      console.error(error);
+      panel.showError(actionError(error, '나누지 못했어요. 다시 눌러 주세요.'));
+    }
+    panel.setBusy('');
+    redraw();
+  }
+
+  async function start() {
+    panel.clearError();
+    const waitingCount = members.filter((m) => m.group_id === null).length;
+    if (waitingCount) {
+      const ok = await confirmDialog(main, {
+        title: '이대로 시작할까요?',
+        text: `아직 모둠이 없는 학생이 ${waitingCount}명 있어요. 시작한 뒤에도 모둠 칸으로 끌어 넣을 수 있어요.`,
+        confirm: '시작하기',
+        tone: 'pri',
+      });
+      if (!ok) return;
+    }
+    panel.setBusy('start');
+    try {
+      await startSession(ctx.client, session.id);
+      status = 'playing';
+      panel.announce('퍼즐을 시작했어요. 학생 화면에 모둠 퍼즐이 열려요.');
+    } catch (error) {
+      console.error(error);
+      if (error?.message === 'session_not_waiting') status = 'playing';
+      panel.showError(actionError(error, '시작하지 못했어요. 다시 눌러 주세요.'));
+    }
+    panel.setBusy('');
+    await reloadMembers(); // start_session renumbers colours
+    redraw();
+  }
+
+  // Live updates on session:<id>. The teacher listens only; students track their names.
+  const channel = ctx.client.channel(`session:${session.id}`, { config: { private: true } });
+  channel
+    .on('presence', { event: 'sync' }, () => {
+      presence = channel.presenceState();
+      redraw();
+    })
+    .on('broadcast', { event: 'groups' }, ({ payload }) => {
+      const result = applyGroupChanges(members, payload?.members ?? []);
+      members = result.members;
+      redraw();
+      if (result.missing) reloadMembers();
+    })
+    .on('broadcast', { event: 'start' }, () => {
+      status = 'playing';
+      reloadMembers();
+    })
+    .on('broadcast', { event: 'end' }, () => {
+      if (!alive) return;
+      stop(); // leave the channel and the drag key listener now, not only on navigation
+      dialog.close();
+      showMessage(main, ctx, '이미 끝난 수업이에요', '이 코드로는 더 이상 들어올 수 없어요. 새 수업을 열어 주세요.', true);
+    });
+  const grace = setTimeout(() => {
+    if (connection === 'connecting') {
+      connection = 'lost';
+      redraw();
+    }
+  }, 6000);
+  ctx.client.realtime
+    .setAuth()
+    .catch((error) => console.error(error))
+    .then(() => {
+      if (!alive) return;
+      channel.subscribe((state) => {
+        if (!alive) return;
+        if (state === 'SUBSCRIBED') {
+          connection = 'ok';
+          reloadMembers(); // catch up on anything missed while connecting
+        } else if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT' || state === 'CLOSED') {
+          connection = 'lost';
+        }
+        redraw();
+      });
+    });
+
+  redraw();
+  return stop;
+}
+
+// Small yes/no dialog. Resolves true when confirmed.
+function confirmDialog(main, { title, text, confirm, tone = 'pri' }) {
+  return new Promise((resolve) => {
+    const yes = h('button', { class: `btn ${tone}`, type: 'button' }, confirm);
+    const no = h('button', { class: 'btn', type: 'button', autofocus: true }, '취소');
+    const dialog = h(
+      'dialog',
+      { class: 't-dialog', 'aria-labelledby': 't-confirm-title' },
+      h('h2', { id: 't-confirm-title' }, title),
+      h('p', { class: 'sub' }, text),
+      h('div', { class: 't-actions' }, no, yes),
+    );
+    let answer = false;
+    yes.addEventListener('click', () => {
+      answer = true;
+      dialog.close();
+    });
+    no.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => {
+      dialog.remove();
+      resolve(answer);
+    });
+    main.append(dialog);
+    dialog.showModal();
+  });
 }
 
 function closeDialog(ctx, session) {

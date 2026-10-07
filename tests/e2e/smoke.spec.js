@@ -41,7 +41,7 @@ test('code field keeps digits only and submits to /join', async ({ page }) => {
   await expect(code).toHaveValue('482913');
   await page.getByRole('button', { name: '들어가기' }).click();
   await expect(page).toHaveURL(/\/join\?code=482913$/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('들어가기');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('이름을 알려 주세요');
 });
 
 test('app screens are served by index.html and kept out of search', async ({ page }) => {

@@ -35,9 +35,12 @@
   <img class="hero" src="/images/hero.svg" alt="" width="170" height="170">
   <h1>선생님이 알려 준<br>코드를 넣어요</h1>
   <form class="code-form" action="/join" method="get">
-    <label class="sr-only" for="code">수업 코드 6자리</label>
-    <input class="code-input" id="code" name="code" type="text" inputmode="numeric" autocomplete="off"
-      pattern="[0-9]{6}" placeholder="000000" title="숫자 6자리" required>
+    <div class="code-field">
+      <label class="sr-only" for="code">수업 코드 6자리</label>
+      <input class="code-input" id="code" name="code" type="text" inputmode="numeric" autocomplete="off"
+        enterkeyhint="go" pattern="[0-9]{6}" maxlength="12" title="숫자 6자리" required>
+      <div class="code-cells" aria-hidden="true"><span></span><span></span><span></span><i></i><span></span><span></span><span></span></div>
+    </div>
     <button class="btn pri big" type="submit">들어가기</button>
   </form>
   <p class="hint">QR 코드를 찍으면 코드를 넣지 않아도 돼요</p>

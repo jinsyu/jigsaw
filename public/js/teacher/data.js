@@ -39,3 +39,33 @@ export async function endSession(client, id) {
   const { error } = await client.rpc('end_session', { p_session: id });
   if (error) throw error;
 }
+
+// Students of a session (no names: those come from Presence on session:<id>).
+export async function listMembers(client, sessionId) {
+  const { data, error } = await client
+    .from('members')
+    .select('id, user_id, group_id, color')
+    .eq('session_id', sessionId)
+    .order('id');
+  if (error) throw error;
+  return data;
+}
+
+// group null = back to "no group yet".
+export async function assignMember(client, memberId, groupId) {
+  const { data, error } = await client.rpc('assign_member', { p_member: memberId, p_group: groupId });
+  if (error) throw error;
+  return data;
+}
+
+export async function randomizeGroups(client, sessionId) {
+  const { data, error } = await client.rpc('randomize_groups', { p_session: sessionId });
+  if (error) throw error;
+  return data;
+}
+
+export async function startSession(client, sessionId) {
+  const { data, error } = await client.rpc('start_session', { p_session: sessionId });
+  if (error) throw error;
+  return data;
+}

@@ -2,7 +2,7 @@
 // Loaded on demand by js/app.js so student pages never download supabase-js.
 import { isConfigured, pickConfig } from '../config.js';
 import { getTeacherClient } from '../supabase-client.js';
-import { h, pieceIcon, setTitle } from './dom.js';
+import { h, nodes as present, pieceIcon, setTitle } from './dom.js';
 import { parseTeacherPath } from './routes.js';
 import { renderHome } from './home-view.js';
 import { renderCreate } from './create-view.js';
@@ -101,7 +101,7 @@ export async function startTeacher(main) {
       bar.className = `t-bar t-bar-${mode}`;
       const brand = h('a', { class: 'brand', href: '/teacher', 'aria-label': '함께 퍼즐 내 수업' }, pieceIcon(), '함께 퍼즐');
       if (mode !== 'nav') {
-        bar.replaceChildren(brand, ...nodes);
+        bar.replaceChildren(brand, ...present(nodes));
         return;
       }
       const nav = h(
@@ -145,6 +145,8 @@ export async function startTeacher(main) {
       const route = parseTeacherPath(location.pathname);
       const views = { home: renderHome, new: renderCreate, images: renderImages, session: renderLobby };
       const view = views[route.view] ?? renderNotFound;
+      // Views whose heading appears only after their data loads call ctx.headingReady().
+      ctx.headingReady = firstRender ? () => {} : () => focusHeadingIfIdle(main);
       cleanup = view(main, ctx, route) ?? null;
     }
     // After in-app navigation, move focus to the new heading for screen readers.
@@ -176,6 +178,13 @@ export async function startTeacher(main) {
   window.addEventListener('popstate', render);
 
   render();
+}
+
+// Moves focus to the heading unless the teacher has already moved it somewhere on the page.
+function focusHeadingIfIdle(main) {
+  const active = document.activeElement;
+  if (active && active !== document.body && main.contains(active)) return;
+  main.querySelector('h1')?.focus({ preventScroll: true });
 }
 
 function renderStartError(main) {
