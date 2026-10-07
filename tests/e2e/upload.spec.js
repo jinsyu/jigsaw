@@ -60,6 +60,8 @@ test('내 그림: delete removes the file and the row, but not while an open cla
   const card = page.locator(`.t-pic-manage[data-image-id="${image.id}"]`);
   await card.getByRole('button', { name: /지우기/ }).click();
   await expect(card.getByText('지울까요? 파일도 함께 지워져요.')).toBeVisible();
+  // --danger-ink: 4.5:1 on white.
+  await expect(card.getByRole('button', { name: '지우기', exact: true })).toHaveCSS('color', 'rgb(184, 50, 45)');
   await page.screenshot({ path: testInfo.outputPath('images-confirm.png') });
   await card.getByRole('button', { name: '지우기', exact: true }).click();
   await expect(card.getByRole('alert')).toHaveText('열려 있는 수업에서 쓰고 있어 지울 수 없어요. 수업을 끝낸 뒤 지워 주세요.');
@@ -69,9 +71,19 @@ test('내 그림: delete removes the file and the row, but not while an open cla
   // After the class ends it can go: the Storage file and the row are both gone.
   const { error: endError } = await client.rpc('end_session', { p_session: session.id });
   if (endError) throw endError;
+  const nextId = await card.evaluate((el) => el.nextElementSibling?.dataset.imageId ?? null);
   await card.getByRole('button', { name: /지우기/ }).click();
   await card.getByRole('button', { name: '지우기', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: '지웠어요.' })).toBeVisible();
+  // Focus moves on to the next card's 지우기, or the upload button when there is none.
+  const focused = () =>
+    page.evaluate(() => {
+      const el = document.activeElement;
+      if (el?.matches('.t-upload-pick')) return 'upload';
+      return el?.matches('.t-pic-delete') ? el.closest('.t-pic-manage').dataset.imageId : null;
+    });
+  await expect.poll(focused).toBe(nextId ?? 'upload');
+  await expect(card).toHaveCount(0);
   expect(await storedFile(image.path)).toBeNull();
   expect((await sql('select 1 from public.images where id = $1', [image.id])).rowCount).toBe(0);
   expect(errors).toEqual([]);

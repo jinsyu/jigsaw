@@ -219,6 +219,7 @@ a.t-session:hover { box-shadow: 0 6px 18px rgba(20, 30, 60, .08), inset 0 0 0 1.
 .t-pic-manage { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .t-pic-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .t-pic-actions .btn { min-height: 44px; padding: 0 14px; font-size: 14px; }
+.t-pic-actions .btn.danger { color: var(--danger-ink); }
 .t-confirm-text { flex: 1 0 100%; font-size: 13px; color: var(--sub); }
 .t-pic-msg { font-size: 13px; line-height: 1.45; color: var(--danger-ink); }
 .t-pic-msg:empty { display: none; }

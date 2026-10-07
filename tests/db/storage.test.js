@@ -121,3 +121,27 @@ describe('지우기', () => {
     expect(await existsAsAdmin(unused.path)).toBe(false);
   });
 });
+
+describe('열린 수업이 쓰는 그림 지우기 (서버에서 막기)', () => {
+  const rowExists = async (id) => (await sql('select 1 from public.images where id = $1', [id])).rowCount === 1;
+  const setStatus = (status) => sql('update public.sessions set status = $1 where id = $2', [status, sessionA.id]);
+
+  it.each(['waiting', 'playing'])('수업이 %s 이면 교사도 파일과 행을 지우지 못한다', async (status) => {
+    await setStatus(status);
+    await teacher1.client.storage.from(BUCKET).remove([used.path]);
+    const removed = await teacher1.client.from('images').delete().eq('id', used.id).select('id');
+    expect(removed.data ?? []).toEqual([]);
+    expect(await existsAsAdmin(used.path)).toBe(true);
+    expect(await rowExists(used.id)).toBe(true);
+  });
+
+  it('수업이 끝나면 교사는 파일과 행을 지울 수 있다', async () => {
+    await setStatus('ended');
+    const { error } = await teacher1.client.storage.from(BUCKET).remove([used.path]);
+    expect(error).toBeNull();
+    const removed = await teacher1.client.from('images').delete().eq('id', used.id).select('id');
+    expect(removed.data).toHaveLength(1);
+    expect(await existsAsAdmin(used.path)).toBe(false);
+    expect(await rowExists(used.id)).toBe(false);
+  });
+});

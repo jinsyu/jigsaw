@@ -39,8 +39,8 @@ describe('Content-Security-Policy (vercel.json)', () => {
     expect(directives['script-src']).toEqual(["'self'", "'wasm-unsafe-eval'", 'https://cdn.jsdelivr.net']);
     expect(directives['style-src']).toEqual(["'self'", 'https://cdn.jsdelivr.net']);
     expect(directives['font-src']).toEqual(["'self'", 'https://cdn.jsdelivr.net']);
-    // The CDN also serves the encoder's .wasm file, fetched by the encoder.
-    expect(directives['connect-src']).toEqual(["'self'", 'https://*.supabase.co', 'wss://*.supabase.co', 'https://cdn.jsdelivr.net']);
+    // The WebP encoder and its .wasm are served from this site (js/vendor), not the CDN.
+    expect(directives['connect-src']).toEqual(["'self'", 'https://*.supabase.co', 'wss://*.supabase.co']);
     expect(directives['img-src']).toEqual(["'self'", 'data:', 'blob:', 'https://*.supabase.co']);
     expect(directives['object-src']).toEqual(["'none'"]);
     expect(directives['frame-ancestors']).toEqual(["'none'"]);
@@ -53,7 +53,7 @@ describe('Content-Security-Policy (vercel.json)', () => {
 
   it('the local server adds only the local Supabase stack, for connections and images', () => {
     const local = withLocalSupabase(csp, 'localhost:4173');
-    expect(local).toContain("connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net http://127.0.0.1:56321 ws://127.0.0.1:56321");
+    expect(local).toContain("connect-src 'self' https://*.supabase.co wss://*.supabase.co http://127.0.0.1:56321 ws://127.0.0.1:56321");
     expect(local).toContain("img-src 'self' data: blob: https://*.supabase.co http://127.0.0.1:56321 ws://127.0.0.1:56321");
     expect(local.replace(/ (http|ws):\/\/127\.0\.0\.1:56321/g, '')).toBe(csp);
     // A tablet on the same Wi-Fi uses the LAN address for the stack as well.

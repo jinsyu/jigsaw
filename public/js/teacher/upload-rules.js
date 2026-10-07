@@ -29,9 +29,8 @@ export const MESSAGES = {
 // null when the file may be tried, otherwise the message to show.
 export function checkFile(file) {
   if (!file) return MESSAGES.notImage;
-  const named = file.name ?? '';
-  if (HEIC.test(file.type) || HEIC.test(named)) return null; // some browsers open them (Safari)
-  if (!IMAGE_TYPE.test(file.type)) return MESSAGES.notImage;
+  // HEIC may have no type in some browsers but is still tried (Safari opens it).
+  if (!IMAGE_TYPE.test(file.type) && !isHeic(file)) return MESSAGES.notImage;
   if (file.size === 0) return MESSAGES.empty;
   if (file.size > MAX_FILE_BYTES) return MESSAGES.tooLarge;
   return null;

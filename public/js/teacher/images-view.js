@@ -28,7 +28,7 @@ export function renderImages(main, ctx) {
           'div',
           {},
           h('h1', { tabindex: '-1' }, '내 그림'),
-          h('p', { class: 'sub' }, '나만 볼 수 있어요 · 지울 때까지 보관 · 1년 동안 쓰지 않으면 정리돼요'),
+          h('p', { class: 'sub' }, '나만 볼 수 있어요 · 지울 때까지 보관'),
         ),
       ),
       uploader,
@@ -68,8 +68,11 @@ export function renderImages(main, ctx) {
     async function remove() {
       actions.querySelectorAll('button').forEach((b) => (b.disabled = true));
       try {
+        const nextId = card.nextElementSibling?.dataset.imageId ?? null;
         await deleteImage(ctx.client, image);
-        if (alive) load('지웠어요.');
+        if (!alive) return;
+        await load('지웠어요.');
+        focusAfterDelete(nextId);
       } catch (error) {
         console.error(error);
         if (!alive) return;
@@ -79,6 +82,13 @@ export function renderImages(main, ctx) {
     }
     idle();
     return card;
+  }
+
+  // Keyboard users land on the next card (the one that took the deleted one's place), else the uploader.
+  function focusAfterDelete(nextId) {
+    const nextCard = nextId ? [...body.querySelectorAll('.t-pic-manage')].find((el) => el.dataset.imageId === nextId) : null;
+    const next = nextCard?.querySelector('.t-pic-delete') ?? uploader.querySelector('.t-upload-pick');
+    next?.focus();
   }
 
   async function load(note = '') {

@@ -3,8 +3,8 @@
 //
 // - Redrawing on a canvas keeps only the pixels: EXIF (camera, place, time) is dropped.
 //   <img> applies the EXIF orientation before drawing, so photos stay upright.
-// - Browsers that cannot encode WebP from a canvas (Safari returns PNG) load a pinned
-//   WASM encoder from the CDN, only then (CSP: 'wasm-unsafe-eval', cdn.jsdelivr.net).
+// - Browsers that cannot encode WebP from a canvas (Safari returns PNG) load the WASM
+//   encoder kept in js/vendor, only then (CSP: 'wasm-unsafe-eval').
 import {
   MAX_UPLOAD_BYTES,
   MESSAGES,
@@ -18,9 +18,8 @@ import {
 
 const BUCKET = 'images';
 const SIGNED_URL_SECONDS = 60 * 60;
-const JSQUASH_VERSION = '1.5.0';
-const JSQUASH_BASE = `https://cdn.jsdelivr.net/npm/@jsquash/webp@${JSQUASH_VERSION}`;
-const JSQUASH_ENCODE = `${JSQUASH_BASE}/encode.js/+esm`;
+// Relative to this module, so it works on any host. The .wasm sits next to its loader.
+const WASM_ENCODER = new URL('../vendor/jsquash-webp-1.5.0/encode.js', import.meta.url).href;
 
 // Error with the message to show the teacher.
 function userError(message, cause) {
@@ -49,10 +48,9 @@ const canvasBlob = (canvas, quality) =>
 
 let wasmEncoder = null;
 async function loadWasmEncoder() {
-  wasmEncoder ??= import(JSQUASH_ENCODE)
+  wasmEncoder ??= import(WASM_ENCODER)
     .then(async (mod) => {
-      // The CDN bundle cannot find its .wasm next to itself: point it there.
-      await mod.init({ locateFile: (path) => `${JSQUASH_BASE}/codec/enc/${path}` });
+      await mod.init();
       return mod.default;
     })
     .catch((error) => {

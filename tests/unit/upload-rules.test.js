@@ -32,6 +32,13 @@ describe('checkFile', () => {
     expect(isHeic(file('', 1000, 'IMG_1234.heif'))).toBe(true);
     expect(isHeic(file('image/jpeg'))).toBe(false);
   });
+
+  it('checks empty and huge files before the HEIC exception', () => {
+    expect(checkFile(file('image/heic', 0))).toBe(MESSAGES.empty);
+    expect(checkFile(file('', 0, 'IMG_1234.HEIC'))).toBe(MESSAGES.empty);
+    expect(checkFile(file('image/heic', MAX_FILE_BYTES + 1))).toBe(MESSAGES.tooLarge);
+    expect(checkFile(file('', MAX_FILE_BYTES + 1, 'IMG_1234.heif'))).toBe(MESSAGES.tooLarge);
+  });
 });
 
 describe('fitSize', () => {

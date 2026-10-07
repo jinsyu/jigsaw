@@ -3,8 +3,8 @@ import { expect, test, webkit } from '@playwright/test';
 import { signInPage } from './support/teacher.js';
 import { PHOTO, cleanUpUploads, expectCleanWebp, uploadedImage } from './support/upload.js';
 
-// T8 on WebKit (the Safari engine): canvas.toBlob cannot make WebP there, so the pinned WASM
-// encoder is loaded from the CDN. Needs `pnpm exec playwright install webkit`; skipped otherwise.
+// T8 on WebKit (the Safari engine): canvas.toBlob cannot make WebP there, so the WASM
+// encoder in js/vendor is loaded from this site. Needs `pnpm exec playwright install webkit`; skipped otherwise.
 test.skip(!existsSync(webkit.executablePath()), 'WebKit is not installed (pnpm exec playwright install webkit)');
 test.use({ browserName: 'webkit' });
 test.afterAll(cleanUpUploads);
@@ -13,8 +13,8 @@ test('uploads through the WASM encoder under the site CSP', async ({ page, conte
   test.skip(testInfo.project.name !== 'desktop-1440', 'one project is enough');
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  const cdn = [];
-  page.on('request', (r) => r.url().includes('@jsquash/webp') && cdn.push(r.url()));
+  const encoder = [];
+  page.on('request', (r) => /jsquash|wasm-feature-detect/.test(r.url()) && encoder.push(r.url()));
   await context.addInitScript(() => {
     window.__csp = [];
     document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
@@ -29,7 +29,9 @@ test('uploads through the WASM encoder under the site CSP', async ({ page, conte
   expect(canvasType).toBe('image/png'); // why the encoder is needed
   await page.locator('.t-images-upload input[type=file]:not([capture])').setInputFiles(PHOTO);
   await expect(page.locator('.t-images-upload').getByRole('status')).toContainText('올렸어요', { timeout: 30_000 });
-  expect(cdn.some((u) => u.endsWith('.wasm'))).toBe(true);
+  const origin = new URL(page.url()).origin;
+  expect(encoder.some((u) => u.endsWith('.wasm'))).toBe(true);
+  expect(encoder.filter((u) => !u.startsWith(`${origin}/js/vendor/`))).toEqual([]); // nothing from the CDN
   expect(await page.evaluate(() => window.__csp)).toEqual([]);
   const image = await uploadedImage(page.locator('.t-images-upload .t-uploader'));
   await expectCleanWebp(image);
