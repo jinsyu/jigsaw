@@ -310,11 +310,50 @@ export function createBoard({
     return [...sweep(), { type: 'member', memberId, online: false }];
   }
 
-  // A member who joins after the start: no tray, plays with the pieces on the board.
+  // Off the board and in nobody's tray (left behind when the last member moved away).
+  function unownedPieces() {
+    const placed = new Set();
+    for (const c of clusters.values()) c.pieces.forEach(([col, row]) => placed.add(row * cols + col));
+    for (const m of members.values()) m.tray.forEach((piece) => placed.add(piece));
+    return allPieces().filter((piece) => !placed.has(piece));
+  }
+
+  // A member who joins after the start: no tray, plays with the pieces on the board, except
+  // that pieces in nobody's tray (the group had been left empty) go to this member.
   function addMember(memberId, { online = true } = {}) {
     if (members.has(memberId)) return [];
+    const events = sweep();
     addMemberRecord(memberId, online);
-    return [...sweep(), { type: 'member', memberId, online }];
+    events.push({ type: 'member', memberId, online });
+    const unowned = unownedPieces();
+    if (unowned.length > 0) {
+      members.get(memberId).tray.push(...unowned);
+      events.push({ type: 'tray', pieces: unowned.map((piece) => ({ piece, from: null, to: memberId })) });
+    }
+    return events;
+  }
+
+  // A member moved to another group (or out of every group): holds end, and the tray goes to
+  // the online members left (everyone left when nobody is online; nobody when the group is empty,
+  // then the next member added gets it).
+  function removeMember(memberId) {
+    const events = sweep();
+    const member = members.get(memberId);
+    if (!member) return events;
+    for (const c of clusters.values()) if (c.heldBy === memberId) events.push(releaseHold(c, 'moved'));
+    members.delete(memberId);
+    const left = [...members.values()];
+    const online = left.filter((m) => m.online);
+    const receivers = online.length > 0 ? online : left;
+    const dealt = dealEvenly(member.tray, receivers.map((m) => ({ id: m.id, count: m.tray.length })), random);
+    const pieces = [];
+    for (const [to, list] of Object.entries(dealt)) {
+      members.get(to).tray.push(...list);
+      for (const piece of list) pieces.push({ piece, from: memberId, to });
+    }
+    if (pieces.length > 0) events.push({ type: 'tray', pieces: pieces.sort((a, b) => a.piece - b.piece) });
+    events.push({ type: 'leave', memberId });
+    return events;
   }
 
   function tick() {
@@ -337,5 +376,5 @@ export function createBoard({
     };
   }
 
-  return { takeFromTray, grab, drop, release, memberOnline, memberOffline, addMember, tick, getState };
+  return { takeFromTray, grab, drop, release, memberOnline, memberOffline, addMember, removeMember, tick, getState };
 }

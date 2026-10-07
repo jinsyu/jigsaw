@@ -333,3 +333,39 @@ describe('snap-cases.json 전 사례를 엔진 drop 경로로 (D7)', () => {
     );
   });
 });
+
+describe('모둠 이동: removeMember·addMember (T16)', () => {
+  it('옮긴 학생의 잡기는 풀리고, 상자는 남은 접속자에게 고르게 나뉜다', () => {
+    const { board } = makeBoard({ members: ['a', 'b', 'c'] });
+    const id = placeOne(board, 'b');
+    board.grab('a', id);
+    board.memberOffline('c');
+    const tray = [...trayOf(board, 'a')];
+    const events = board.removeMember('a');
+    expect(types(events)).toEqual(['release', 'tray', 'leave']);
+    expect(events[0]).toEqual({ type: 'release', clusterId: id, by: 'a', reason: 'moved' });
+    expect(events[1].pieces.map((p) => p.piece).sort((x, y) => x - y)).toEqual([...tray].sort((x, y) => x - y));
+    expect(events[1].pieces.every((p) => p.from === 'a' && p.to === 'b')).toBe(true);
+    expect(board.getState().members.map((m) => m.id)).toEqual(['b', 'c']);
+    expect(board.grab('a', id).result).toEqual({ ok: false, reason: 'not-member' });
+  });
+
+  it('남은 학생이 모두 끊겼으면 남은 학생 모두에게 나눈다', () => {
+    const { board } = makeBoard({ members: ['a', 'b', 'c'] });
+    board.memberOffline('b');
+    board.memberOffline('c');
+    board.removeMember('a');
+    expect(trayOf(board, 'b').length + trayOf(board, 'c').length).toBe(12);
+    expect(Math.abs(trayOf(board, 'b').length - trayOf(board, 'c').length)).toBeLessThanOrEqual(1);
+  });
+
+  it('마지막 학생이 떠나면 상자는 주인 없이 남고, 다음에 들어온 학생이 모두 받는다', () => {
+    const { board } = makeBoard({ members: ['a'] });
+    placeOne(board, 'a');
+    expect(types(board.removeMember('a'))).toEqual(['leave']);
+    const events = board.addMember('z');
+    expect(types(events)).toEqual(['member', 'tray']);
+    expect(trayOf(board, 'z')).toHaveLength(11);
+    expect(events[1].pieces.every((p) => p.from === null && p.to === 'z')).toBe(true);
+  });
+});
