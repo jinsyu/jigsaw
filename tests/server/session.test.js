@@ -406,3 +406,20 @@ describe('학생 이름은 저장용 기록에 없다 (D14)', () => {
     expect(session.roster().map((m) => m.name)).toEqual(names);
   });
 });
+
+describe('T19 보강', () => {
+  it('수업당 학생 수 상한을 넘으면 class_full (같은 기기 재입장은 된다)', () => {
+    const { registry } = makeRegistry({ maxMembers: 2 });
+    const session = openClass(registry);
+    const [a] = joinMany(registry, session, ['가', '나']);
+    expect(registry.join(session.code, { name: '다' }).result).toEqual({ ok: false, error: 'class_full' });
+    expect(registry.join(session.code, { name: '가', token: a.token }).result.ok).toBe(true);
+  });
+
+  it('수업 객체에는 end 가 없다 (registry.end 만 토큰까지 정리한다)', () => {
+    const { registry } = makeRegistry();
+    const session = openClass(registry);
+    expect(session.end).toBeUndefined();
+    expect(Object.keys(session)).not.toContain('end');
+  });
+});

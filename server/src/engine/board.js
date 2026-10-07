@@ -12,7 +12,8 @@
 // - Only the owner takes a piece out of a tray. Taking is a drop of a new one-piece
 //   cluster (clamp, merges, frame) and leaves it released.
 // - grab: the first one wins; locked clusters and clusters held by someone else are refused.
-//   The holder grabbing again extends the hold (the screen does that while dragging).
+//   The holder grabbing again extends the hold (the screen does that while dragging). A
+//   student holds one cluster at a time: grabbing another releases the first.
 // - A hold ends after HOLD_MS without a grab or drop from the holder, HOLD_LIMIT_MS after the
 //   first grab whatever happens, or when the holder disconnects.
 // - A member offline for GONE_MS loses the pieces left in the tray: they are dealt to the
@@ -307,6 +308,12 @@ export function createBoard({
       if (refusal === 'held') return refuse('held', { heldBy: cluster.heldBy });
       if (refusal) return refuse(refusal);
       const extending = cluster.heldBy === member.id;
+      // One hold per student (one finger drags; two fingers only zoom): grabbing another
+      // cluster lets go of the one held before.
+      const released = [];
+      for (const other of clusters.values()) {
+        if (other !== cluster && other.heldBy === member.id) released.push(releaseHold(other, 'regrab'));
+      }
       if (!extending) {
         cluster.heldSince = t;
         cluster.z = ++zTop;
@@ -314,7 +321,7 @@ export function createBoard({
       cluster.heldBy = member.id;
       cluster.heldAt = t;
       const event = { type: 'grab', by: member.id, clusterId, z: cluster.z, heldAt: t };
-      return { result: { ok: true, z: cluster.z, heldAt: t }, events: [event] };
+      return { result: { ok: true, z: cluster.z, heldAt: t }, events: [...released, event] };
     });
   }
 

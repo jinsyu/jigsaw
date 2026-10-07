@@ -13,13 +13,16 @@
     "db:reset": "npx --yes supabase@2.120.0 db reset",
     "db:status": "npx --yes supabase@2.120.0 status -o env",
     "images:builtin": "node scripts/builtin-images.mjs",
-    "teacher:open": "node scripts/teacher-open.mjs"
+    "teacher:open": "node scripts/teacher-open.mjs",
+    "rt:dev": "node scripts/rt-dev.mjs",
+    "test:server": "vitest run --config vitest.db.config.js tests/server"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@supabase/supabase-js": "2.117.2",
     "jsqr": "1.4.0",
     "pg": "^8.23.1",
+    "socket.io-client": "4.8.4",
     "vitest": "^5.0.3"
   }
 }

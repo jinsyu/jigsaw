@@ -161,34 +161,37 @@ export function createPersistence({
 
   // Open classes (waiting or playing) as toRecord() objects, for registry.restore().
   async function loadOpenSessions() {
+    // Open classes are capped (registry MAX_OPEN_SESSIONS = 100), well under the row limit.
     const { data: sessions, error } = await db.from('sessions').select('*').in('status', ['waiting', 'playing']);
     if (error) throw error;
     if (sessions.length === 0) return [];
-    const ids = sessions.map((s) => s.id);
-    const [groups, members] = await Promise.all([
-      db.from('groups').select('*').in('session_id', ids),
-      db.from('members').select('*').in('session_id', ids),
-    ]);
-    if (groups.error) throw groups.error;
-    if (members.error) throw members.error;
-    return sessions.map((s) =>
-      recordFromRows(
-        s,
-        groups.data.filter((g) => g.session_id === s.id),
-        members.data.filter((m) => m.session_id === s.id),
-      ),
+    // One class at a time: at most 12 groups and 60 members each, under PostgREST's row limit.
+    return Promise.all(
+      sessions.map(async (s) => {
+        const [groups, members] = await Promise.all([
+          db.from('groups').select('*').eq('session_id', s.id),
+          db.from('members').select('*').eq('session_id', s.id),
+        ]);
+        if (groups.error) throw groups.error;
+        if (members.error) throw members.error;
+        return recordFromRows(s, groups.data, members.data);
+      }),
     );
   }
 
   return { saveSession, scheduleBoard, persistEvents, flush, loadOpenSessions };
 }
 
-// SIGTERM (systemd stop, deploy): finish the pending saves, then exit.
-export function installShutdown(persistence, { proc = process, log = console } = {}) {
+// SIGTERM (systemd stop, deploy): stop taking requests (beforeFlush), finish the pending
+// saves, then exit.
+export function installShutdown(persistence, { proc = process, log = console, beforeFlush = async () => {} } = {}) {
   let stopping = false;
   proc.once('SIGTERM', async () => {
     if (stopping) return;
     stopping = true;
+    await Promise.resolve()
+      .then(beforeFlush)
+      .catch((error) => log.error(`[server] 종료 준비 실패: ${error?.message ?? error}`));
     const done = await persistence.flush().catch((error) => {
       log.error(`[store] 종료 전 저장 실패: ${error?.message ?? error}`);
       return false;

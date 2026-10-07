@@ -9,10 +9,12 @@ import { createHash, randomBytes, randomInt as cryptoRandomInt, randomUUID } fro
 import { PIECE_COUNTS, gridFor } from '../../../public/js/puzzle/geometry.js';
 import { normalizeHints } from '../../../public/js/store/puzzle-store.js';
 import { normalizeName } from '../../../public/js/student/names.js';
-import { createClassSession } from './session.js';
+import { END_SESSION, createClassSession } from './session.js';
 
 export const MAX_GROUPS = 12;
 export const MAX_OPEN_SESSIONS = 100;
+// Students per class (a class is about 30; room for a second device each).
+export const MAX_MEMBERS = 60;
 // An open class is closed automatically this long after it started (or, if it never
 // started, after it was created): spec clean-up job.
 export const OPEN_LIMIT_MS = 24 * 60 * 60 * 1000;
@@ -49,6 +51,7 @@ function pictureOf(picture) {
  * @param {() => string} [options.newId]
  * @param {() => string} [options.newToken]
  * @param {number} [options.maxOpenSessions]
+ * @param {number} [options.maxMembers]  students per class
  */
 export function createRegistry({
   now,
@@ -57,6 +60,7 @@ export function createRegistry({
   newId = randomUUID,
   newToken = () => randomBytes(32).toString('base64url'),
   maxOpenSessions = MAX_OPEN_SESSIONS,
+  maxMembers = MAX_MEMBERS,
 }) {
   const sessions = new Map(); // id -> session (open only)
   const byCode = new Map(); // code -> session
@@ -112,6 +116,7 @@ export function createRegistry({
       // After a server restart the name is gone from memory; the device sends it again.
       session.rename(member.id, clean);
     } else {
+      if (session.memberCount >= maxMembers) return fail('class_full');
       memberToken = newToken();
       const tokenHash = hashToken(memberToken);
       member = session.addMember({ id: newId(), name: clean, tokenHash });
@@ -175,7 +180,7 @@ export function createRegistry({
   function end(sessionId) {
     const session = sessions.get(sessionId);
     if (!session) return fail('not_found');
-    const outcome = session.end();
+    const outcome = session[END_SESSION]();
     sessions.delete(sessionId);
     byCode.delete(session.code);
     for (const [hash, entry] of byTokenHash) if (entry.session === session) byTokenHash.delete(hash);

@@ -7,6 +7,7 @@ import { createRegistry } from '../../../server/src/engine/registry.js';
 import { createDbClient } from '../../../server/src/db.js';
 import { BATCH_MS, createPersistence, installShutdown } from '../../../server/src/store/persistence.js';
 import { runCleanup } from '../../../server/src/store/cleanup.js';
+import { restoreOpenSessions } from '../../../server/src/store/restore.js';
 import { TEACHERS, cleanup, sql } from '../../db/helpers.js';
 
 const NAMES = ['홍길동저장시험', 'Zq7Probe', '김민준저장시험'];
@@ -249,5 +250,62 @@ describe('학생 이름은 DB 에 없다 (D14)', () => {
     }
     expect(dump).toContain(session.id);
     for (const name of NAMES) expect(dump).not.toContain(name);
+  });
+});
+
+describe('T19 보강', () => {
+  it('정리 작업은 끝난 수업을 나눠 읽고 members 를 조금씩 지운다 (행 수 제한 회피)', async () => {
+    const persistence = createPersistence({ db, log: quietLog() });
+    const ended = [];
+    for (let i = 0; i < 3; i++) {
+      const { session } = playingClass(makeRegistry());
+      await persistence.saveSession(session);
+      ended.push(session.id);
+    }
+    await sql("update jigsaw.sessions set status = 'ended', ended_at = now() where id = any($1::uuid[])", [ended]);
+    const result = await runCleanup({ registry: makeRegistry(), persistence, db, pageSize: 2, chunkSize: 1 });
+    expect(result.deletedMembers).toBeGreaterThanOrEqual(9);
+    const { rows } = await sql('select count(*)::int as n from jigsaw.members where session_id = any($1::uuid[])', [ended]);
+    expect(rows[0].n).toBe(0);
+  });
+
+  it('서버 시작 때 복구에 실패한 열린 수업은 바로 끝난 상태로 닫는다', async () => {
+    const persistence = createPersistence({ db, log: quietLog() });
+    const { session: good } = playingClass(makeRegistry());
+    const { session: bad } = playingClass(makeRegistry());
+    await persistence.saveSession(good);
+    await persistence.saveSession(bad);
+    // A piece in two places: not restorable.
+    await sql(
+      `update jigsaw.groups set board = jsonb_set(board, '{unowned}', '[0]'::jsonb)
+       where session_id = $1 and number = 1`,
+      [bad.id],
+    );
+    const registry = makeRegistry();
+    const log = quietLog();
+    const result = await restoreOpenSessions({ registry, persistence, db, log });
+    expect(result.failed).toContain(bad.id);
+    expect(result.failed).not.toContain(good.id);
+    expect(registry.session(good.id)).not.toBeNull();
+    expect(registry.session(bad.id)).toBeNull();
+    const { rows } = await sql('select status, ended_at from jigsaw.sessions where id = $1', [bad.id]);
+    expect(rows[0].status).toBe('ended');
+    expect(rows[0].ended_at).not.toBeNull();
+    expect(log.lines.join('\n')).toContain(bad.id);
+    // Close the good one too so later runs do not restore it.
+    await sql("update jigsaw.sessions set status = 'ended', ended_at = now() where id = $1", [good.id]);
+  });
+
+  it('SIGTERM 때 새 요청을 막는 단계가 저장보다 먼저 돈다', async () => {
+    const order = [];
+    const persistence = { flush: async () => order.push('flush') && true };
+    const proc = new EventEmitter();
+    const exited = new Promise((resolve) => {
+      proc.exit = resolve;
+    });
+    installShutdown(persistence, { proc, log: quietLog(), beforeFlush: async () => order.push('close') });
+    proc.emit('SIGTERM');
+    expect(await exited).toBe(0);
+    expect(order).toEqual(['close', 'flush']);
   });
 });

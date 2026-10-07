@@ -23,8 +23,18 @@ async function data(promise) {
  * @param {import('@supabase/supabase-js').SupabaseClient} options.db
  * @param {() => number} [options.now]
  * @param {(closed: object) => void} [options.onClosed]  broadcasts the 'end' events
+ * @param {number} [options.pageSize]  rows per read (PostgREST max rows)
+ * @param {number} [options.chunkSize]  session ids per delete request
  */
-export async function runCleanup({ registry, persistence, db, now = Date.now, onClosed = () => {} }) {
+export async function runCleanup({
+  registry,
+  persistence,
+  db,
+  now = Date.now,
+  onClosed = () => {},
+  pageSize = 1000,
+  chunkSize = 100,
+}) {
   const closed = registry.expireStale();
   for (const c of closed) {
     await persistence.saveSession(c.session);
@@ -33,12 +43,14 @@ export async function runCleanup({ registry, persistence, db, now = Date.now, on
 
   const t = now();
   const limit = new Date(t - OPEN_LIMIT_MS).toISOString();
+  // At most pageSize per run; the next run takes the rest.
   const stale = await data(
     db
       .from('sessions')
       .select('id')
       .neq('status', 'ended')
-      .or(`started_at.lt.${limit},and(started_at.is.null,created_at.lt.${limit})`),
+      .or(`started_at.lt.${limit},and(started_at.is.null,created_at.lt.${limit})`)
+      .limit(pageSize),
   );
   const orphans = stale.map((r) => r.id).filter((id) => registry.session(id) === null);
   if (orphans.length > 0) {
@@ -47,21 +59,25 @@ export async function runCleanup({ registry, persistence, db, now = Date.now, on
     );
   }
 
-  const withMembers = [...new Set((await data(db.from('members').select('session_id'))).map((r) => r.session_id))];
-  let endedWithMembers = [];
-  if (withMembers.length > 0) {
-    endedWithMembers = (await data(db.from('sessions').select('id').eq('status', 'ended').in('id', withMembers))).map(
-      (r) => r.id,
-    );
-  }
+  // Ended classes page by page (PostgREST returns at most 1000 rows), members deleted in chunks
+  // (ids go in the URL).
   let deletedMembers = 0;
-  if (endedWithMembers.length > 0) {
-    deletedMembers = (await data(db.from('members').delete().in('session_id', endedWithMembers).select('id'))).length;
+  for (let from = 0; ; from += pageSize) {
+    const page = (
+      await data(db.from('sessions').select('id').eq('status', 'ended').order('id').range(from, from + pageSize - 1))
+    ).map((r) => r.id);
+    for (let i = 0; i < page.length; i += chunkSize) {
+      const { count, error } = await db.from('members').delete({ count: 'exact' }).in('session_id', page.slice(i, i + chunkSize));
+      if (error) throw error;
+      deletedMembers += count ?? 0;
+    }
+    if (page.length < pageSize) break;
   }
 
   const old = new Date(t - KEEP_ENDED_MS).toISOString();
-  const deletedSessions = (await data(db.from('sessions').delete().eq('status', 'ended').lt('ended_at', old).select('id')))
-    .length;
+  const removed = await db.from('sessions').delete({ count: 'exact' }).eq('status', 'ended').lt('ended_at', old);
+  if (removed.error) throw removed.error;
+  const deletedSessions = removed.count ?? 0;
 
   return { closed: closed.length + orphans.length, deletedMembers, deletedSessions };
 }

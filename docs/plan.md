@@ -86,7 +86,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
     - 정리 작업 3가지가 맞게 지운다. 시각은 행을 직접 과거로 바꿔 시험한다.
     - DB 전체 덤프(jigsaw 스키마)에 시험 학생 이름 문자열이 없다.
 
-- [ ] T19: rt 서버 — HTTP·socket.io·학생 연결·보안 제한 — DoD: D3, D6, D11, D12, D16, D17
+- [x] T19: rt 서버 — HTTP·socket.io·학생 연결·보안 제한 — DoD: D3, D6, D11, D12, D16, D17
   - `socket.io` 를 추가한다. `server/src/index.js` 는 `node:http` + socket.io 로 `PORT`(기본 3400)에서 돈다. 환경변수는 `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `ALLOWED_ORIGINS`, `NODE_ENV` 이다. 로컬 값은 `npx supabase status -o env` 에서 읽는 개발 스크립트로 채운다(커밋 안 함).
   - HTTP 경로: `GET /health`(버전·가동 시간·수업 수, 비밀값 없음), `POST /api/join`(코드+이름 → member·토큰).
   - 소켓 연결과 방:
@@ -248,3 +248,6 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
 - **저장 토큰 재접속 실패(T22)**: 저장된 토큰으로 다시 들어가다 `invalid_code` 를 받으면 그 수업 코드의 localStorage 키를 지운다.
 - **원격 권한 점검(T25)**: 원격 적용 전후에 `storage.objects` 에 bucket 조건 없이 anon·authenticated 에 열린 정책이 있는지, `pg_default_acl` 에 스키마 지정 없는 전역 기본 권한이 있는지 확인한다. D12 curl 점검에 Storage 요청(공개 키로 `jigsaw-images` 목록·읽기)을 포함한다.
 - **계정 삭제와 그림 파일(T24)**: `docs/ops.md` 의 탈퇴 절차는 gyosil `auth.users` 계정이 삭제될 때도 적용한다. DB 행은 cascade 로 지워지지만 Storage 파일은 남으므로 `jigsaw-images/<uid>/` 파일 삭제 절차를 함께 적는다.
+- **T19 결정 기록**: 한 학생은 한 덩어리만 잡는다(다른 덩어리를 잡으면 먼저 잡은 것은 `regrab` 으로 놓임). 틀린 코드는 같은 1분 창에서 `틀린 코드 > 60 + 그 주소의 성공 입장 × 3` 이 되면 30초 동안 그 주소의 입장을 모두(맞는 코드 포함) 거부한다. 학교 NAT 에서 한 반이 함께 들어오며 내는 오타로는 막히지 않게 한 값이다(`RT_WRONG_CODE_LIMIT`·`RT_WRONG_CODE_BONUS`·`RT_WRONG_CODE_BLOCK_MS` 로 조정). 수업당 학생 상한 60, 교사 소켓은 연결할 때 교사 토큰 uid 와 `session.teacherId` 를 대조한다. 소켓 시험은 로컬 Supabase 가 필요해 `tests/server/db/socket.test.js` 에 둔다(`pnpm test:server`).
+- **입장 차단 안내(T22)**: `POST /api/join` 이 `429 too_many_attempts` 를 주면 학생 화면은 '잠시 뒤에 다시 입력해 주세요' 라고 안내한다.
+- **주소 판단과 프록시(T24·T25)**: `docs/ops.md` 의 Caddyfile 에 `trusted_proxies` 를 넣지 않는다(Caddy 가 클라이언트가 보낸 X-Forwarded-For 를 그대로 넘기지 않게). T25 에서 위조한 `X-Forwarded-For` 로 주소별 제한을 피할 수 없는지 확인한다. `/etc/jigsaw-rt.env` 틀과 systemd 유닛에 `NODE_ENV=production` 을 명시한다(시험 훅이 켜지지 않게).

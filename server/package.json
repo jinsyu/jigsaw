@@ -1,5 +1,6 @@
 {
   "name": "jigsaw-rt",
+  "version": "0.1.0",
   "private": true,
   "description": "함께 퍼즐 실시간·판정 서버 (rt.gyosil.app). Imports the puzzle rules from ../public/js/puzzle.",
   "type": "module",
@@ -7,6 +8,7 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.117.2"
+    "@supabase/supabase-js": "2.117.2",
+    "socket.io": "4.8.4"
   }
 }

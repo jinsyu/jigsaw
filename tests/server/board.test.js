@@ -369,3 +369,19 @@ describe('모둠 이동: removeMember·addMember (T16)', () => {
     expect(events[1].pieces.every((p) => p.from === null && p.to === 'z')).toBe(true);
   });
 });
+
+describe('한 학생은 한 덩어리만 잡는다 (T19 결정)', () => {
+  it('다른 덩어리를 잡으면 먼저 잡은 덩어리는 놓인다', () => {
+    const { board } = makeBoard();
+    const first = placeOne(board, 'a', 0, 0);
+    const second = placeOne(board, 'a', 500, 300);
+    board.grab('a', first);
+    const { result, events } = board.grab('a', second);
+    expect(result.ok).toBe(true);
+    expect(events).toMatchObject([
+      { type: 'release', clusterId: first, by: 'a', reason: 'regrab' },
+      { type: 'grab', clusterId: second, by: 'a' },
+    ]);
+    expect(board.grab('b', first).result.ok).toBe(true);
+  });
+});

@@ -14,6 +14,10 @@ import { checkBoardRecord, createBoard } from './board.js';
 
 const PUZZLE_ACTIONS = new Set(['takeFromTray', 'grab', 'drop', 'release']);
 
+// Ending a class must go through registry.end (it also forgets the class's tokens and code),
+// so end() is reachable only with this key, which registry.js imports.
+export const END_SESSION = Symbol('endSession');
+
 const refuse = (error) => ({ result: { ok: false, error }, events: [] });
 const toGroup = (group, events) => events.map((event) => ({ to: 'group', group, ...event }));
 
@@ -345,13 +349,17 @@ export function createClassSession({
       return startedAt;
     },
     member: (memberId) => members.get(memberId) ?? null,
+    get memberCount() {
+      return members.size;
+    },
+    boardState: (number) => groups.get(number)?.board?.getState() ?? null,
     addMember,
     rename,
     joinEvent,
     assign,
     randomize,
     start,
-    end,
+    [END_SESSION]: end,
     memberOnline: (memberId) => presence(memberId, true),
     memberOffline: (memberId) => presence(memberId, false),
     puzzle,
