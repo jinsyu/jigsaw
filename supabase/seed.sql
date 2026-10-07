@@ -29,3 +29,22 @@ select
   now(), now(), now()
 from auth.users u
 where u.email in ('teacher1@jigsaw.test', 'teacher2@jigsaw.test');
+
+-- jigsaw (new structure, T17): both test teachers have started using jigsaw.
+insert into jigsaw.teachers (id)
+select u.id from auth.users u
+where u.email in ('teacher1@jigsaw.test', 'teacher2@jigsaw.test');
+
+-- Local stand-in for the shared gyosil core.profiles table, which already exists on the hosted
+-- project (platform.md). Seed only, never in a jigsaw migration. Minimal columns; the hosted
+-- column set is confirmed with the user before T20.
+create schema if not exists core;
+create table if not exists core.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  display_name text,
+  terms_agreed_at timestamptz
+);
+revoke all on schema core from public, anon, authenticated;
+revoke all on all tables in schema core from public, anon, authenticated;
+grant usage on schema core to service_role;
+grant select, insert, update on core.profiles to service_role;
