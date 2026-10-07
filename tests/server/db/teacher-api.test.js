@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { inject } from 'vitest';
 import { startServer } from '../../../server/src/index.js';
 import { signTeacherToken } from '../../../server/src/teacher-token.js';
-import { TEACHERS, adminClient, cleanup, sql } from '../../db/helpers.js';
+import { TEACHERS, adminClient, cleanup, sql } from './helpers.js';
 
 const ORIGIN = 'http://localhost:4173';
 const SECRET = 'teacher-api-test-secret-'.padEnd(48, 'x');
@@ -191,7 +191,7 @@ describe('수업 API (D1)', () => {
     expect(opened.status).toBe(200);
     createdSessions.add(opened.body.sessionId);
     expect(opened.body.code).toMatch(/^\d{6}$/);
-    const { rows } = await sql('select aspect, cols, rows, hint_underlay, status from jigsaw.sessions where id = $1', [opened.body.sessionId]);
+    const { rows } = await sql('select aspect::float8 as aspect, cols, rows, hint_underlay, status from jigsaw.sessions where id = $1', [opened.body.sessionId]);
     expect(rows[0]).toMatchObject({ aspect: 1800 / 1200, cols: 6, rows: 4, hint_underlay: true, status: 'waiting' });
     const list = await call('GET', '/api/sessions', { token });
     expect(list.body.sessions.find((s) => s.id === opened.body.sessionId)).toMatchObject({

@@ -8,7 +8,7 @@ import { createDbClient } from '../../../server/src/db.js';
 import { BATCH_MS, createPersistence, installShutdown } from '../../../server/src/store/persistence.js';
 import { runCleanup } from '../../../server/src/store/cleanup.js';
 import { restoreOpenSessions } from '../../../server/src/store/restore.js';
-import { TEACHERS, cleanup, sql } from '../../db/helpers.js';
+import { TEACHERS, cleanup, sql } from './helpers.js';
 
 const NAMES = ['홍길동저장시험', 'Zq7Probe', '김민준저장시험'];
 const DAY = 24 * 60 * 60 * 1000;

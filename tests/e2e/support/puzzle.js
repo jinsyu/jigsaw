@@ -101,6 +101,23 @@ export async function placeAll(page, input) {
   for (const piece of (await puzzleState(page)).tray) await dragFromTray(page, input, piece, ox, oy);
 }
 
+// Drags the loose clusters on this screen into their place in the frame until the puzzle is
+// complete (pieces dropped next to each other may have joined before reaching the frame).
+export async function finishFrame(page, input) {
+  const { ox, oy } = await frameOrigin(page);
+  for (let round = 0; round < 3 && !(await puzzleState(page)).progress.complete; round++) {
+    for (const loose of (await puzzleState(page)).clusters.filter((c) => !c.locked)) {
+      const from = await cellPoint(page, loose.x, loose.y, loose.pieces[0]);
+      const to = await cellPoint(page, ox, oy, loose.pieces[0]);
+      await input.drag([
+        [from.x, from.y],
+        [to.x, to.y],
+      ]);
+    }
+    await page.waitForTimeout(500);
+  }
+}
+
 export async function expectNoHorizontalOverflow(page) {
   const { scrollWidth, clientWidth } = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,

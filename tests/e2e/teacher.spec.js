@@ -182,9 +182,13 @@ test('an expired or refused teacher token goes back to sign-in', async ({ browse
 test('Google sign-in of a new teacher: 함께 퍼즐 시작하기 with the gyosil name filled in, then 내 수업', async ({ browser, baseURL }, testInfo) => {
   test.skip(!['desktop-1440', 'phone-360'].includes(testInfo.project.name), 'one wide and one phone screen');
   // GIS and the hosted Google client ID exist only on the deployed site (T25). Here the page
-  // gets a client ID, a stand-in for the GIS script and stand-in sign-in answers; the CSP
-  // allows the real GIS from T23, so it is bypassed for this test only.
-  const context = await browser.newContext({ ...testInfo.project.use, bypassCSP: true });
+  // gets a client ID, a stand-in for the GIS script (served at the real GIS address, which the
+  // CSP allows since T23) and stand-in sign-in answers.
+  const context = await browser.newContext({ ...testInfo.project.use });
+  await context.addInitScript(() => {
+    window.__cspViolations = [];
+    document.addEventListener('securitypolicyviolation', (e) => window.__cspViolations.push(`${e.violatedDirective} ${e.blockedURI}`));
+  });
   const page = await context.newPage();
   const errors = trackErrors(page);
   const token = await teacherToken();
@@ -242,6 +246,7 @@ test('Google sign-in of a new teacher: 함께 퍼즐 시작하기 with the gyosi
   expect(sent.start).toEqual({ startTicket: 'ticket-1', displayName: '김교실쌤', agreed: true });
   await expect(page.locator('.t-name')).toHaveText('김교실쌤 선생님');
   expect(JSON.parse(await page.evaluate(() => localStorage.getItem('jigsaw-teacher')))).toEqual({ token, displayName: '김교실쌤' });
+  expect(await page.evaluate(() => window.__cspViolations)).toEqual([]);
   expect(errors).toEqual([]);
   await context.close();
 });
@@ -314,7 +319,7 @@ test('D1: a teacher picks a picture, piece count and groups, opens the class, an
   await page.screenshot({ path: testInfo.outputPath('teacher-lobby.png'), fullPage: true });
 
   const { rows } = await sql(
-    `select s.code, s.status, s.builtin_key, s.piece_count, s.cols, s.rows, s.aspect,
+    `select s.code, s.status, s.builtin_key, s.piece_count, s.cols, s.rows, s.aspect::float8 as aspect,
             (select count(*)::int from jigsaw.groups g where g.session_id = s.id) as groups
      from jigsaw.sessions s where s.id = $1`,
     [id],
@@ -711,7 +716,7 @@ test('a picture from 내 그림 can be chosen for a class', async ({ page, conte
   await expect(page).toHaveURL(new RegExp(`/teacher/sessions/${UUID.source}$`));
   const id = sessionIdOf(page);
   await trackClass(id);
-  const { rows } = await sql('select image_id, builtin_key, aspect from jigsaw.sessions where id = $1', [id]);
+  const { rows } = await sql('select image_id, builtin_key, aspect::float8 as aspect from jigsaw.sessions where id = $1', [id]);
   expect(rows[0]).toMatchObject({ image_id: image.id, builtin_key: null, aspect: 1.5 });
   await expect(page.locator('.t-summary')).toHaveText('내 그림 · 24조각 · 6모둠');
   expect(direct).toEqual([]);

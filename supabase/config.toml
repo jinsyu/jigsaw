@@ -106,7 +106,7 @@ openai_api_key = "env(OPENAI_API_KEY)"
 # Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
 # are monitored, and you can view the emails that would have been sent from the web interface.
 [local_smtp]
-# No emails are sent: students are anonymous and the local test teachers are seeded.
+# No emails are sent: students have no account and the local test teachers are seeded.
 enabled = false
 # Port to use for the email testing server web interface.
 port = 56324
@@ -179,8 +179,8 @@ refresh_token_reuse_interval = 10
 # Allow/disallow new user signups to your project.
 enable_signup = true
 # Allow/disallow anonymous sign-ins to your project.
-# Students join without an account: anonymous sign-in only.
-enable_anonymous_sign_ins = true
+# Off: students join through the rt server with a class code and make no Supabase account.
+enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
 enable_manual_linking = false
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
@@ -205,9 +205,7 @@ email_sent = 2
 # Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
 sms_sent = 30
 # Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
-# A whole class (30+ students) joins from one school IP within minutes. Raise the same limit
-# on the hosted project too (Auth > Rate Limits, T14).
-anonymous_users = 1000
+anonymous_users = 30
 # Number of sessions that can be refreshed in a 5 minute interval per IP address.
 token_refresh = 150
 # Number of sign up and sign-in requests that can be made in a 5 minute interval per IP address (excludes anonymous users).

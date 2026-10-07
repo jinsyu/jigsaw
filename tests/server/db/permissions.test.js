@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { inject } from 'vitest';
-import { TEACHERS, adminClient, anonClient, cleanup, sql, teacherClient } from '../../db/helpers.js';
+import { TEACHERS, adminClient, anonClient, cleanup, sql, teacherClient } from './helpers.js';
 
 const BUCKET = 'jigsaw-images';
 const EXPECTED_TABLES = ['groups', 'images', 'members', 'schema_migrations', 'sessions', 'teachers'];

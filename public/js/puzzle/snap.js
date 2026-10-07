@@ -1,19 +1,19 @@
 // Drop resolution: board clamp, snap (merge) detection, snapping into the frame
 // and progress.
 //
-// The server implements exactly these rules in SQL (private.resolve_drop and
-// private.held_by_other in supabase/migrations/*_puzzle_rpc.sql). Both sides are
-// checked against tests/fixtures/snap-cases.json (tests/unit/snap.test.js and
-// tests/db/snap-parity.test.js). Change the fixture rules text together with this file.
+// The rt server imports this module (server/src/engine/board.js), so the screen and the
+// server judge with the same code. Both are checked against tests/fixtures/snap-cases.json
+// (tests/unit/snap.test.js and tests/server/board.test.js). Change the fixture rules text
+// together with this file.
 //
 // Data shapes
 // - layout: from geometry.layoutFor() — { cols, rows, width, height, pw, ph, boardWidth, boardHeight }.
 // - cluster: { id, x, y, locked?, pieces: [[col, row], ...], heldBy?, heldAt? }, ids are
-//   integers (bigint in SQL). (x, y) is where the picture origin sits on the board.
+//   integers. (x, y) is where the picture origin sits on the board.
 //   locked = snapped into the frame (fixed for good). Only clusters on the board are
 //   passed in; pieces still in a tray are not clusters here.
 //
-// Rules (all arithmetic in float64 / float8, same operation order in SQL)
+// Rules (all arithmetic in float64)
 // 0. Frame: the completed picture's place on the board, origin T = frameOrigin(layout)
 //    = ((boardWidth - width) / 2, (boardHeight - height) / 2), the middle of the board.
 // 1. Clamp: only the dropped cluster's requested position is clamped, once,
@@ -183,7 +183,7 @@ export function progress(clusters, total) {
 export function resolveDrop(layout, clusters, drop, tol = SNAP_TOLERANCE) {
   const dropped = clusters.find((c) => c.id === drop.id);
   if (!dropped) throw new Error(`dropped cluster not found: ${drop.id}`);
-  // Locked clusters cannot be grabbed, so they are never dropped (SQL raises too).
+  // Locked clusters cannot be grabbed, so they are never dropped.
   if (dropped.locked === true) throw new Error(`dropped cluster is locked: ${drop.id}`);
   const { x, y } = clampPosition(layout, dropped.pieces, drop.x, drop.y);
   const moved = clusters.map((c) => (c === dropped ? { ...c, x, y } : c));
@@ -203,7 +203,7 @@ export function resolveDrop(layout, clusters, drop, tol = SNAP_TOLERANCE) {
 
 // Holds. A cluster is held by another student when heldBy is set, heldBy !== me,
 // it was grabbed less than HOLD_MS ago (now - heldAt < HOLD_MS, both in ms) and the
-// holder is connected (isOnline(heldBy)). Same test as SQL private.held_by_other().
+// holder is connected (isOnline(heldBy)).
 export function isHeldByOther(cluster, me, now, isOnline) {
   return (
     cluster.heldBy != null &&
@@ -218,7 +218,7 @@ export function withoutHeldByOthers(clusters, me, now, isOnline) {
 }
 
 // Why `me` may not grab this cluster: 'locked' (in the frame), 'held' (another
-// student is holding it) or null (grab allowed). Same order as SQL public.grab.
+// student is holding it) or null (grab allowed).
 export function grabRefusal(cluster, me, now, isOnline) {
   if (cluster.locked === true) return 'locked';
   if (isHeldByOther(cluster, me, now, isOnline)) return 'held';

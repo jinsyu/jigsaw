@@ -9,7 +9,7 @@ import { io as connect } from 'socket.io-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { inject } from 'vitest';
 import { signTeacherToken } from '../../../server/src/teacher-token.js';
-import { TEACHERS, cleanup, sql } from '../../db/helpers.js';
+import { TEACHERS, cleanup, sql } from './helpers.js';
 
 const SERVER = fileURLToPath(new URL('../../../server/src/index.js', import.meta.url));
 const ORIGIN = 'http://localhost:4173';

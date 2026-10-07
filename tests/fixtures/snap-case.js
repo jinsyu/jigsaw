@@ -1,5 +1,5 @@
 // Runs and checks tests/fixtures/snap-cases.json cases on the JS side.
-// Shared by tests/unit/snap.test.js and tests/db/snap-parity.test.js.
+// Shared by tests/unit/snap.test.js and tests/server/board.test.js.
 import { readFileSync } from 'node:fs';
 import { expect } from 'vitest';
 import { layoutFor } from '../../public/js/puzzle/geometry.js';

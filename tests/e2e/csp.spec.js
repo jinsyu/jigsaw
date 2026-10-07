@@ -1,10 +1,14 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { headersFor } from '../../scripts/lib/vercel-routing.mjs';
+import { expectNoHorizontalOverflow } from './support/puzzle.js';
 import { classControl, cleanUpClasses, closeSql, nodeStudent, openClass, signInPage } from './support/teacher.js';
 
 // Every page under the CSP: no violations, and requests only go to this site, the CDN
 // (Pretendard) and the rt server (the local stack here). No page talks to Supabase itself
 // (a teacher's own picture comes through a signed URL: coop.spec.js, teacher.spec.js).
 const PAGES = ['/', '/privacy', '/play?demo=1', '/play?demo=1&picture=giraffe', '/teacher', '/join'];
+const VERCEL = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url), 'utf8'));
 
 test.afterAll(async () => {
   await cleanUpClasses();
@@ -124,4 +128,56 @@ test('teacher screens under the CSP: 새 수업, the lobby with a student, the o
   expect(await violations(page), 'teacher overview').toEqual([]);
   testInfo.annotations.push({ type: 'hosts', description: [...hosts].join(', ') });
   expect([...hosts].filter((h) => ![self, 'cdn.jsdelivr.net', '127.0.0.1:3400'].includes(h))).toEqual([]);
+});
+
+// The deployed site until T25: no rt server address yet, so the teacher and student screens say
+// 준비 중. Served under the production header of vercel.json exactly (no local additions), at
+// the production address, so 'self' and every allowed host are the real ones.
+test('the production CSP: every page loads without a violation and the screens say 준비 중', async ({ page, baseURL }, testInfo) => {
+  test.skip(!['desktop-1440', 'phone-360'].includes(testInfo.project.name), 'one wide and one phone screen');
+  const site = 'https://jigsaw.gyosil.app';
+  const productionCsp = headersFor('/', VERCEL)['Content-Security-Policy'];
+  const hosts = new Set();
+  page.on('request', (request) => hosts.add(new URL(request.url()).host));
+  page.on('websocket', (ws) => hosts.add(new URL(ws.url()).host));
+  await page.route(`${site}/**`, async (route) => {
+    const response = await route.fetch({ url: route.request().url().replace(site, baseURL) });
+    const headers = { ...response.headers() };
+    if (headers['content-security-policy']) headers['content-security-policy'] = productionCsp;
+    await route.fulfill({ response, headers });
+  });
+  await watchCsp(page.context());
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+
+  const visit = async (path) => {
+    const response = await page.goto(`${site}${path}`);
+    expect(response.headers()['content-security-policy'], path).toBe(productionCsp);
+    await page.waitForLoadState('networkidle');
+  };
+  for (const path of ['/', '/privacy', '/play?demo=1']) {
+    await visit(path);
+    expect(await violations(page), path).toEqual([]);
+  }
+  // The demo puzzle draws under the production CSP too.
+  await expect(page.locator('main[data-ready="true"]')).toBeVisible();
+
+  for (const path of ['/teacher', '/teacher/new']) {
+    await visit(path);
+    await expect(page.getByRole('heading', { level: 1, name: '선생님 화면은 준비 중이에요' })).toBeVisible();
+    expect(await violations(page), path).toEqual([]);
+    await expectNoHorizontalOverflow(page);
+  }
+  for (const path of ['/join', '/join?code=123456', '/play']) {
+    await visit(path);
+    await expect(page.getByRole('heading', { level: 1, name: '아직 들어갈 수 없어요' })).toBeVisible();
+    await expect(page.getByText('학생 입장은 준비 중이에요. 선생님께 알려 주세요.')).toBeVisible();
+    expect(await violations(page), path).toEqual([]);
+    await expectNoHorizontalOverflow(page);
+  }
+  await page.screenshot({ path: testInfo.outputPath('production-not-ready.png'), fullPage: true });
+  testInfo.annotations.push({ type: 'hosts', description: [...hosts].join(', ') });
+  // Only the site and the font CDN: no rt server, Supabase or Google before T25.
+  expect([...hosts].filter((h) => !['jigsaw.gyosil.app', 'cdn.jsdelivr.net'].includes(h))).toEqual([]);
+  expect(errors).toEqual([]);
 });

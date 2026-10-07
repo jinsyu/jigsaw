@@ -149,7 +149,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
     - 완성·화면: 마지막 조각을 놓으면 모두에게 축하 화면이 뜬다. 4개 너비와 터치 동작을 검사한다.
     - 개인정보: DB 덤프와 서버 로그 출력에 학생 이름이 없다(D14).
 
-- [ ] T23: 이전 구조 제거·CSP·처리방침·전체 E2E — DoD: D12, D14, D15, D16, D17
+- [x] T23: 이전 구조 제거·CSP·처리방침·전체 E2E — DoD: D12, D14, D15, D16, D17
   - 삭제 대상:
     - 마이그레이션·시험: `supabase/migrations/20261007*`, `tests/db/*`(살릴 것은 T17~T19 서버 시험으로 이미 옮김), `snap-parity`.
     - 옛 구조 E2E 도우미: `tests/e2e/support/legacy.js`(T21 에서 학생 화면 시험용으로 남긴 시드 교사 비밀번호 로그인, T22 에서 쓰는 곳이 없어지면 함께 삭제).
@@ -261,3 +261,6 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
   - (a) 이벤트 순서: 서버는 학생에게 `state` 를 보내기 전과 학생 퍼즐 메시지(take·grab·drop·release)에 답하기 전에 그 모둠의 묶음 이벤트를 먼저 보낸다(`broadcaster.flushGroupOf`). 그래서 학생 화면은 연결 직후·`groups`/`start` 뒤 `state` 를 받기 전에 온 모둠 이벤트를 버리고, 그 뒤의 이벤트와 답은 서버 순서대로 적용한다. 대가로 학생이 자주 움직이는 모둠에서는 0.1초 묶음이 덜 묶인다(동작마다 한 번 보냄).
   - (b) 학생 `sync` 메시지: 답은 `{ ok: true }`, 이어서 새 `state` 를 그 소켓에 보낸다. 다른 소켓 메시지와 같은 빈도 제한을 받고, 교사가 보내면 `forbidden`. 화면 판이 이벤트와 맞지 않을 때와 화면이 다시 보일 때 쓴다(소켓을 다시 붙이면 끊김으로 처리되어 잡기가 놓이므로).
   - (c) 끄는 도중 놓임: 놓기가 `not-held` 로 거부되면 한 번 다시 잡고 다시 놓는다. 그사이 친구가 잡았으면 '친구가 잡고 있는 조각이에요.' 를 보이고 조각은 서버 위치로 돌아간다. `idle` 은 화면도 같은 10초 규칙으로 스스로 놓는다. `limit` 은 끄는 동안 6초마다 보내는 다시 잡기로 상한 뒤 다시 잡힌다(T15 재잡기 허용 결정). `moved` 는 퍼즐을 닫고 새 모둠 퍼즐을 연다. 늦게 온 `release` 이벤트는 지금 잡은 사람이 그 이벤트의 학생과 같을 때만 잡기를 푼다.
+- **T23 결정 기록**:
+  - (a) 실수 값 정밀도: Supabase Postgres 이미지는 `extra_float_digits = 0` 이라 Data API(서버의 supabase-js)를 거친 double precision 값이 15자리로 반올림된다(예전 마이그레이션의 `alter role … set extra_float_digits = 1` 이 이를 가리고 있었고, 삭제 뒤 재시작 복구 시험에서 `sessions.aspect` 가 달라져 드러남). 원격 gyosil 은 `alter role` 금지라 `sessions.aspect` 를 numeric 으로 바꾸는 마이그레이션 `20261010000000_jigsaw_aspect_numeric.sql` 을 추가했다(서버 코드 변경 없음, T25 의 migrate.sh 로 함께 적용). 앞으로 Data API 로 왕복하는 실수 값은 float8 대신 numeric 또는 jsonb 에 둔다. T23 시점 jigsaw 스키마의 실수 열은 `sessions.aspect`(numeric) 하나뿐이다(판 좌표는 `groups.board` jsonb).
+  - (b) 정리 후보: `public/js/store/puzzle-store.js` 의 `hintsFromSession` 은 삭제된 `supabase-api.js` 만 쓰던 함수로, 지금은 단위 시험(`hints.test.js`)만 쓴다. 남겨 두고 나중에 정리한다.

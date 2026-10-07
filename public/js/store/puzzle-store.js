@@ -1,6 +1,6 @@
 // Puzzle store contract: the only way the student puzzle screen reads or changes
-// puzzle data. T10 ships an in-memory implementation (local-store.js); T11 adds a
-// Supabase RPC implementation with the same shape, so the screen does not change.
+// puzzle data. local-store.js keeps it in memory (demo); remote-store.js talks to the rt
+// server over its socket with the same shape, so the screen does not change.
 //
 // Every action returns a Promise and never throws for rule violations; it resolves
 // to { ok: false, reason } instead. Listeners are called after the state changed.
@@ -16,7 +16,7 @@
  * @property {Cell[]} pieces
  * @property {string|null} heldBy  uid of the member holding it, or null.
  * @property {number|null} [heldAt]  When heldBy grabbed it (ms since epoch), or null.
- *   Remote stores pass the server's grab time (clusters.grabbed_at): holds are judged
+ *   Remote stores pass the server's grab time: holds are judged
  *   by time like the server does (snap.js isHeldByOther, 10 s). Without heldAt the
  *   screen treats a hold as fresh.
  * @property {boolean} [locked]  In the frame for good: cannot be grabbed (snap.js rule 6).
@@ -79,7 +79,7 @@ export function normalizeHints(hints = {}) {
   return Object.freeze(out);
 }
 
-// sessions row (hint_* columns, supabase/migrations/*_board_hints.sql) -> Hints.
+// sessions row (hint_* columns of jigsaw.sessions) -> Hints.
 export function hintsFromSession(row) {
   return normalizeHints({
     preview: row?.hint_preview,

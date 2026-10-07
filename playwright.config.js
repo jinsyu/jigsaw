@@ -3,6 +3,10 @@ import { RT_LOG_FILE } from './tests/e2e/support/rt-log.js';
 
 const PORT = 4173;
 const CLOCK_TESTS = /disconnect\.spec\.js$/;
+// Runs its own rt server (port 3401) and kills it; a starting rt server takes over every open
+// class of the database, so this test runs last, when no other test has a class open.
+const RESTART_TESTS = /restart\.spec\.js$/;
+const ALONE = [CLOCK_TESTS, RESTART_TESTS];
 
 // Do not run pnpm test:e2e and pnpm test:db at the same time on one local stack: the DB tests'
 // rt servers restore every open class of the database when they start (and count them against
@@ -38,10 +42,10 @@ export default defineConfig({
     },
   ],
   projects: [
-    { name: 'phone-360', testIgnore: CLOCK_TESTS, use: { ...devices['Desktop Chrome'], viewport: { width: 360, height: 780 }, isMobile: true, hasTouch: true } },
-    { name: 'phone-390', testIgnore: CLOCK_TESTS, use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
-    { name: 'tablet-1024', testIgnore: CLOCK_TESTS, use: { ...devices['Desktop Chrome'], viewport: { width: 1024, height: 768 }, hasTouch: true } },
-    { name: 'desktop-1440', testIgnore: CLOCK_TESTS, use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
+    { name: 'phone-360', testIgnore: ALONE, use: { ...devices['Desktop Chrome'], viewport: { width: 360, height: 780 }, isMobile: true, hasTouch: true } },
+    { name: 'phone-390', testIgnore: ALONE, use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
+    { name: 'tablet-1024', testIgnore: ALONE, use: { ...devices['Desktop Chrome'], viewport: { width: 1024, height: 768 }, hasTouch: true } },
+    { name: 'desktop-1440', testIgnore: ALONE, use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
     // Tests that move the rt server's clock forward (one-minute rule) affect every class on it,
     // so they run alone, after all the others.
     {
@@ -49,6 +53,13 @@ export default defineConfig({
       testMatch: CLOCK_TESTS,
       dependencies: ['phone-360', 'phone-390', 'tablet-1024', 'desktop-1440'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true },
+    },
+    // Restart of the rt server (D17), after everything else.
+    {
+      name: 'restart-1024',
+      testMatch: RESTART_TESTS,
+      dependencies: ['clock-390'],
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1024, height: 768 }, hasTouch: true },
     },
   ],
 });

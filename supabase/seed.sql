@@ -1,5 +1,5 @@
 -- Local-only seed (applied by `pnpm db:reset`, never pushed to the hosted project).
--- Two test teachers with email + password sign-in for DB tests and E2E.
+-- Two test teachers with email + password sign-in for the DB tests (tests/server/db).
 -- Real teachers sign in with Google; these accounts exist only in the local stack.
 --   teacher1@jigsaw.test / local-teacher-only
 --   teacher2@jigsaw.test / local-teacher-only

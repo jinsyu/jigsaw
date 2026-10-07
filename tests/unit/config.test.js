@@ -1,24 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { hasRtServer, isConfigured, pickConfig } from '../../public/js/config.js';
+import { hasRtServer, pickConfig } from '../../public/js/config.js';
 
 describe('pickConfig', () => {
-  it.each(['localhost', '127.0.0.1', '[::1]'])('%s uses the local stack (rt server and Supabase)', (host) => {
+  it.each(['localhost', '127.0.0.1', '[::1]'])('%s uses the local rt server', (host) => {
     const config = pickConfig(host);
     expect(config.env).toBe('local');
     expect(config.rtUrl).toBe('http://127.0.0.1:3400');
     expect(hasRtServer(config)).toBe(true);
-    expect(config.supabaseUrl).toBe('http://127.0.0.1:56321');
-    expect(config.publishableKey).toMatch(/^sb_publishable_/);
-    expect(isConfigured(config)).toBe(true);
   });
 
   it.each(['192.168.0.12', '10.1.2.3', '172.20.0.5', 'my-mac.local'])(
-    '%s (same Wi-Fi as a test tablet) reaches the local stack on that host',
+    '%s (same Wi-Fi as a test tablet) reaches the local rt server on that host',
     (host) => {
       const config = pickConfig(host);
       expect(config.env).toBe('local');
       expect(config.rtUrl).toBe(`http://${host}:3400`);
-      expect(config.supabaseUrl).toBe(`http://${host}:56321`);
     },
   );
 
@@ -27,19 +23,24 @@ describe('pickConfig', () => {
     expect(config.env).toBe('remote');
     expect(config.rtUrl).toBe('');
     expect(hasRtServer(config)).toBe(false);
-    expect(isConfigured(config)).toBe(false);
   });
 
   it('never ships a secret or service key', () => {
     for (const host of ['localhost', 'jigsaw.gyosil.app']) {
       const json = JSON.stringify(pickConfig(host));
-      expect(json).not.toMatch(/service_role|sb_secret_/);
+      expect(json).not.toMatch(/service_role|sb_secret_|sb_publishable_|supabase/i);
     }
   });
 
   it('the local stack has no Google sign-in and carries no account details', () => {
     const local = pickConfig('localhost');
     expect(local.googleClientId).toBe('');
-    expect(Object.keys(local).sort()).toEqual(['env', 'googleClientId', 'publishableKey', 'rtUrl', 'supabaseUrl']);
+    expect(Object.keys(local).sort()).toEqual(['env', 'googleClientId', 'rtUrl']);
+  });
+
+  it('no Supabase address or key for the browser: the screens reach Supabase only through the rt server (D12)', () => {
+    for (const host of ['localhost', '192.168.0.12', 'jigsaw.gyosil.app']) {
+      expect(Object.keys(pickConfig(host)).sort()).toEqual(['env', 'googleClientId', 'rtUrl']);
+    }
   });
 });

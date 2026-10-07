@@ -10,7 +10,19 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
     expect(text).toContain('구글 계정 이메일');
     expect(text).toContain('교사가 올린 그림');
     expect(text).toContain('학생 이름은 서버에 저장하지 않습니다');
-    expect(text).toContain('익명 접속 번호');
+    expect(text).toContain('무작위 학생 번호');
+  });
+
+  it('students: no account (anonymous ones included), the name only in the rt server memory and on the device (D14)', () => {
+    expect(text).toContain('학생 계정(익명 계정 포함)을 만들지 않습니다');
+    expect(text).toContain('수업 중에만 실시간 서버의 메모리에 있고');
+    expect(text).toContain('학생 기기의 브라우저에 남습니다');
+    expect(text).not.toMatch(/익명 접속 번호|익명 로그인/);
+  });
+
+  it('IP addresses: only in memory for request limits, never logged; server logs kept 14 days', () => {
+    expect(text).toContain('IP 주소는 실시간 서버가 지나친 요청을 막는 데(요청 수 제한)만 메모리에서 쓰고');
+    expect(text).toContain('14일');
   });
 
   it('gives the retention periods of the spec data table', () => {
@@ -23,14 +35,31 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
 
   it('explains how to delete, who processes the data, and that there are no ads or analytics', () => {
     for (const phrase of ['내 그림 지우기', '수업 끝내기', '자동 정리', '교사 탈퇴']) expect(text).toContain(phrase);
-    for (const company of ['Supabase', 'Vercel', 'jsDelivr', 'Google']) expect(text).toContain(company);
+    for (const company of ['Supabase', 'Vercel', 'AWS Lightsail', 'jsDelivr', 'Google']) expect(text).toContain(company);
     expect(text).toContain('광고와 외부 분석 도구는 쓰지 않습니다');
     expect(text).toContain('학습지원 소프트웨어');
   });
 
-  it('marks what the operator still has to fill in', () => {
-    expect(html).toContain('data-todo="effective-date"'); // date written at T14
-    expect(html).toContain('data-todo="server-region"'); // Supabase region not decided yet
+  it('names the places of processing (D15): Vercel, AWS Lightsail Seoul, Supabase Seoul', () => {
+    expect(text).toContain('AWS Lightsail 서울');
+    expect(text).toContain('Supabase 서울');
+    expect(text).toContain('Vercel(서울 지역 우선');
+    expect(html).not.toContain('data-todo="server-region"');
+  });
+
+  it('teacher withdrawal deletes the jigsaw data only, not the shared gyosil account', () => {
+    expect(text).toContain('함께 퍼즐의 데이터(함께 퍼즐 시작 기록, 올린 그림 파일, 수업 기록)를 모두 지웁니다');
+    expect(text).toContain('다른 교실 앱과 함께 쓰는 구글 로그인 계정과 교사 이름은 그대로 두며');
+  });
+
+  it('jsDelivr serves the font only (no script from a CDN)', () => {
+    expect(text).toContain('글꼴(Pretendard) 파일 전달');
+    expect(text).not.toContain('서버 연결 도구');
+  });
+
+  it('leaves only the start date for the operator to fill in (written on the day of the public launch)', () => {
+    expect(html).toContain('data-todo="effective-date"');
+    expect([...html.matchAll(/data-todo="([^"]+)"/g)].map((m) => m[1])).toEqual(['effective-date']);
   });
 
   it('gives the contact address the operator chose to publish, and no other e-mail', () => {
