@@ -46,7 +46,7 @@ test('code field keeps digits only and submits to /join', async ({ page }) => {
 
 test('app screens are served by index.html and kept out of search', async ({ page }) => {
   await page.goto('/teacher/new');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('선생님');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('선생님 로그인');
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, follow');
   await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
   await expectNoHorizontalOverflow(page);

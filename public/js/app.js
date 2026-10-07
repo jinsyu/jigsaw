@@ -60,6 +60,12 @@ if (route === 'home') {
   import('./play/demo.js')
     .then(({ startDemo }) => startDemo(main))
     .catch((error) => showLoadError(main, error));
+} else if (route === 'teacher') {
+  markPrivate(TITLES.teacher);
+  main.replaceChildren(); // do not flash the home screen while the teacher screens load
+  import('./teacher/app.js')
+    .then(({ startTeacher }) => startTeacher(main))
+    .catch((error) => showLoadError(main, error));
 } else {
   markPrivate(TITLES[route]);
   renderPlaceholder(main, TITLES[route]);
