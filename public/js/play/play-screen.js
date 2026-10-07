@@ -5,6 +5,7 @@ import { makePuzzle } from '../puzzle/geometry.js';
 import { resolveDrop } from '../puzzle/snap.js';
 import { cellOfPiece, isPuzzleStore, pieceOfCell } from '../store/puzzle-store.js';
 import { createBoardView } from './board-view.js';
+import { frameRect } from './frame.js';
 import { freeSpot } from './placement.js';
 import { loadPicture } from './picture.js';
 import { drawPiece, pieceBox, createSpriteCache } from './sprites.js';
@@ -63,7 +64,7 @@ function buildLayout(main) {
   const body = el('div', 'pz-body');
   const board = el('section', 'pz-board');
   board.setAttribute('aria-label', '퍼즐 판');
-  const hint = el('p', 'pz-hint', coarsePointer() ? '두 손가락으로 크게 볼 수 있어요' : '마우스 휠로 크게 볼 수 있어요');
+  const hint = el('p', 'pz-hint', coarsePointer() ? '두 손가락으로 판을 옮기고 크게 봐요' : '마우스 휠로 크게 볼 수 있어요');
   const toast = el('p', 'pz-toast');
   toast.setAttribute('role', 'status');
   board.append(hint, toast);
@@ -226,7 +227,7 @@ export async function mountPlayScreen(main, store) {
     },
   });
   board.canvas.setAttribute('role', 'img');
-  board.canvas.setAttribute('aria-label', '퍼즐 판: 한 손가락으로 조각을 옮기고, 두 손가락으로 크게 봐요');
+  board.canvas.setAttribute('aria-label', '퍼즐 판: 한 손가락으로 조각을 옮기고, 두 손가락으로 판을 옮기거나 크게 봐요');
 
   function makeGhost(index) {
     const piece = puzzle.pieces[index];
@@ -272,7 +273,8 @@ export async function mountPlayScreen(main, store) {
       settleAction(placeFromTray(index, b.x - (piece.x0 + layout.pw / 2), b.y - (piece.y0 + layout.ph / 2)));
     },
     onTap(index) {
-      const spot = freeSpot(layout, board.visibleRect(), store.getState().clusters, cellOfPiece(index, layout.cols));
+      const cell = cellOfPiece(index, layout.cols);
+      const spot = freeSpot(layout, board.viewRect(), store.getState().clusters, cell, frameRect(layout));
       settleAction(placeFromTray(index, spot.x, spot.y));
     },
   });

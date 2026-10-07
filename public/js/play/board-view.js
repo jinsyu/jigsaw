@@ -1,7 +1,9 @@
-// Board canvas: draws clusters from piece sprites and turns pointer input into
-// piece drags (one finger on a piece), pans (one finger on empty board) and
-// zoom (two fingers, or the mouse wheel). It knows nothing about the store:
-// the screen passes clusters in and gets onGrab / onDrop calls out.
+// Board canvas: draws the frame and clusters from piece sprites and turns pointer
+// input into piece drags (one finger or the mouse on a piece), pans and zooms
+// (two fingers; the mouse drags empty board and uses the wheel). One finger on
+// empty board does nothing, so the board never slides away under a child's hand.
+// It knows nothing about the store: the screen passes clusters in and gets
+// onGrab / onDrop calls out.
 import { pieceOfCell } from '../store/puzzle-store.js';
 import {
   clampCamera,
@@ -10,9 +12,11 @@ import {
   pinchCamera,
   screenToBoard,
   boardToScreen,
+  viewBoardRect,
   visibleBoardRect,
   zoomAt,
 } from './camera.js';
+import { createFrameLayer } from './frame.js';
 
 const MAX_DPR = 2;
 const SLIDE_MS = 220;
@@ -41,6 +45,7 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
   const layer = document.createElement('canvas'); // everything but the dragged cluster
   const layerCtx = layer.getContext('2d');
   const hitCtx = document.createElement('canvas').getContext('2d');
+  const frameLayer = createFrameLayer(layout, puzzle);
 
   const dpr = () => Math.min(MAX_DPR, window.devicePixelRatio || 1);
   let view = { viewW: 1, viewH: 1 };
@@ -97,6 +102,7 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
     }
     c.fillStyle = COLORS.dot;
     c.fill();
+    frameLayer.draw(c, cam, dpr());
   }
 
   function drawCluster(c, indices, lifted) {
@@ -189,6 +195,7 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
   }
 
   function zoomSettled() {
+    frameLayer.setScale(cam.scale, dpr());
     spritesPending = sprites.setPixelScale(cam.scale * dpr()) || spritesPending;
     requestRender();
   }
@@ -292,6 +299,11 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
     gesture = { kind: 'pan', pointerId, start: { ...cam }, from: pt };
   }
 
+  function endGesture() {
+    gesture = null;
+    zoomSettled();
+  }
+
   function startPinch() {
     const [a, b] = [...pointers.values()];
     gesture = {
@@ -362,7 +374,7 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
       const b = screenToBoard(cam, pt.x, pt.y);
       const hit = hitTest(b.x, b.y);
       if (hit) beginDrag(hit, e, pt);
-      else startPan(e.pointerId);
+      else if (e.pointerType === 'mouse') startPan(e.pointerId);
     } else if (pointers.size === 2 && drag && pointers.has(drag.pointerId)) {
       const moved = pointers.get(drag.pointerId);
       if (Math.hypot(moved.x - drag.from.x, moved.y - drag.from.y) < PINCH_TAKEOVER_PX) {
@@ -406,13 +418,9 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
       endDrag();
       return;
     }
-    if (gesture?.kind === 'pinch' && pointers.size === 1) {
-      startPan([...pointers.keys()][0]); // keep panning with the finger left
-      zoomSettled();
-    } else if (pointers.size === 0 && gesture) {
-      gesture = null;
-      zoomSettled();
-    }
+    // The finger left after a pinch does nothing until a second one comes back.
+    if (gesture?.kind === 'pinch' && pointers.size < 2) endGesture();
+    else if (pointers.size === 0 && gesture) endGesture();
   }
 
   function onWheel(e) {
@@ -480,8 +488,9 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
       const rect = canvas.getBoundingClientRect();
       return cx >= rect.left && cx <= rect.right && cy >= rect.top && cy <= rect.bottom;
     },
-    visibleRect() {
-      return visibleBoardRect(cam, view, layout);
+    // The screen in board units, past the board edges too.
+    viewRect() {
+      return viewBoardRect(cam, view);
     },
     destroy() {
       observer.disconnect();
