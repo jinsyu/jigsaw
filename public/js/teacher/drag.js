@@ -31,7 +31,9 @@ export function enableChipDrag(root, { onDrop, onStart, onEnd }) {
     ghost.classList.add('t-chip-ghost');
     ghost.style.width = `${rect.width}px`;
     ghost.style.height = `${rect.height}px`;
-    document.body.append(ghost);
+    // Inside a modal dialog (모둠 편성 on 모둠 한눈에 보기) the ghost must be in the dialog:
+    // the dialog sits in the top layer, above anything appended to the body.
+    (root.closest('dialog[open]') ?? document.body).append(ghost);
     drag.ghost = ghost;
     drag.active = true;
     drag.chip.classList.add('is-lifted');

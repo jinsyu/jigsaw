@@ -446,3 +446,216 @@ a.t-session:hover { box-shadow: 0 6px 18px rgba(20, 30, 60, .08), inset 0 0 0 1.
   .t-skel, .t-pulse { animation: none; }
   .t-pool, .t-group { transition: none; }
 }
+
+/* ---------- 모둠 한눈에 보기 (mockup teacher-overview) ---------- */
+/* A 44px button around the small code pill (the pill keeps the mockup's look). */
+.t-bar .t-ov-code {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer;
+  font: inherit; border-radius: 999px;
+}
+.t-ov-code .pill { font-size: 15px; font-weight: 700; padding: 7px 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.t-ov-code:hover .pill { background: #DCE2FF; }
+.t-ov-clock {
+  display: inline-flex; align-items: center; gap: 8px; font-size: 22px; font-weight: 800; white-space: nowrap;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+}
+.t-ov-clock .t-icon { color: var(--sub); }
+
+.t-ov {
+  flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px;
+  padding: clamp(14px, 1.4vw, 22px) max(clamp(16px, 2vw, 36px), env(safe-area-inset-right)) max(clamp(16px, 1.6vw, 30px), env(safe-area-inset-bottom)) max(clamp(16px, 2vw, 36px), env(safe-area-inset-left));
+}
+.t-ov-sum { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+.t-ov-sum .pill { font-size: 16px; padding: 8px 16px; white-space: nowrap; }
+.t-ov-sum .pill b { color: var(--ink); font-weight: 800; margin-left: 2px; font-variant-numeric: tabular-nums; }
+.t-ov-sum .pill.ok { color: var(--ok-ink); }
+.t-ov-sum .pill.ok span { margin-left: 4px; }
+.t-ov-hints { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.t-ov-note { color: var(--muted); font-size: 15px; margin-left: 4px; }
+
+.t-ov-late {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 12px 10px 18px; border-radius: 16px;
+  background: var(--warn-weak); color: #7A4405; font-size: 16px; font-weight: 600;
+}
+.t-ov-late[hidden] { display: none; }
+.t-ov-late p { flex: 1 1 260px; min-width: 0; line-height: 1.45; }
+.t-ov-late b { font-weight: 800; }
+.t-ov-late-btn { flex: none; }
+.t-ov-warn { align-self: flex-start; }
+
+.t-ov-grid {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(14px, 1.1vw, 20px);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
+.t-ov-item { display: flex; min-width: 0; min-height: 0; }
+.t-ov-card {
+  position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px;
+  padding: 14px 16px 16px; transition: box-shadow .15s;
+}
+.t-ov-card:hover:not(.is-empty) { box-shadow: 0 8px 22px rgba(20, 30, 60, .09), inset 0 0 0 1.5px #D8D0C2; }
+.t-ov-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.t-ov-head h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
+.t-ov-prog { flex: 1; min-width: 40px; height: 10px; }
+.t-ov-prog[hidden] { display: none; }
+.t-ov-prog i { width: 0; }
+.t-ov.is-live .t-ov-prog i { transition: width .6s ease-out; } /* not on the first drawing */
+.t-ov-pct {
+  margin-left: auto; min-width: 3.1em; text-align: right; font-size: 19px; font-weight: 800; color: var(--ok-ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.t-ov-pct:empty { display: none; }
+.t-ov-open {
+  flex: none; width: 44px; height: 44px; border: 0; border-radius: 12px; background: #fff; color: var(--sub);
+  box-shadow: inset 0 0 0 1.5px var(--line); display: grid; place-items: center; cursor: pointer;
+}
+/* The whole card opens the big view (one button, one tab stop). */
+.t-ov-open::after { content: ''; position: absolute; inset: 0; z-index: 2; border-radius: 20px; cursor: pointer; }
+.t-ov-open:focus-visible { outline: none; }
+.t-ov-open:focus-visible::after { outline: 3px solid var(--pri); outline-offset: 3px; }
+.t-ov-card:hover .t-ov-open { color: var(--pri); box-shadow: inset 0 0 0 1.5px var(--pri); }
+.t-ov-open:disabled { visibility: hidden; }
+.t-ov-open:disabled::after { display: none; }
+
+.t-ov-board {
+  position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: var(--board-ratio, 3 / 2);
+  background-color: var(--board); background-image: radial-gradient(rgba(120, 100, 70, .16) 1.2px, transparent 1.3px); background-size: 22px 22px;
+}
+.t-ov-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.t-ov-skel { position: absolute; inset: 0; opacity: .6; }
+.t-ov-board.is-failed { background-image: none; }
+.t-ov-card.is-done { box-shadow: inset 0 0 0 3px var(--ok); }
+.t-ov-card.is-done:hover { box-shadow: 0 8px 22px rgba(20, 30, 60, .09), inset 0 0 0 3px var(--ok); }
+.t-ov-card.is-done .t-ov-board, .t-ov-zoom.is-done .t-ov-board { background-color: #EAF6EE; background-image: none; }
+.t-ov-badge {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 1;
+  background: var(--ok-ink); color: #fff; font-weight: 800; font-size: 18px; padding: 8px 18px; border-radius: 999px;
+  white-space: nowrap; box-shadow: 0 6px 16px rgba(23, 105, 60, .25);
+}
+.t-ov-badge[hidden] { display: none; }
+.t-ov-card.is-new-done .t-ov-badge { animation: t-ov-pop .5s cubic-bezier(.3, 1.4, .5, 1) both; }
+@keyframes t-ov-pop { from { opacity: 0; scale: .7; } }
+.t-ov-card.is-empty { background: #FCFAF6; }
+.t-ov-card.is-empty .t-ov-board { background-image: none; background-color: #F4F0E8; }
+.t-ov-empty {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding: 16px; text-align: center; color: var(--sub); font-size: 15px; line-height: 1.45;
+}
+.t-ov-empty[hidden] { display: none; }
+.t-ov-empty b { font-size: 18px; color: var(--ink); }
+
+.t-ov-mates { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; }
+.t-ov-mates .chip { height: 32px; font-size: 15px; max-width: 100%; }
+.t-ov-mates .chip .ic { flex: none; }
+.t-ov-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.t-ov-mates .chip em { color: #5D6676; font-variant-numeric: tabular-nums; }
+
+/* Wide screens (whiteboard, PC, landscape tablet): the grid fills the screen, no scrolling. */
+@media (min-width: 1000px) and (min-height: 700px) {
+  html.is-overview body { height: 100dvh; }
+  html.is-overview .teacher { min-height: 0; }
+  .t-ov-grid {
+    flex: 1; min-height: 0; grid-template-columns: repeat(var(--ov-cols, 3), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--ov-rows, 2), minmax(0, 1fr));
+  }
+  .t-ov-card { min-height: 0; }
+  .t-ov-board { flex: 1; min-height: 0; aspect-ratio: auto; }
+}
+/* Tablets in landscape and small PCs: slimmer name chips so four fit on one line. */
+@media (min-width: 1000px) and (max-width: 1399px) and (min-height: 700px) {
+  .t-ov-card { gap: 10px; padding: 12px 14px 14px; }
+  .t-ov-mates { gap: 4px; min-height: 28px; }
+  .t-ov-mates .chip { height: 28px; font-size: 13px; gap: 4px; padding: 0 9px 0 5px; }
+  .t-ov-mates .chip .ic { width: 18px; height: 18px; }
+  .t-ov-mates .chip em { font-size: 11px; }
+}
+@media (min-width: 1600px) and (min-height: 900px) {
+  .t-bar-lobby .t-ov-code { min-height: 52px; }
+  .t-ov-code .pill { font-size: 16px; padding: 8px 16px; }
+  .t-ov-clock { font-size: 26px; }
+  .t-ov-sum .pill { font-size: 17px; }
+  .t-ov-head h2 { font-size: 24px; }
+  .t-ov-pct { font-size: 20px; }
+  .t-ov-card { padding: 16px 18px; }
+}
+@media (max-width: 719px) {
+  .t-ov-clock { font-size: 18px; }
+  .t-ov-clock .t-icon svg { width: 18px; height: 18px; }
+  /* Phones: brand and clock, then code, 모둠 편성 and 수업 끝내기 on the second row. */
+  html.is-overview .t-bar { column-gap: 8px; }
+  html.is-overview .t-bar .spacer { display: none; }
+  .t-ov-clock { order: 1; margin-left: auto; }
+  .t-bar-lobby .t-ov-code { order: 2; }
+  html.is-overview .t-bar-btn { order: 3; }
+  html.is-overview .t-bar .t-summary { order: 4; }
+  .t-ov-code .pill { font-size: 14px; padding: 6px 11px; }
+  .t-ov-note { flex-basis: 100%; margin-left: 2px; font-size: 14px; }
+  .t-ov-sum .pill { font-size: 15px; padding: 7px 13px; }
+}
+@media (max-width: 479px) {
+  html.is-overview .t-bar .t-summary { display: none; }
+  .t-ov-clock .t-icon { display: none; }
+  .t-bar-lobby .t-bar-btn .t-icon { display: none; }
+}
+
+/* Big view of one group */
+.t-ov-zoom {
+  width: min(96vw, 1680px); height: min(94dvh, 1000px); max-width: none; max-height: none; border: 0; border-radius: 22px;
+  padding: 18px clamp(14px, 1.6vw, 26px); background: #fff; color: var(--ink); box-shadow: 0 24px 60px rgba(20, 30, 60, .3);
+}
+.t-ov-zoom[open] { display: flex; flex-direction: column; gap: 14px; }
+.t-ov-zoom::backdrop { background: rgba(30, 36, 51, .6); }
+.t-ov-zhead { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.t-ov-zhead h2 { font-size: clamp(22px, 2vw, 30px); font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
+.t-ov-zhead .t-ov-prog { height: 12px; }
+.t-ov-zhead .t-ov-pct { font-size: clamp(19px, 1.6vw, 24px); margin-left: 0; }
+.t-ov-znav { display: flex; gap: 8px; flex: none; }
+.t-ov-znav .iconbtn:disabled { opacity: .4; cursor: default; }
+.t-ov-zboard { flex: 1; min-height: 0; aspect-ratio: auto; border-radius: 16px; }
+.t-ov-zboard .t-ov-badge { font-size: 22px; padding: 10px 24px; bottom: 20px; }
+.t-ov-zfoot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.t-ov-zfoot .chip { height: 36px; font-size: 16px; }
+.t-ov-zfoot .chip .ic { width: 22px; height: 22px; }
+.t-ov-zstatus { color: var(--sub); font-size: 16px; font-weight: 600; }
+@media (max-width: 719px) {
+  .t-ov-zoom { width: 100vw; height: 100dvh; border-radius: 0; padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
+  .t-ov-zhead { flex-wrap: wrap; row-gap: 8px; }
+  .t-ov-zhead .t-ov-prog { order: 3; flex-basis: 100%; }
+  /* Portrait phones: the board keeps its own shape instead of a tall empty area. */
+  .t-ov-zboard { flex: 0 1 auto; aspect-ratio: var(--board-ratio, 3 / 2); }
+}
+
+/* 모둠 편성 over the overview (the lobby's grouping panel in a dialog) */
+.t-ov-groups {
+  width: min(96vw, 1400px); max-height: 94dvh; border: 0; border-radius: 22px; padding: 22px clamp(14px, 2vw, 28px) 18px;
+  background: var(--bg); color: var(--ink); box-shadow: 0 24px 60px rgba(20, 30, 60, .3);
+}
+.t-ov-groups[open] { display: flex; flex-direction: column; gap: 14px; }
+.t-ov-groups::backdrop { background: rgba(30, 36, 51, .6); }
+.t-ov-groups .t-grouping { padding-right: 52px; }
+.t-ov-groups .t-groups { grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
+.t-ov-gclose { position: absolute; top: 16px; right: 16px; }
+.t-ov-gfoot { display: flex; justify-content: flex-end; }
+.t-ov-gfoot .btn { min-width: 140px; }
+@media (max-width: 599px) {
+  .t-ov-groups { width: 100vw; max-height: 100dvh; height: 100dvh; border-radius: 0; }
+}
+
+/* Code and QR again, for late students */
+.t-ov-codebox {
+  container-type: inline-size; width: min(92vw, 560px); max-height: 96dvh; border: 0; border-radius: 22px;
+  padding: 26px clamp(18px, 3vw, 34px) 22px; background: #fff; color: var(--ink); text-align: center;
+  box-shadow: 0 24px 60px rgba(20, 30, 60, .3);
+}
+.t-ov-codebox[open] { display: flex; flex-direction: column; align-items: center; }
+.t-ov-codebox::backdrop { background: rgba(30, 36, 51, .6); }
+.t-ov-codebox h2 { font-size: clamp(18px, 4.4cqi, 24px); font-weight: 800; margin-bottom: 8px; }
+.t-ov-codebox .t-join-code { font-size: clamp(48px, 17cqi, 104px); }
+.t-ov-codebox .t-join-qr { width: min(64cqi, 42dvh); margin: 18px 0 10px; }
+.t-ov-codebox .t-join-note { line-height: 1.5; }
+.t-ov-codebox .t-actions { margin-top: 16px; }
+.t-ov-codebox .btn { min-width: 140px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .t-ov.is-live .t-ov-prog i, .t-ov-card { transition: none; }
+  .t-ov-card.is-new-done .t-ov-badge { animation: none; }
+}

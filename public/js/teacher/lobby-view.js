@@ -7,10 +7,12 @@
 // Presence keys and payloads are set by the student's browser, so a name is shown only for
 // a members row of this session read from the database (student/presence.js).
 import { assignMember, endSession, getSession, listMembers, randomizeGroups, startSession } from './data.js';
+import { confirmDialog } from './dialogs.js';
 import { h, icon, setTitle } from './dom.js';
 import { formatCode, hintsSummary, sessionSummary, statusLabel } from './format.js';
 import { createGroupingPanel } from './grouping.js';
 import { loadBuiltins, loadMyImages, sessionPicture } from './pictures.js';
+import { showOverview } from './overview-view.js';
 import { joinUrl, qrSvg } from './qr.js';
 import { applyGroupChanges, buildRoster } from './roster.js';
 import { presenceNames } from '../student/presence.js';
@@ -44,8 +46,18 @@ export function renderLobby(main, ctx, { sessionId }) {
       const [builtins, members] = await Promise.all([loadBuiltins(), listMembers(ctx.client, session.id)]);
       const myImages = session.image_id ? await loadMyImages(ctx.client) : [];
       if (!alive) return;
-      stopLive = showLobby(main, ctx, session, sessionPicture(session, builtins, myImages), members);
-      ctx.headingReady?.();
+      const picture = sessionPicture(session, builtins, myImages);
+      // Once the puzzles start, the lobby turns into 모둠 한눈에 보기 (T12).
+      const overview = () => {
+        stopLive?.();
+        stopLive = showOverview(main, ctx, { session, picture, builtins, onEnded: (result) => showEnded(main, ctx, result) });
+        ctx.headingReady?.();
+      };
+      if (session.status === 'playing') overview();
+      else {
+        stopLive = showLobby(main, ctx, session, picture, members, { onPlaying: () => alive && overview() });
+        ctx.headingReady?.();
+      }
     } catch (error) {
       console.error(error);
       if (!alive) return;
@@ -96,7 +108,19 @@ function showMessage(main, ctx, title, text, offerNew = false) {
   ctx.headingReady?.();
 }
 
-function showLobby(main, ctx, session, picture, initialMembers) {
+// After 수업 끝내기 (or the class ended elsewhere): what happened, and where to go next.
+function showEnded(main, ctx, { byMe, doneCount, activeCount }) {
+  const done = activeCount ? ` 완성한 모둠은 ${doneCount} / ${activeCount}모둠이에요.` : '';
+  showMessage(
+    main,
+    ctx,
+    byMe ? '수업을 끝냈어요' : '이미 끝난 수업이에요',
+    `학생 화면에 ‘수업이 끝났어요’가 나왔고, 모둠 배정과 학생 익명 계정은 지워졌어요.${done}`,
+    true,
+  );
+}
+
+function showLobby(main, ctx, session, picture, initialMembers, { onPlaying }) {
   document.documentElement.classList.add('is-lobby');
   const summary = sessionSummary({ title: picture.title, pieceCount: session.piece_count, groupCount: session.groups.length });
   setTitle(`수업 코드 ${session.code}`);
@@ -258,15 +282,13 @@ function showLobby(main, ctx, session, picture, initialMembers) {
     panel.setBusy('start');
     try {
       await startSession(ctx.client, session.id);
-      status = 'playing';
-      panel.announce('퍼즐을 시작했어요. 학생 화면에 모둠 퍼즐이 열려요.');
+      return onPlaying();
     } catch (error) {
       console.error(error);
-      if (error?.message === 'session_not_waiting') status = 'playing';
+      if (error?.message === 'session_not_waiting') return onPlaying();
       panel.showError(actionError(error, '시작하지 못했어요. 다시 눌러 주세요.'));
     }
     panel.setBusy('');
-    await reloadMembers(); // start_session renumbers colours
     redraw();
   }
 
@@ -284,8 +306,7 @@ function showLobby(main, ctx, session, picture, initialMembers) {
       if (result.missing) reloadMembers();
     })
     .on('broadcast', { event: 'start' }, () => {
-      status = 'playing';
-      reloadMembers();
+      if (alive) onPlaying(); // started in another tab
     })
     .on('broadcast', { event: 'end' }, () => {
       if (!alive) return;
@@ -318,33 +339,6 @@ function showLobby(main, ctx, session, picture, initialMembers) {
 
   redraw();
   return stop;
-}
-
-// Small yes/no dialog. Resolves true when confirmed.
-function confirmDialog(main, { title, text, confirm, tone = 'pri' }) {
-  return new Promise((resolve) => {
-    const yes = h('button', { class: `btn ${tone}`, type: 'button' }, confirm);
-    const no = h('button', { class: 'btn', type: 'button', autofocus: true }, '취소');
-    const dialog = h(
-      'dialog',
-      { class: 't-dialog', 'aria-labelledby': 't-confirm-title' },
-      h('h2', { id: 't-confirm-title' }, title),
-      h('p', { class: 'sub' }, text),
-      h('div', { class: 't-actions' }, no, yes),
-    );
-    let answer = false;
-    yes.addEventListener('click', () => {
-      answer = true;
-      dialog.close();
-    });
-    no.addEventListener('click', () => dialog.close());
-    dialog.addEventListener('close', () => {
-      dialog.remove();
-      resolve(answer);
-    });
-    main.append(dialog);
-    dialog.showModal();
-  });
 }
 
 function closeDialog(ctx, session) {

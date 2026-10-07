@@ -232,9 +232,10 @@ test('D3·D4·D14: students join by code or QR, the teacher sees names live, gro
   await a.page.screenshot({ path: testInfo.outputPath('student-3-waiting-group.png') });
 
   // 시작하기 → every student gets their own group's puzzle (T11), on /play (not the demo).
+  // The lobby turns into 모둠 한눈에 보기 (T12, tests/e2e/overview.spec.js).
   await page.getByRole('button', { name: '시작하기' }).click();
-  await expect(page.locator('.t-playing')).toBeVisible();
-  await expect(page.getByRole('button', { name: '무작위로 나누기' })).toBeHidden();
+  await expect(page.locator('.t-ov-card')).toHaveCount(4);
+  await expect(page.getByRole('button', { name: '무작위로 나누기' })).toHaveCount(0);
   for (const [student, number] of [
     [a, 1],
     [b, target],
