@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 // Student puzzle screen, solo demo (/play?demo=1): in-memory store, 24 pieces (6 x 4)
 // unless &pieces= asks for 12, 48 or 70. Help settings (spec rule 10) by address too:
-// &preview=1 &outline=0 &picture=0 &underlay=1.
+// &preview=1 &outline=0 &button=0 &underlay=1, and &picture=<built-in key>.
 // Touch projects drive real touch input through CDP; the desktop project uses the mouse.
 
 // options: extra address parameters, e.g. { pieces: 70, preview: 1 }.
@@ -712,6 +712,25 @@ for (const pieces of [48, 70]) {
   });
 }
 
+test('the demo can use any built-in picture (&picture=giraffe, a portrait one)', async ({ page }, testInfo) => {
+  const errors = await openDemo(page, { picture: 'giraffe' });
+  const { picture, layout } = await state(page);
+  expect(picture.src).toBe('/images/builtin/giraffe.webp');
+  expect(layout.rows).toBeGreaterThan(layout.cols);
+  // The frame (portrait) is centred and on screen.
+  const { ox, oy } = await framePlace(page);
+  const box = await boardBox(page);
+  const mid = await toClient(page, ox + layout.width / 2, oy + layout.height / 2);
+  expect(Math.abs(mid.x - (box.x + box.width / 2))).toBeLessThanOrEqual(1);
+  expect(Math.abs(mid.y - (box.y + box.height / 2))).toBeLessThanOrEqual(1);
+  await page.locator('.pz-tile').first().click();
+  await expect(page.locator('.pz-tile')).toHaveCount(23);
+  await expectNoHorizontalOverflow(page);
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: testInfo.outputPath('play-giraffe.png') });
+  expect(errors).toEqual([]);
+});
+
 test('reduced motion: pieces and the view jump instead of sliding', async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const errors = await openDemo(page);
@@ -790,7 +809,7 @@ test('help settings change the screen: outline, picture button, underlay', async
   const plainFill = await canvasRgb(page, ...fillAt);
 
   // Everything flipped.
-  const errors = await openDemo(page, { outline: 0, picture: 0, underlay: 1 });
+  const errors = await openDemo(page, { outline: 0, button: 0, underlay: 1 });
   expect((await state(page)).hints).toEqual({ preview: false, outline: false, pictureButton: false, underlay: true });
   await expect(page.getByRole('button', { name: '완성 그림 보기' })).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);

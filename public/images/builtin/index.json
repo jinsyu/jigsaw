@@ -9,8 +9,15 @@
       "height": 1200,
       "src": "/images/builtin/sea.webp",
       "thumb": "/images/builtin/sea-thumb.webp",
-      "source": "함께 퍼즐 자체 제작",
-      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
     },
     {
       "key": "village",
@@ -20,8 +27,15 @@
       "height": 1200,
       "src": "/images/builtin/village.webp",
       "thumb": "/images/builtin/village-thumb.webp",
-      "source": "함께 퍼즐 자체 제작",
-      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
     },
     {
       "key": "space",
@@ -31,8 +45,15 @@
       "height": 1200,
       "src": "/images/builtin/space.webp",
       "thumb": "/images/builtin/space-thumb.webp",
-      "source": "함께 퍼즐 자체 제작",
-      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
     },
     {
       "key": "garden",
@@ -42,8 +63,15 @@
       "height": 1200,
       "src": "/images/builtin/garden.webp",
       "thumb": "/images/builtin/garden-thumb.webp",
-      "source": "함께 퍼즐 자체 제작",
-      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
     },
     {
       "key": "classroom",
@@ -53,8 +81,15 @@
       "height": 1200,
       "src": "/images/builtin/classroom.webp",
       "thumb": "/images/builtin/classroom-thumb.webp",
-      "source": "함께 퍼즐 자체 제작",
-      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
     },
     {
       "key": "friends",
@@ -64,8 +99,267 @@
       "height": 1200,
       "src": "/images/builtin/friends.webp",
       "thumb": "/images/builtin/friends-thumb.webp",
-      "source": "함께 퍼즐 자체 제작",
-      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "picnic",
+      "title": "봄 소풍",
+      "category": "계절",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/picnic.webp",
+      "thumb": "/images/builtin/picnic-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "water-play",
+      "title": "여름 물놀이",
+      "category": "계절",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/water-play.webp",
+      "thumb": "/images/builtin/water-play-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "autumn-field",
+      "title": "가을 들판",
+      "category": "계절",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/autumn-field.webp",
+      "thumb": "/images/builtin/autumn-field-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "snowman",
+      "title": "겨울 눈사람",
+      "category": "계절",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/snowman.webp",
+      "thumb": "/images/builtin/snowman-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "sports-day",
+      "title": "운동회",
+      "category": "학교",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/sports-day.webp",
+      "thumb": "/images/builtin/sports-day-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "playground",
+      "title": "놀이터",
+      "category": "학교",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/playground.webp",
+      "thumb": "/images/builtin/playground-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "farm",
+      "title": "농장 동물",
+      "category": "동물",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/farm.webp",
+      "thumb": "/images/builtin/farm-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "giraffe",
+      "title": "기린과 코끼리",
+      "category": "동물",
+      "width": 1200,
+      "height": 1800,
+      "src": "/images/builtin/giraffe.webp",
+      "thumb": "/images/builtin/giraffe-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "dinosaurs",
+      "title": "공룡 계곡",
+      "category": "동물",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/dinosaurs.webp",
+      "thumb": "/images/builtin/dinosaurs-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "train",
+      "title": "기차 여행",
+      "category": "탈것",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/train.webp",
+      "thumb": "/images/builtin/train-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "balloons",
+      "title": "열기구",
+      "category": "탈것",
+      "width": 1200,
+      "height": 1800,
+      "src": "/images/builtin/balloons.webp",
+      "thumb": "/images/builtin/balloons-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "lighthouse",
+      "title": "밤바다 등대",
+      "category": "자연",
+      "width": 1200,
+      "height": 1800,
+      "src": "/images/builtin/lighthouse.webp",
+      "thumb": "/images/builtin/lighthouse-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "chuseok",
+      "title": "추석 보름달",
+      "category": "명절",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/chuseok.webp",
+      "thumb": "/images/builtin/chuseok-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
+    },
+    {
+      "key": "seollal",
+      "title": "설날 연날리기",
+      "category": "명절",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/seollal.webp",
+      "thumb": "/images/builtin/seollal-thumb.webp",
+      "source": {
+        "name": "함께 퍼즐 자체 제작",
+        "author": "함께 퍼즐",
+        "url": null
+      },
+      "license": {
+        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
+        "url": null
+      }
     }
   ]
 }

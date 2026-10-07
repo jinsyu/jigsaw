@@ -1,17 +1,17 @@
-// Renders the self-made mockup scenes (docs/mockups/src/common.js) into the built-in
-// pictures: public/images/builtin/<key>.webp (1800 x 1200), <key>-thumb.webp (720 x 480)
+// Renders the self-made scenes into the built-in pictures: the mockup scenes
+// (docs/mockups/src/common.js) and the scenes in scripts/builtin-scenes.mjs.
+// Writes public/images/builtin/<key>.webp (long side 1800), <key>-thumb.webp (long side 720)
 // and index.json. Usage: pnpm images:builtin   (needs network for the Pretendard font)
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
+import { SCENES } from './builtin-scenes.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT = join(ROOT, 'public/images/builtin');
-const SCENE_W = 600;
-const SCENE_H = 400;
-const FULL = { width: 1800, height: 1200, quality: 0.86 };
-const THUMB = { width: 720, height: 480, quality: 0.8 };
+const SCALE = { full: 3, thumb: 1.2 }; // a 600 x 400 scene -> 1800 x 1200 and 720 x 480
+const QUALITY = { full: 0.86, thumb: 0.8 };
 
 // key: file and builtin_key name, scene: mockup scene id.
 // Text that only made sense in the mockup (a date, a class number) is made general.
@@ -28,14 +28,25 @@ const PICTURES = [
     replace: [['3월 4일 · 우리 반 첫 활동', '우리 반 첫 활동']],
   },
   { key: 'friends', scene: 'group', title: '우리 반 친구들', category: '학교', replace: [['4학년 2반', '우리 반']] },
+  ...SCENES,
 ];
-const SOURCE = '함께 퍼즐 자체 제작';
-const LICENSE = '함께 퍼즐 수업용으로 자유롭게 사용';
+// index.json image entry:
+//   { key, title, category, width, height, src, thumb,
+//     source:  { name, author, url },   who made it and where it came from
+//     license: { name, url } }          what may be done with it
+// Self-made scenes have author '함께 퍼즐' and no URLs. Outside pictures (e.g. public
+// domain paintings or photos) must give source.author, source.url and license.url.
+const SOURCE = { name: '함께 퍼즐 자체 제작', author: '함께 퍼즐', url: null };
+const LICENSE = { name: '함께 퍼즐 수업용으로 자유롭게 사용', url: null };
+
+// Mockup scenes are 600 x 400; the others say their own size (400 x 600 for portrait).
+const sceneW = (picture) => picture.width ?? 600;
+const sceneH = (picture) => picture.height ?? 400;
 
 mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
 try {
-  const page = await browser.newPage({ viewport: { width: FULL.width, height: FULL.height } });
+  const page = await browser.newPage({ viewport: { width: 1800, height: 1800 } });
   await page.setContent(
     '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">' +
       '<style>body{margin:0}svg{display:block}</style><div id="stage"></div>',
@@ -47,7 +58,7 @@ try {
   for (const picture of PICTURES) {
     await page.evaluate(
       async ({ picture, sceneW, sceneH }) => {
-        let svg = window.M.SCENES[picture.scene].svg;
+        let svg = picture.svg ?? window.M.SCENES[picture.scene].svg;
         for (const [from, to] of picture.replace ?? []) {
           if (!svg.includes(from)) throw new Error(`text not found in ${picture.scene}: ${from}`);
           svg = svg.replace(from, to);
@@ -58,10 +69,15 @@ try {
         await document.fonts.load('700 38px Pretendard', '함께 퍼즐 우리 반 첫 활동');
         await document.fonts.ready;
       },
-      { picture, sceneW: SCENE_W, sceneH: SCENE_H },
+      { picture, sceneW: sceneW(picture), sceneH: sceneH(picture) },
     );
 
-    for (const [name, size] of Object.entries({ full: FULL, thumb: THUMB })) {
+    for (const name of ['full', 'thumb']) {
+      const size = {
+        width: sceneW(picture) * SCALE[name],
+        height: sceneH(picture) * SCALE[name],
+        quality: QUALITY[name],
+      };
       // Screenshot the SVG at the target size, then re-encode the PNG as WebP in the page.
       await page.setViewportSize({ width: size.width, height: size.height });
       await page.evaluate(({ width, height }) => {
@@ -92,8 +108,8 @@ try {
       key: picture.key,
       title: picture.title,
       category: picture.category,
-      width: FULL.width,
-      height: FULL.height,
+      width: sceneW(picture) * SCALE.full,
+      height: sceneH(picture) * SCALE.full,
       src: `/images/builtin/${picture.key}.webp`,
       thumb: `/images/builtin/${picture.key}-thumb.webp`,
       source: SOURCE,
