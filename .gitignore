@@ -1,0 +1,8 @@
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+.vercel/
+.DS_Store
+.env*
+!.env.example

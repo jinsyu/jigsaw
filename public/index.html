@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>함께 퍼즐 — 모둠이 함께 맞추는 교실 직소 퍼즐</title>
+<meta name="description" content="초등 교실에서 4~6명 모둠이 각자 태블릿·휴대폰으로 같은 퍼즐 하나를 함께 맞추는 무료 수업 도구입니다. 선생님이 그림을 고르고 코드 하나로 모둠을 나누면, 학생은 로그인 없이 바로 들어옵니다.">
+<meta name="application-name" content="함께 퍼즐">
+<meta name="theme-color" content="#FBF7F0">
+<link rel="canonical" href="https://jigsaw.gyosil.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="함께 퍼즐">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:url" content="https://jigsaw.gyosil.app/">
+<meta property="og:title" content="함께 퍼즐 — 모둠이 함께 맞추는 교실 직소 퍼즐">
+<meta property="og:description" content="모둠원 모두가 참여해야 완성되는 교실 협동 퍼즐. 코드 하나로 입장, 학생 로그인 없음, 광고 없음.">
+<meta property="og:image" content="https://jigsaw.gyosil.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="함께 퍼즐 — 모둠이 함께 맞추는 교실 직소 퍼즐">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/app.css">
+<script type="module" src="/js/app.js"></script>
+</head>
+<body>
+<main id="app" class="page home">
+  <p class="brand"><img class="ic" src="/icon.svg" alt="" width="26" height="26">함께 퍼즐</p>
+  <img class="hero" src="/images/hero.svg" alt="" width="170" height="170">
+  <h1>선생님이 알려 준<br>코드를 넣어요</h1>
+  <form class="code-form" action="/join" method="get">
+    <label class="sr-only" for="code">수업 코드 6자리</label>
+    <input class="code-input" id="code" name="code" type="text" inputmode="numeric" autocomplete="off"
+      pattern="[0-9]{6}" placeholder="000000" title="숫자 6자리" required>
+    <button class="btn pri big" type="submit">들어가기</button>
+  </form>
+  <p class="hint">QR 코드를 찍으면 코드를 넣지 않아도 돼요</p>
+  <div class="spacer"></div>
+  <div class="home-foot">
+    <p class="teacher-link">선생님이신가요? <a href="/teacher">수업 만들기 →</a></p>
+    <a class="policy-link" href="/privacy">개인정보 처리방침</a>
+  </div>
+</main>
+</body>
+</html>

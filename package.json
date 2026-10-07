@@ -1,0 +1,15 @@
+{
+  "name": "jigsaw",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "assets": "node scripts/assets.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "vitest": "^5.0.3"
+  }
+}

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /teacher
+Disallow: /join
+Disallow: /play
+
+Sitemap: https://jigsaw.gyosil.app/sitemap.xml

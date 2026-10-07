@@ -1,0 +1,14 @@
+{
+  "name": "함께 퍼즐",
+  "short_name": "함께 퍼즐",
+  "description": "모둠이 함께 맞추는 교실 직소 퍼즐",
+  "lang": "ko",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#FBF7F0",
+  "background_color": "#FBF7F0",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
