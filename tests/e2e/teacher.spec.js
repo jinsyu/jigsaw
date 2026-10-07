@@ -163,6 +163,7 @@ test('D1: a teacher picks a picture, piece count and groups, opens the class, an
   await expect(page.getByRole('img', { name: /입장 QR 코드/ })).toBeVisible();
   expect(await readQr(page)).toBe(`${baseURL}/join?code=${digits}`);
   await expect(page.locator('.t-summary')).toHaveText('숲속 마을 · 48조각 · 4모둠');
+  await expect(page.locator('.t-join-hints')).toHaveText('도움: 조각 윤곽선 · 완성 그림 버튼');
   await expect(page.locator('.t-group')).toHaveCount(4);
   await expectNoHorizontalOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('teacher-lobby.png'), fullPage: true });
@@ -207,6 +208,80 @@ test('D1: a teacher picks a picture, piece count and groups, opens the class, an
   expect((await sql('select status from public.sessions where id = $1', [id])).rows[0].status).toBe('ended');
   await page.goto(`/teacher/sessions/${id}`);
   await expect(page.getByRole('heading', { level: 1, name: '이미 끝난 수업이에요' })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('help settings: four switches with defaults, the frame preview follows them, and the class keeps the choice', async ({
+  page,
+  context,
+}, testInfo) => {
+  const errors = trackErrors(page);
+  await signInPage(context);
+  await page.goto('/teacher/new');
+  await expect(page.locator('.t-preview svg')).toBeVisible();
+
+  const settings = page.getByRole('group', { name: '도움 설정' });
+  const switches = settings.getByRole('switch');
+  await expect(switches).toHaveCount(4);
+  const preview = settings.getByRole('switch', { name: '들어갈 칸 미리 보기' });
+  const outline = settings.getByRole('switch', { name: '틀 안 조각 윤곽선' });
+  const pictureButton = settings.getByRole('switch', { name: '완성 그림 보기 버튼' });
+  const underlay = settings.getByRole('switch', { name: '틀 안 흐린 밑그림' });
+  // Spec defaults, each with a one-line explanation that says the default.
+  await expect(preview).not.toBeChecked();
+  await expect(outline).toBeChecked();
+  await expect(pictureButton).toBeChecked();
+  await expect(underlay).not.toBeChecked();
+  await expect(preview).toHaveAccessibleDescription(/초록색.*\(기본: 꺼짐\)/);
+  await expect(outline).toHaveAccessibleDescription(/\(기본: 켜짐\)/);
+  await expect(pictureButton).toHaveAccessibleDescription(/\(기본: 켜짐\)/);
+  await expect(underlay).toHaveAccessibleDescription(/\(기본: 꺼짐\)/);
+
+  // The small frame shows what students see: outlines on, no underlay.
+  const frame = page.locator('.t-frame-mini svg');
+  await expect(frame).toHaveAttribute('aria-label', '학생 판의 틀: 조각 윤곽선 있음, 밑그림 없음');
+  await expect(frame.locator('.t-frame-seams')).toHaveCount(1);
+  await expect(frame.locator('image')).toHaveCount(0);
+
+  // Keyboard (Space) and pointer (tap on the row) both flip a switch.
+  await outline.focus();
+  await page.keyboard.press('Space');
+  await expect(outline).not.toBeChecked();
+  await page.getByText('틀 안 흐린 밑그림').click();
+  await expect(underlay).toBeChecked();
+  await preview.click();
+  await expect(preview).toBeChecked();
+  await pictureButton.click();
+  await expect(pictureButton).not.toBeChecked();
+  await expect(frame).toHaveAttribute('aria-label', '학생 판의 틀: 바깥 테두리만, 흐린 밑그림 있음');
+  await expect(frame.locator('.t-frame-seams')).toHaveCount(0);
+  await expect(frame.locator('image')).toHaveCount(1);
+
+  await expectTouchSize(settings.locator('.t-switch'));
+  await expectNoHorizontalOverflow(page);
+  await settings.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath('teacher-create-hints.png'), fullPage: true });
+
+  await page.getByRole('button', { name: '수업 열기' }).click();
+  await expect(page).toHaveURL(/\/teacher\/sessions\/\d+$/);
+  const id = Number(new URL(page.url()).pathname.split('/').pop());
+  createdSessions.push(id);
+  const { rows } = await sql(
+    'select hint_preview, hint_outline, hint_picture_button, hint_underlay from public.sessions where id = $1',
+    [id],
+  );
+  expect(rows[0]).toEqual({ hint_preview: true, hint_outline: false, hint_picture_button: false, hint_underlay: true });
+
+  // Summaries: the lobby and 내 수업 say which help is on.
+  await expect(page.locator('.t-join-hints')).toHaveText('도움: 칸 미리 보기 · 흐린 밑그림');
+  await expectNoHorizontalOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath('teacher-lobby-hints.png'), fullPage: true });
+  const digits = await page.locator('.t-join-code').getAttribute('data-code');
+  await page.getByRole('link', { name: '내 수업', exact: true }).click();
+  const card = page.locator(`a.t-session[data-code="${digits}"]`);
+  await expect(card.locator('.t-session-hints')).toHaveText('도움: 칸 미리 보기 · 흐린 밑그림');
+  await expectNoHorizontalOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath('teacher-home-hints.png'), fullPage: true });
   expect(errors).toEqual([]);
 });
 

@@ -2,6 +2,7 @@
 // start_session, end_session (D3, D4, D5, D14).
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { PIECE_COUNTS, gridFor, layoutFor, makePuzzle } from '../../public/js/puzzle/geometry.js';
+import { DEFAULT_HINTS } from '../../public/js/store/puzzle-store.js';
 import {
   TEACHERS,
   cleanup,
@@ -73,6 +74,14 @@ async function trayCounts(groupId) {
 }
 
 const sortedCounts = (counts) => Object.values(counts).sort((a, b) => a - b);
+
+// sessions row -> puzzle-store Hints
+const hintsOf = (row) => ({
+  preview: row.hint_preview,
+  outline: row.hint_outline,
+  pictureButton: row.hint_picture_button,
+  underlay: row.hint_underlay,
+});
 
 beforeAll(async () => {
   teacher1 = await teacherClient(TEACHERS.one);
@@ -189,6 +198,43 @@ describe('create_session', () => {
     expect(new Set(sessions.map((s) => s.code)).size).toBe(sessions.length);
   });
 
+  it('도움 설정을 주지 않으면 기획서 기본값(DEFAULT_HINTS 와 같음)으로 저장된다', async () => {
+    const session = await openSession(teacher1, { p_group_count: 1 });
+    expect(hintsOf(session)).toEqual(DEFAULT_HINTS);
+    expect(hintsOf(session)).toEqual({ preview: false, outline: true, pictureButton: true, underlay: false });
+    // Column defaults match too (rows made without create_session, e.g. by fixtures).
+    const { rows } = await sql(
+      `select column_name, column_default from information_schema.columns
+       where table_schema = 'public' and table_name = 'sessions' and column_name like 'hint\\_%'
+       order by column_name`,
+    );
+    expect(Object.fromEntries(rows.map((r) => [r.column_name, r.column_default]))).toEqual({
+      hint_outline: 'true',
+      hint_picture_button: 'true',
+      hint_preview: 'false',
+      hint_underlay: 'false',
+    });
+  });
+
+  it('교사가 고른 도움 설정 4가지가 수업 행에 그대로 저장되고, null 은 기본값이 된다', async () => {
+    const flipped = await openSession(teacher1, {
+      p_group_count: 1,
+      p_hint_preview: true,
+      p_hint_outline: false,
+      p_hint_picture_button: false,
+      p_hint_underlay: true,
+    });
+    expect(hintsOf(flipped)).toEqual({ preview: true, outline: false, pictureButton: false, underlay: true });
+    const { rows } = await sql(
+      'select hint_preview, hint_outline, hint_picture_button, hint_underlay from public.sessions where id = $1',
+      [flipped.id],
+    );
+    expect(rows[0]).toEqual({ hint_preview: true, hint_outline: false, hint_picture_button: false, hint_underlay: true });
+
+    const partial = await openSession(teacher1, { p_group_count: 1, p_hint_preview: true, p_hint_outline: null });
+    expect(hintsOf(partial)).toEqual({ ...DEFAULT_HINTS, preview: true });
+  });
+
   it('학생(익명 사용자)이 부르면 거부된다', async () => {
     const student = await studentClient();
     const { error } = await student.client.rpc('create_session', {
@@ -220,6 +266,22 @@ describe('join_session', () => {
       student.userId,
     ]);
     expect(rows[0].n).toBe(1);
+  });
+
+  it('들어온 학생은 RLS 로 자기 수업의 도움 설정만 읽는다', async () => {
+    const mine = await openSession(teacher1, { p_group_count: 1, p_hint_preview: true, p_hint_underlay: true });
+    const other = await openSession(teacher2, { p_group_count: 1, p_hint_outline: false });
+    const student = await studentClient();
+    expect((await rpcOk(student.client, 'join_session', { p_code: mine.code })).ok).toBe(true);
+
+    const { data, error } = await student.client
+      .from('sessions')
+      .select('id, hint_preview, hint_outline, hint_picture_button, hint_underlay')
+      .in('id', [mine.id, other.id]);
+    expect(error).toBeNull();
+    expect(data).toEqual([
+      { id: mine.id, hint_preview: true, hint_outline: true, hint_picture_button: true, hint_underlay: true },
+    ]);
   });
 
   it('틀린 코드는 invalid_code 를 돌려주고 members 행이 생기지 않는다', async () => {

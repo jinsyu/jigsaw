@@ -1,7 +1,10 @@
 // Supabase reads and RPC calls used by the teacher screens.
 // Teachers only read through RLS and change sessions through RPCs (T4).
+import { normalizeHints } from '../store/puzzle-store.js';
 
-const SESSION_FIELDS = 'id, code, status, builtin_key, image_id, piece_count, created_at, started_at, ended_at';
+const SESSION_FIELDS =
+  'id, code, status, builtin_key, image_id, piece_count, created_at, started_at, ended_at, ' +
+  'hint_preview, hint_outline, hint_picture_button, hint_underlay';
 
 export async function listSessions(client) {
   const { data, error } = await client
@@ -25,9 +28,17 @@ export async function getSession(client, id) {
   return { ...data, groups };
 }
 
-// picture: { builtinKey, aspect } or { imageId }
-export async function createSession(client, { picture, pieceCount, groupCount }) {
-  const args = { p_piece_count: pieceCount, p_group_count: groupCount };
+// picture: { builtinKey, aspect } or { imageId }; hints: puzzle-store Hints (missing = defaults).
+export async function createSession(client, { picture, pieceCount, groupCount, hints = {} }) {
+  const h = normalizeHints(hints);
+  const args = {
+    p_piece_count: pieceCount,
+    p_group_count: groupCount,
+    p_hint_preview: h.preview,
+    p_hint_outline: h.outline,
+    p_hint_picture_button: h.pictureButton,
+    p_hint_underlay: h.underlay,
+  };
   if (picture.imageId) args.p_image_id = picture.imageId;
   else Object.assign(args, { p_builtin_key: picture.builtinKey, p_aspect: picture.aspect });
   const { data, error } = await client.rpc('create_session', args);

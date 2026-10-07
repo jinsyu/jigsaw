@@ -77,5 +77,15 @@ export function normalizeHints(hints = {}) {
   return Object.freeze(out);
 }
 
+// sessions row (hint_* columns, supabase/migrations/*_board_hints.sql) -> Hints.
+export function hintsFromSession(row) {
+  return normalizeHints({
+    preview: row?.hint_preview,
+    outline: row?.hint_outline,
+    pictureButton: row?.hint_picture_button,
+    underlay: row?.hint_underlay,
+  });
+}
+
 export const cellOfPiece = (index, cols) => [index % cols, Math.floor(index / cols)];
 export const pieceOfCell = ([col, row], cols) => row * cols + col;

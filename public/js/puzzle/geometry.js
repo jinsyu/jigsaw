@@ -8,11 +8,14 @@
 //   in picture coordinates, with pw = 100 and ph = height / rows.
 // - A cluster position (x, y) is where the picture origin sits on the board.
 //   Piece (col, row) of that cluster is drawn translated by (x, y).
-// - Board: [0, boardWidth] x [0, boardHeight] with boardWidth = width * sqrt(2)
-//   and boardHeight = height * sqrt(2), i.e. twice the picture area.
+// - Board: [0, boardWidth] x [0, boardHeight] with boardWidth = width * sqrt(3)
+//   and boardHeight = height * sqrt(3), i.e. three times the picture area.
 
 export const PIECE_UNIT = 100;
 export const PIECE_COUNTS = [12, 24, 48, 70];
+// Board side / picture side (spec rule 5). SQL private.resolve_drop uses sqrt(3::float8):
+// both are the correctly rounded square root, so the board size is bit-identical.
+export const BOARD_SIDE_RATIO = Math.sqrt(3);
 
 // [cols, rows] for a landscape (or square) picture; portrait swaps them.
 const LANDSCAPE_GRIDS = { 12: [4, 3], 24: [6, 4], 48: [8, 6], 70: [10, 7] };
@@ -57,8 +60,8 @@ export function layoutFor(cols, rows, aspect) {
     height,
     pw: PIECE_UNIT,
     ph: height / rows,
-    boardWidth: width * Math.SQRT2,
-    boardHeight: height * Math.SQRT2,
+    boardWidth: width * BOARD_SIDE_RATIO,
+    boardHeight: height * BOARD_SIDE_RATIO,
   };
 }
 

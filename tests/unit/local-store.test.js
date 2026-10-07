@@ -81,8 +81,8 @@ describe('createLocalStore', () => {
 
   it('snaps a dropped piece to its neighbour with the snap.js rules', async () => {
     const store = makeStore();
-    await place(store, 0, 100, 100);
-    const result = await place(store, 1, 100 + 20, 100 - 10);
+    await place(store, 0, 300, 300);
+    const result = await place(store, 1, 300 + 20, 300 - 10);
 
     expect(result.ok).toBe(true);
     expect(result.absorbed).toHaveLength(1);
@@ -90,7 +90,7 @@ describe('createLocalStore', () => {
     expect(result.progress).toEqual({ placed: 0, total: 12, complete: false });
     const { clusters, progress } = store.getState();
     expect(clusters).toHaveLength(1);
-    expect(clusters[0]).toMatchObject({ x: 100, y: 100, heldBy: null });
+    expect(clusters[0]).toMatchObject({ x: 300, y: 300, heldBy: null });
     expect(clusters[0].pieces).toEqual([
       [0, 0],
       [1, 0],
@@ -100,9 +100,9 @@ describe('createLocalStore', () => {
 
   it('does not snap outside the tolerance or to diagonal pieces', async () => {
     const store = makeStore();
-    await place(store, 0, 100, 100);
-    await place(store, 1, 100 + 41, 100);
-    await place(store, 5, 100, 100); // (1, 1) is diagonal to (0, 0) but below (1, 0)
+    await place(store, 0, 300, 300);
+    await place(store, 1, 300 + 41, 300);
+    await place(store, 5, 300, 300); // (1, 1) is diagonal to (0, 0) but below (1, 0)
     // (1, 1) touches (1, 0) which sits at +41: 41 > 40, so no merge at all.
     expect(store.getState().clusters).toHaveLength(3);
     expect(store.getState().progress.placed).toBe(0);
@@ -110,15 +110,15 @@ describe('createLocalStore', () => {
 
   it('moves merged clusters together', async () => {
     const store = makeStore();
-    await place(store, 0, 100, 100);
-    await place(store, 1, 100, 100);
+    await place(store, 0, 300, 300);
+    await place(store, 1, 300, 300);
     const [merged] = store.getState().clusters;
 
     expect((await store.grab(merged.id)).ok).toBe(true);
-    await store.drop(merged.id, 150, 120);
+    await store.drop(merged.id, 350, 320);
 
     const [moved] = store.getState().clusters;
-    expect(moved).toMatchObject({ id: merged.id, x: 150, y: 120 });
+    expect(moved).toMatchObject({ id: merged.id, x: 350, y: 320 });
     expect(moved.pieces).toHaveLength(2);
   });
 
@@ -169,7 +169,10 @@ describe('createLocalStore', () => {
     const changes = [];
     store.subscribe((_, change) => changes.push(change));
     clock = 61_000;
-    for (const piece of store.getState().tray) await place(store, piece, 80, 60);
+    // Near the frame origin: the first piece locks in, the rest snap onto it.
+    const frameX = (layout.boardWidth - layout.width) / 2;
+    const frameY = (layout.boardHeight - layout.height) / 2;
+    for (const piece of store.getState().tray) await place(store, piece, frameX - 3, frameY - 2);
 
     const state = store.getState();
     expect(state.clusters).toHaveLength(1);

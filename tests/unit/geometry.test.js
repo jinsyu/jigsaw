@@ -55,11 +55,11 @@ describe('layoutFor', () => {
     expect(l).toMatchObject({ cols: 4, rows: 3, width: 400, height: 300, pw: 100, ph: 100 });
   });
 
-  it('makes the board about twice the picture area', () => {
+  it('makes the board three times the picture area (each side sqrt(3))', () => {
     const l = layoutFor(6, 4, 1.5);
-    expect(l.boardWidth).toBe(600 * Math.SQRT2);
-    expect(l.boardHeight).toBe(400 * Math.SQRT2);
-    expect((l.boardWidth * l.boardHeight) / (l.width * l.height)).toBeCloseTo(2, 12);
+    expect(l.boardWidth).toBe(600 * Math.sqrt(3));
+    expect(l.boardHeight).toBe(400 * Math.sqrt(3));
+    expect((l.boardWidth * l.boardHeight) / (l.width * l.height)).toBeCloseTo(3, 12);
   });
 
   it('allows non-square pieces', () => {

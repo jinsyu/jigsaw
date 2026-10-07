@@ -1,9 +1,10 @@
 // 내 수업: open sessions (tap to see the code and QR again) and recently ended ones.
 import { listSessions } from './data.js';
 import { h, icon, setTitle } from './dom.js';
-import { formatCode, formatDateTime, statusLabel } from './format.js';
+import { formatCode, formatDateTime, hintsSummary, statusLabel } from './format.js';
 import { loadBuiltins, loadMyImages, sessionPicture } from './pictures.js';
 import { sessionPath } from './routes.js';
+import { hintsFromSession } from '../store/puzzle-store.js';
 
 const SKELETON_COUNT = 3;
 
@@ -116,6 +117,7 @@ function openCard(session, builtins, myImages) {
         `${session.piece_count}조각 · ${session.groupCount}모둠 · `,
         h('span', { class: 't-nowrap' }, `${formatDateTime(session.created_at)}에 만듦`),
       ),
+      h('span', { class: 't-session-hints' }, hintsSummary(hintsFromSession(session))),
       h(
         'span',
         { class: 't-session-row' },

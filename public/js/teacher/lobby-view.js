@@ -8,12 +8,13 @@
 // a members row of this session read from the database (student/presence.js).
 import { assignMember, endSession, getSession, listMembers, randomizeGroups, startSession } from './data.js';
 import { h, icon, setTitle } from './dom.js';
-import { formatCode, sessionSummary, statusLabel } from './format.js';
+import { formatCode, hintsSummary, sessionSummary, statusLabel } from './format.js';
 import { createGroupingPanel } from './grouping.js';
 import { loadBuiltins, loadMyImages, sessionPicture } from './pictures.js';
 import { joinUrl, qrSvg } from './qr.js';
 import { applyGroupChanges, buildRoster } from './roster.js';
 import { presenceNames } from '../student/presence.js';
+import { hintsFromSession } from '../store/puzzle-store.js';
 
 const NETWORK_ERROR = /fetch|network|load failed/i;
 
@@ -124,6 +125,7 @@ function showLobby(main, ctx, session, picture, initialMembers) {
     h('div', { class: 't-join-qr', 'data-url': url, html: qrSvg(url, `입장 QR 코드: ${url}`) }),
     h('p', { class: 't-join-note' }, 'QR 코드를 찍으면 코드를 넣지 않아도 돼요'),
     waitLine,
+    h('p', { class: 't-join-hints' }, hintsSummary(hintsFromSession(session))),
   );
 
   let status = session.status;
