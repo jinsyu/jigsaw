@@ -104,6 +104,16 @@
   background: var(--warn-weak); color: #8A4E06; font-size: 14px; font-weight: 600;
 }
 .st-banner:empty { display: none; }
+/* 다시 연결하는 중 at the top of the puzzle board, under the toast (same look as the teacher band) */
+.st-band {
+  position: absolute; z-index: 5; left: 50%; transform: translateX(-50%);
+  top: 54px; width: max-content; max-width: calc(100% - 24px); pointer-events: none;
+  display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px;
+  background: var(--warn-weak); color: #7A4300; font-size: 15px; font-weight: 700; line-height: 1.4;
+  box-shadow: 0 6px 18px rgba(20, 30, 60, .16);
+}
+.st-band[hidden] { display: none; }
+.st-band .dot { background: var(--warn); }
 .st-pill { margin-top: 10px; }
 .st-pill.pri .dot { background: var(--pri); }
 .st-pill.ok { color: #187A43; }

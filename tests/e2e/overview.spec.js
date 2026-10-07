@@ -6,7 +6,7 @@ import { expectNoHorizontalOverflow } from './support/puzzle.js';
 
 // T12, T21: 모둠 한눈에 보기 and 수업 끝내기 (D10, D11, D14) against the local rt server. The
 // teacher is a browser; the students are Node socket.io clients that join, take pieces from
-// their trays and put them down (the student screens move to the rt server in T22).
+// their trays and put them down (browser students: join, coop and disconnect specs).
 
 const createdImages = [];
 

@@ -21,7 +21,7 @@ import {
 
 // Teacher screens against the local rt server and Supabase stack (pnpm db:start; Playwright
 // starts pnpm rt:dev). Google sign-in is replaced by the seeded test teacher's dev token
-// (plan T21); students are Node socket.io clients until the student screens move (T22).
+// (plan T21); students are Node socket.io clients (browser students: join and coop specs).
 // Every test removes what it creates.
 
 const require = createRequire(import.meta.url);

@@ -240,6 +240,29 @@ describe('소켓', () => {
     closeAll();
   });
 
+  it('모둠에서 먼저 일어난 일은 답과 state 보다 먼저 도착한다 (T22 순서)', async () => {
+    const { teacher, students } = await playing();
+    const [a, b] = students;
+    const seen = [];
+    b.on('events', (list) => seen.push(...list.map((e) => `${e.type}:${e.by ?? ''}`)));
+    b.on('state', () => seen.push('state'));
+    const taken = await send(a, 'take', { piece: trayOf(a)[0], x: 10, y: 10 });
+    // Still in a's 0.1 s batch: b's answer must come after it.
+    const answer = await send(b, 'grab', { clusterId: taken.id });
+    seen.push('answer');
+    expect(answer.ok).toBe(true);
+    expect(seen.indexOf(`take:${a.states.at(-1).me.memberId}`)).toBeGreaterThanOrEqual(0);
+    expect(seen.indexOf(`take:${a.states.at(-1).me.memberId}`)).toBeLessThan(seen.indexOf('answer'));
+    // sync: a fresh state, with b's grab (sent in b's batch before it) in the board.
+    expect(await send(b, 'sync', {})).toEqual({ ok: true });
+    await waitFor(() => seen.includes('state'));
+    expect(seen.indexOf(`grab:${b.states.at(-1).me.memberId}`)).toBeLessThan(seen.indexOf('state'));
+    const cluster = b.states.at(-1).group.board.clusters.find((c) => c.id === taken.id);
+    expect(cluster.heldBy).toBe(b.states.at(-1).me.memberId);
+    expect(await send(teacher, 'sync', {})).toEqual({ ok: false, reason: 'forbidden' });
+    closeAll();
+  });
+
   it('교사 요약이 판이 바뀐 뒤 3초 안에 도착한다 (D11)', async () => {
     const { teacher, students } = await playing();
     const started = Date.now();

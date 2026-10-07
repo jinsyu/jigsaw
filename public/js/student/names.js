@@ -1,6 +1,6 @@
-// Student display names. They live only in Realtime Presence and on the student's own
-// device (spec D14), so every screen that shows one runs it through normalizeName first:
-// Presence payloads come from other clients and are not checked by the server.
+// Student display names. They live only in the rt server's memory and on the student's own
+// device (spec D14). Every screen that shows one runs it through normalizeName first, and so
+// does the rt server when a name arrives (registry.js, sockets.js).
 
 export const NAME_MAX = 10;
 

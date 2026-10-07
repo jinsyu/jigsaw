@@ -1,86 +1,52 @@
-// Student entry (/join, /play): code -> name -> anonymous sign-in -> join_session -> waiting
-// -> the group puzzle once the class has started and the student is in a group (student/puzzle.js).
+// Student entry (/join, /play): code -> name -> POST /api/join (rt server) -> the class socket
+// (student/live.js) -> waiting, then the group puzzle once the class has started and the
+// student is in a group (student/puzzle.js). No Supabase and no account: the rt server gives a
+// student token, kept with the name under the class code on this device (saved.js).
 // Loaded on demand by js/app.js. /play never opens the solo demo.
-import { isConfigured, pickConfig } from '../config.js';
+import { hasRtServer, pickConfig } from '../config.js';
 import { normalizeCode } from '../routes.js';
-import { getStudentClient } from '../supabase-client.js';
+import { RtError, rtRequest } from '../rt-client.js';
 import { connectClass } from './live.js';
 import { normalizeName } from './names.js';
 import { openPuzzle } from './puzzle.js';
-import { clearSaved, readSaved, writeSaved } from './saved.js';
+import { clearSaved, latestSaved, readSaved, writeSaved } from './saved.js';
 import { renderCodeStep, renderLoading, renderMessage, renderNameStep, renderWaiting } from './views.js';
 
-const NETWORK_ERROR = /fetch|network|load failed/i;
-
-const MESSAGES = {
+export const MESSAGES = {
   invalid_code: '코드를 다시 확인해 주세요',
-  too_many_attempts: '코드를 여러 번 틀렸어요. 1분 뒤에 다시 넣어 주세요.',
+  too_many_attempts: '코드를 여러 번 틀렸어요. 잠시 뒤에 다시 입력해 주세요.',
+  invalid_name: '이름을 넣어 주세요.',
+  class_full: '이 수업은 자리가 다 찼어요. 선생님께 알려 주세요.',
   network: '인터넷 연결을 확인하고 다시 눌러 주세요.',
   failed: '들어가지 못했어요. 잠시 뒤 다시 눌러 주세요.',
 };
 
-class JoinError extends Error {
-  constructor(reason) {
-    super(reason);
-    this.reason = reason;
-  }
+// RtError code -> MESSAGES key.
+export function joinReason(error) {
+  const code = error instanceof RtError ? error.code : 'failed';
+  return Object.hasOwn(MESSAGES, code) ? code : 'failed';
 }
 
-function reasonOf(error) {
-  if (error instanceof JoinError) return error.reason;
-  const text = `${error?.message ?? ''} ${error?.name ?? ''}`;
-  return NETWORK_ERROR.test(text) || error?.status === 0 ? 'network' : 'failed';
-}
-
-async function anonymousUser(client, { fresh = false } = {}) {
-  if (!fresh) {
-    const { data } = await client.auth.getSession();
-    if (data.session?.user?.is_anonymous) return data.session.user;
-  }
-  await client.auth.signOut({ scope: 'local' }).catch(() => {});
-  const { data, error } = await client.auth.signInAnonymously();
-  if (error) throw error;
-  return data.user;
-}
-
-// join_session with the device's anonymous account; a fresh account if the old one was
-// deleted when an earlier class ended (account_gone, T4 review).
-async function joinClass(client, code) {
-  let user = await anonymousUser(client);
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const { data, error } = await client.rpc('join_session', { p_code: code });
-    if (error) {
-      // An expired or revoked token: start over with a new anonymous account once.
-      if (attempt === 0 && (error.code === '42501' || error.status === 401)) {
-        user = await anonymousUser(client, { fresh: true });
-        continue;
-      }
-      throw error;
-    }
-    if (data?.ok) return { user, result: data };
-    if (data?.error === 'account_gone' && attempt === 0) {
-      user = await anonymousUser(client, { fresh: true });
-      continue;
-    }
-    throw new JoinError(data?.error === 'too_many_attempts' ? 'too_many_attempts' : 'invalid_code');
-  }
-  throw new JoinError('failed');
+// POST /api/join. With the token this device got before, the server returns the same member
+// (and takes the name again: a rename, or the name after a server restart).
+function join(rtUrl, { code, name, token }) {
+  return rtRequest(rtUrl, '/api/join', { method: 'POST', json: token ? { code, name, token } : { code, name } });
 }
 
 export function startStudent(main, route) {
   const config = pickConfig(location.hostname);
-  if (!isConfigured(config)) {
+  if (!hasRtServer(config)) {
     renderMessage(main, {
       title: '아직 들어갈 수 없어요',
       text: '학생 입장은 준비 중이에요. 선생님께 알려 주세요.',
     });
     return;
   }
-  const flow = new StudentFlow(main, config);
-  const saved = readSaved(localStorage);
+  const flow = new StudentFlow(main, config.rtUrl);
   const code = normalizeCode(new URLSearchParams(location.search).get('code'));
 
   if (route === 'play') {
+    const saved = latestSaved(localStorage);
     if (saved) flow.resume(saved);
     else {
       renderMessage(main, {
@@ -91,24 +57,22 @@ export function startStudent(main, route) {
     }
     return;
   }
-  if (code.length === 6 && saved?.code === code) flow.resume(saved);
+  const saved = code.length === 6 ? readSaved(localStorage, code) : null;
+  if (saved) flow.resume(saved);
   else if (code.length === 6) flow.askName(code);
   else flow.askCode('');
 }
 
 class StudentFlow {
-  constructor(main, config) {
+  constructor(main, rtUrl) {
     this.main = main;
-    this.config = config;
+    this.rtUrl = rtUrl;
     this.pendingName = '';
     this.live = null;
-    this.waiting = null;
-    this.puzzle = null; // { groupId, handle } while a puzzle is open or opening
-    this.classState = null;
-    this.name = '';
-    // Start downloading supabase-js while the student types.
-    this.clientPromise = getStudentClient(config);
-    this.clientPromise.catch(() => {});
+    this.room = null; // { code, name, token }
+    this.waiting = null; // update function of the waiting screen
+    this.puzzle = null; // puzzle.js handle while a puzzle is open or opening
+    this.connected = true;
   }
 
   askCode(code, error = '') {
@@ -117,7 +81,9 @@ class StudentFlow {
       code,
       error,
       onSubmit: (next) => {
-        if (this.pendingName) this.enter(next, this.pendingName);
+        const saved = readSaved(localStorage, next);
+        if (saved) this.resume(saved);
+        else if (this.pendingName) this.enter(next, this.pendingName);
         else this.askName(next);
       },
     });
@@ -131,7 +97,7 @@ class StudentFlow {
       onBack: () => this.askCode(code),
       onSubmit: async (value) => {
         const name = normalizeName(value);
-        if (!name) return '이름을 넣어 주세요.';
+        if (!name) return MESSAGES.invalid_name;
         return this.enter(code, name);
       },
     });
@@ -142,166 +108,168 @@ class StudentFlow {
     this.pendingName = name;
     const fromCodeStep = !this.main.querySelector('.st-name-form');
     if (fromCodeStep) renderLoading(this.main, '들어가는 중이에요…');
+    const token = readSaved(localStorage, code)?.token;
     try {
-      const client = await this.clientPromise;
-      const { user, result } = await joinClass(client, code);
-      writeSaved(localStorage, { name, code, sessionId: result.session_id, memberId: result.member_id });
+      const answer = await join(this.rtUrl, { code, name, token });
+      writeSaved(localStorage, { name, code, token: answer.token });
       this.pendingName = '';
-      this.openClass(client, { code, name, userId: user.id, sessionId: result.session_id, memberId: result.member_id, status: result.status });
+      this.openClass({ code, name, token: answer.token, memberId: answer.memberId });
       return '';
     } catch (error) {
-      const reason = reasonOf(error);
-      if (reason !== 'network' && reason !== 'failed') {
+      const reason = joinReason(error);
+      // A token this device kept for a class that is gone (plan memo T22).
+      if (reason === 'invalid_code' && token) clearSaved(localStorage, code);
+      if (reason === 'invalid_code' || reason === 'too_many_attempts') {
         console.warn('join refused:', reason);
         this.askCode(code, MESSAGES[reason]);
         return '';
       }
-      console.error(error);
+      if (reason === 'failed') console.error(error);
       if (fromCodeStep) this.askCode(code, MESSAGES[reason]);
       return MESSAGES[reason];
     }
   }
 
-  // Same device again: same anonymous account, so join_session returns the same members row.
-  async resume(saved) {
-    renderLoading(this.main, '다시 들어가는 중이에요…');
-    try {
-      const client = await this.clientPromise;
-      const { user, result } = await joinClass(client, saved.code);
-      writeSaved(localStorage, { ...saved, sessionId: result.session_id, memberId: result.member_id });
-      this.openClass(client, { ...saved, userId: user.id, sessionId: result.session_id, memberId: result.member_id, status: result.status });
-    } catch (error) {
-      const reason = reasonOf(error);
-      if (reason === 'invalid_code') {
-        clearSaved(localStorage);
-        this.ended('이 수업은 끝났어요');
-        return;
-      }
-      console.error(error);
-      renderMessage(this.main, {
-        title: '다시 들어가지 못했어요',
-        text: MESSAGES[reason === 'too_many_attempts' ? 'too_many_attempts' : 'network'],
-        action: { label: '다시 시도' },
-        onAction: () => this.resume(saved),
-      });
-    }
+  // Same device again: straight back in with the saved token.
+  resume(saved) {
+    this.openClass(saved);
   }
 
-  openClass(client, { code, name, userId, sessionId, memberId, status }) {
-    this.live?.stop();
+  openClass({ code, name, token, memberId = null }) {
+    this.live?.close();
     this.closePuzzle();
-    this.showStatus(status, code);
-    this.waiting = renderWaiting(this.main, { onRename: () => this.rename(code) });
-    this.name = name;
-    this.room = { client, code, userId, sessionId };
+    this.waiting = null;
+    this.room = { code, name, token };
+    this.connected = true;
+    renderLoading(this.main, '들어가는 중이에요…');
     this.live = connectClass({
-      client,
-      sessionId,
-      memberId,
-      userId,
+      rtUrl: this.rtUrl,
+      token,
       name,
-      onBeat: (iso, sentAt, receivedAt) => this.puzzle?.handle?.noteServerTime(iso, sentAt, receivedAt),
-      onChange: (state) => {
-        this.classState = state;
-        this.showStatus(state.status, code);
-        this.follow(state);
-      },
+      memberId,
+      onChange: (state, change) => this.update(state, change),
+      onConnection: (status) => this.setConnection(status),
       onEnded: () => this.finish(),
     });
   }
 
-  finish() {
-    this.live?.stop();
-    this.live = null;
-    this.closePuzzle();
-    clearSaved(localStorage);
-    this.ended('수업이 끝났어요');
-  }
-
-  // Playing in a group: that group's puzzle. Otherwise (waiting, or no group yet): waiting.
-  follow(state) {
-    const groupId = state.status === 'playing' && state.group ? state.group.id : null;
-    if (groupId !== null) {
-      if (this.puzzle?.groupId === groupId) this.puzzle.handle?.setMates(state.mates);
-      else this.startPuzzle(state);
+  setConnection(status) {
+    const connected = status !== 'lost';
+    if (connected === this.connected) return;
+    this.connected = connected;
+    const state = this.live?.model.state;
+    if (!state?.ready) {
+      renderLoading(this.main, connected ? '들어가는 중이에요…' : '연결이 끊겼어요. 다시 연결하는 중이에요…');
       return;
     }
-    if (this.puzzle) {
-      this.closePuzzle();
-      this.waiting = renderWaiting(this.main, { onRename: () => this.rename(this.room.code) });
-    }
-    this.waiting?.(state);
+    this.puzzle?.setConnected(connected);
+    this.drawWaiting(state);
   }
 
-  // A move to another group closes the old puzzle (and its group channel) first.
-  startPuzzle(state) {
+  update(state, change) {
+    if (!state.ready) return;
+    this.setAddress(state.status === 'playing' ? '/play' : `/join?code=${this.room.code}`);
+    const group = state.status === 'playing' ? state.me.group : null;
+    if (group !== null && this.puzzle?.groupNumber === group) {
+      if (change.board) this.puzzle.applyBoard(change.board, state.serverNow);
+      if (change.events?.length) this.puzzle.applyEvents(change.events);
+      this.puzzle.setMates(state.mates);
+      return;
+    }
+    if (group !== null && change.board) return this.startPuzzle(state, change.board);
+    // Waiting, without a group, or a puzzle about to open (its state is on the way).
+    if (this.puzzle && group === null) this.closePuzzle();
+    if (!this.puzzle) this.drawWaiting(state);
+  }
+
+  drawWaiting(state) {
+    if (this.puzzle) return;
+    if (!this.waiting) this.waiting = renderWaiting(this.main, { onRename: () => this.rename() });
+    this.waiting({
+      name: state.me.name,
+      code: this.room.code,
+      status: state.status,
+      group: state.me.group === null ? null : { number: state.me.group },
+      myColor: state.me.color,
+      mates: state.mates,
+      connected: this.connected,
+    });
+  }
+
+  // A move to another group closes the old puzzle first.
+  startPuzzle(state, board) {
     this.closePuzzle();
-    const token = { groupId: state.group.id, handle: null };
-    this.puzzle = token;
     this.waiting = null;
     renderLoading(this.main, '퍼즐을 여는 중이에요…');
-    const { client, sessionId, userId } = this.room;
-    openPuzzle({
-      client,
+    const handle = openPuzzle({
       main: this.main,
-      sessionId,
-      group: state.group,
-      userId,
-      mates: state.mates,
       live: this.live,
-      onEnded: () => this.finish(),
-      isCurrent: () => this.puzzle === token,
-    })
-      .then((handle) => {
-        if (!handle) return;
-        if (this.puzzle !== token) return handle.dispose();
-        token.handle = handle;
-        if (this.classState) handle.setMates(this.classState.mates);
-      })
-      .catch((error) => {
-        if (this.puzzle !== token) return;
-        console.error(error);
-        this.puzzle = null;
-        renderMessage(this.main, {
-          title: '퍼즐을 열지 못했어요',
-          text: '인터넷 연결을 확인하고 다시 눌러 주세요.',
-          action: { label: '다시 시도' },
-          onAction: () => this.classState && this.follow(this.classState),
-        });
+      setup: state.setup,
+      memberId: state.me.memberId,
+      groupNumber: state.me.group,
+      mates: state.mates,
+      board,
+      serverNow: state.serverNow,
+    });
+    this.puzzle = handle;
+    handle.setConnected(this.connected);
+    handle.ready.catch((error) => {
+      if (this.puzzle !== handle) return;
+      console.error(error);
+      this.closePuzzle();
+      renderMessage(this.main, {
+        title: '퍼즐을 열지 못했어요',
+        text: '인터넷 연결을 확인하고 다시 눌러 주세요.',
+        action: { label: '다시 시도' },
+        onAction: () => this.live?.sync(),
       });
+    });
   }
 
   closePuzzle() {
-    this.puzzle?.handle?.dispose();
+    this.puzzle?.dispose();
     this.puzzle = null;
   }
 
-  // /join?code= while waiting, /play once the puzzles have started.
-  showStatus(status, code) {
-    this.setAddress(status === 'playing' ? '/play' : `/join?code=${code}`);
+  finish() {
+    const wasIn = this.live?.model.state.ready === true;
+    this.live?.close();
+    this.live = null;
+    this.closePuzzle();
+    if (this.room) clearSaved(localStorage, this.room.code);
+    this.ended(wasIn ? '수업이 끝났어요' : '이 수업은 끝났어요');
   }
 
-  rename(code) {
+  rename() {
+    const { code } = this.room;
     renderNameStep(this.main, {
       code,
-      name: this.name,
+      name: this.room.name,
       mode: 'rename',
-      onBack: () => this.redrawWaiting(code),
+      onBack: () => this.redrawWaiting(),
       onSubmit: async (value) => {
         const name = normalizeName(value);
-        if (!name) return '이름을 넣어 주세요.';
-        const saved = readSaved(localStorage);
-        if (saved) writeSaved(localStorage, { ...saved, name });
-        this.name = name;
-        this.redrawWaiting(code);
+        if (!name) return MESSAGES.invalid_name;
+        try {
+          await join(this.rtUrl, { code, name, token: this.room.token });
+        } catch (error) {
+          const reason = joinReason(error);
+          if (reason === 'failed') console.error(error);
+          return MESSAGES[reason === 'invalid_code' ? 'failed' : reason];
+        }
+        writeSaved(localStorage, { name, code, token: this.room.token });
+        this.room.name = name;
+        this.live?.rename(name);
+        this.redrawWaiting();
         return '';
       },
     });
   }
 
-  redrawWaiting(code) {
-    this.waiting = renderWaiting(this.main, { onRename: () => this.rename(code) });
-    this.live?.rename(this.name); // tracks the name again and draws the current state
+  redrawWaiting() {
+    this.waiting = null;
+    const state = this.live?.model.state;
+    if (state?.ready) this.update(state, {});
   }
 
   ended(title) {

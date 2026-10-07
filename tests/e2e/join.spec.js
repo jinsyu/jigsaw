@@ -1,105 +1,61 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { deleteLegacySessions as deleteSessions, legacyTeacher as teacherSession } from './support/legacy.js';
-import { closeSql, sql } from './support/teacher.js';
+import { expectNoHorizontalOverflow } from './support/puzzle.js';
+import { RT_LOG_FILE } from './support/rt-log.js';
+import { savedEntry, savedKeyOf, studentContext, supabaseHosts } from './support/student.js';
+import { ORIGIN, classControl, cleanUpClasses, closeSql, openClass, sql } from './support/teacher.js';
 
-// T9: students join with a code and a name, wait, get their group and start (D3, D4, D14).
-// Several browser contexts play the students against the local stack. The student screens
-// still use the old structure (Supabase) until T22, so the teacher's moves are made from Node
-// (RPCs); the teacher's lobby itself runs on the rt server since T21 (teacher.spec.js).
-// Every test ends its session and removes it, with the anonymous accounts it created.
-
-const createdSessions = [];
+// T9 → T22: students join with a code and a name through the rt server (POST /api/join, then
+// the class socket), wait, get their group and start (D3, D4, D14). Several browser contexts
+// play the students; the teacher's moves come from Node (the lobby itself: teacher.spec.js).
 
 test.afterAll(async () => {
-  if (createdSessions.length) {
-    await sql(
-      `delete from auth.users where is_anonymous and id in
-         (select user_id from public.members where session_id = any($1::bigint[]))`,
-      [createdSessions],
-    );
-  }
-  await deleteSessions(createdSessions.splice(0));
+  await cleanUpClasses();
   await closeSql();
 });
 
-async function openSession(groupCount = 4) {
-  const { client } = await teacherSession();
-  const { data, error } = await client.rpc('create_session', {
-    p_piece_count: 24,
-    p_group_count: groupCount,
-    p_builtin_key: 'sea',
-    p_aspect: 1800 / 1200,
-  });
-  if (error) throw error;
-  createdSessions.push(data.id);
-  const { rows } = await sql('select id, number from public.groups where session_id = $1 order by number', [data.id]);
-  return { ...data, groups: rows.map((r) => ({ id: Number(r.id), number: r.number })), client };
-}
-
-function trackErrors(page) {
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(e.message));
-  return errors;
-}
-
-async function expectNoHorizontalOverflow(page) {
-  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    clientWidth: document.documentElement.clientWidth,
-  }));
-  expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
-}
-
-async function newStudent(browser, testInfo) {
-  const context = await browser.newContext({ ...testInfo.project.use, baseURL: testInfo.project.use.baseURL });
-  const page = await context.newPage();
-  return { context, page, errors: trackErrors(page) };
-}
-
-const savedEntry = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('jigsaw-student') ?? 'null'));
-
-
 test('D3·D4·D14: students join by code or QR, get their groups and start', async ({ browser }, testInfo) => {
   test.setTimeout(120_000);
-  const session = await openSession(4);
-  const rpc = async (fn, args) => {
-    const { data, error } = await session.client.rpc(fn, args);
-    if (error) throw error;
-    return data;
-  };
-  const memberOf = async (student) => (await savedEntry(student.page)).memberId;
+  const cls = await openClass({ pieces: 24, groups: 4 });
+  const control = await classControl(cls);
 
   // Student A types the code on the home page (six cells).
-  const a = await newStudent(browser, testInfo);
+  const a = await studentContext(browser, testInfo, '다솜이');
   await a.page.goto('/');
   const codeInput = a.page.getByLabel('수업 코드 6자리');
-  await codeInput.fill(session.code.slice(0, 3));
+  await codeInput.fill(cls.code.slice(0, 3));
   await expect(a.page.locator('.code-cells span.is-filled')).toHaveCount(3);
   await expect(a.page.locator('.code-cells span.is-cur')).toHaveCount(1);
   await expectNoHorizontalOverflow(a.page);
   await a.page.screenshot({ path: testInfo.outputPath('student-1-code.png') });
-  await codeInput.fill(session.code);
+  await codeInput.fill(cls.code);
   await a.page.getByRole('button', { name: '들어가기' }).click();
   await expect(a.page.getByRole('heading', { level: 1, name: '이름을 알려 주세요' })).toBeVisible();
-  await expect(a.page.locator('.st-topnav .pill')).toHaveText(`수업 ${session.code.slice(0, 3)} ${session.code.slice(3)}`);
+  await expect(a.page.locator('.st-topnav .pill')).toHaveText(`수업 ${cls.code.slice(0, 3)} ${cls.code.slice(3)}`);
   await expect(a.page.getByText('이름은 저장하지 않아요.')).toBeVisible();
   await a.page.getByLabel('내 이름').fill('  다솜이 ');
   await expectNoHorizontalOverflow(a.page);
   await a.page.screenshot({ path: testInfo.outputPath('student-2-name.png') });
   await a.page.getByRole('button', { name: '다음' }).click();
   await expect(a.page.getByRole('heading', { level: 1, name: '선생님이 모둠을 정하고 있어요' })).toBeVisible();
+  // D3: the teacher has the name.
+  await control.memberId('다솜이');
+  // The device keeps the name and the student token under the class code (nothing else).
+  const savedA = await savedEntry(a.page, cls.code);
+  expect(savedA).toMatchObject({ v: 2, name: '다솜이', code: cls.code });
+  expect(savedA.token).toMatch(/^[A-Za-z0-9_-]{40,}$/);
 
   // Student B scans the QR: the code is already in the address, so only the name is asked.
-  const b = await newStudent(browser, testInfo);
-  await b.page.goto(`/join?code=${session.code}`);
+  const b = await studentContext(browser, testInfo, '보람찬');
+  await b.page.goto(`/join?code=${cls.code}`);
   await expect(b.page.getByRole('heading', { level: 1, name: '이름을 알려 주세요' })).toBeVisible();
   await b.page.getByLabel('내 이름').fill('보람찬');
   await b.page.getByLabel('내 이름').press('Enter');
   await expect(b.page.getByRole('heading', { level: 1, name: '선생님이 모둠을 정하고 있어요' })).toBeVisible();
 
   // Student C mistypes the code: told to check it, keeps the name, goes straight in after fixing it.
-  const wrong = session.code === '000000' ? '000001' : '000000';
-  const c = await newStudent(browser, testInfo);
+  const wrong = cls.code === '000000' ? '000001' : '000000';
+  const c = await studentContext(browser, testInfo, '한결이');
   await c.page.goto(`/join?code=${wrong}`);
   await c.page.getByLabel('내 이름').fill('한결이');
   await c.page.getByRole('button', { name: '다음' }).click();
@@ -107,51 +63,45 @@ test('D3·D4·D14: students join by code or QR, get their groups and start', asy
   await expect(c.page.getByLabel('수업 코드 6자리')).toHaveValue(wrong);
   await expectNoHorizontalOverflow(c.page);
   await c.page.screenshot({ path: testInfo.outputPath('student-1-wrong-code.png') });
-  await c.page.getByLabel('수업 코드 6자리').fill(session.code);
+  await c.page.getByLabel('수업 코드 6자리').fill(cls.code);
   await c.page.getByRole('button', { name: '들어가기' }).click();
   await expect(c.page.getByRole('heading', { level: 1, name: '선생님이 모둠을 정하고 있어요' })).toBeVisible();
   await expect(c.page.getByText('한결이, 잘 들어왔어요!')).toBeVisible();
   await expectNoHorizontalOverflow(c.page);
   await c.page.screenshot({ path: testInfo.outputPath('student-3-waiting.png') });
 
-  // 무작위로 나누기 (from Node): everyone gets a group, and each student screen shows it.
-  await rpc('randomize_groups', { p_session: session.id });
+  // 무작위로 나누기: everyone gets a group, and each student screen shows it.
+  await control.randomize();
   for (const [student, name] of [
     [a, '다솜이'],
     [b, '보람찬'],
     [c, '한결이'],
   ]) {
-    const { memberId } = await savedEntry(student.page);
-    const { rows } = await sql(
-      'select g.number from public.members m join public.groups g on g.id = m.group_id where m.id = $1',
-      [memberId],
-    );
-    await expect(student.page.getByRole('heading', { level: 1 })).toHaveText(`${name}, ${rows[0].number}모둠이에요!`);
+    await expect.poll(() => control.member(name)?.group ?? null).not.toBeNull();
+    await expect(student.page.getByRole('heading', { level: 1 })).toHaveText(`${name}, ${control.member(name).group}모둠이에요!`);
     await expect(student.page.locator('.st-mate.is-me')).toContainText(name);
   }
 
-  // Moves: 다솜이 into 1모둠, 보람찬 into another group, 한결이 back to no group.
-  const g = (number) => session.groups.find((x) => x.number === number).id;
-  await rpc('assign_member', { p_member: await memberOf(a), p_group: g(1) });
+  // Moves: 다솜이 into 1모둠, 보람찬 into 2모둠, 한결이 back to no group.
+  await control.assign(await control.memberId('다솜이'), 1);
   await expect(a.page.getByRole('heading', { level: 1 })).toHaveText('다솜이, 1모둠이에요!');
-  const target = 2;
-  await rpc('assign_member', { p_member: await memberOf(b), p_group: g(target) });
-  await expect(b.page.getByRole('heading', { level: 1 })).toHaveText(`보람찬, ${target}모둠이에요!`);
-  await rpc('assign_member', { p_member: await memberOf(c), p_group: null });
+  await control.assign(await control.memberId('보람찬'), 2);
+  await expect(b.page.getByRole('heading', { level: 1 })).toHaveText('보람찬, 2모둠이에요!');
+  await control.assign(await control.memberId('한결이'), null);
   await expect(c.page.getByRole('heading', { level: 1 })).toHaveText('선생님이 모둠을 정하고 있어요');
 
   // Same group as A: put C into 1모둠 to check groupmates on both screens.
-  await rpc('assign_member', { p_member: await memberOf(c), p_group: g(1) });
+  await control.assign(await control.memberId('한결이'), 1);
   await expect(a.page.locator('.st-mate', { hasText: '한결이' })).toBeVisible();
   await expect(c.page.locator('.st-mate', { hasText: '다솜이' })).toBeVisible();
   await expectNoHorizontalOverflow(a.page);
   await a.page.screenshot({ path: testInfo.outputPath('student-3-waiting-group.png') });
 
-  // 시작하기 → every student gets their own group's puzzle (T11), on /play (not the demo).
-  await rpc('start_session', { p_session: session.id });
+  // 시작하기 → every student gets their own group's puzzle, on /play (not the demo).
+  await control.start();
   for (const [student, number] of [
     [a, 1],
-    [b, target],
+    [b, 2],
     [c, 1],
   ]) {
     await expect(student.page.locator('main[data-ready="true"]')).toBeVisible({ timeout: 15000 });
@@ -161,7 +111,7 @@ test('D3·D4·D14: students join by code or QR, get their groups and start', asy
   }
   await expectNoHorizontalOverflow(a.page);
   await a.page.screenshot({ path: testInfo.outputPath('student-4-started.png') });
-  expect((await sql('select status from public.sessions where id = $1', [session.id])).rows[0].status).toBe('playing');
+  expect((await sql('select status from jigsaw.sessions where id = $1', [cls.id])).rows[0].status).toBe('playing');
 
   // Same device again: back to the same name, group and tray without asking.
   const tray = await a.page.evaluate(() => [...window.__puzzle.state().tray].sort((x, y) => x - y));
@@ -171,41 +121,59 @@ test('D3·D4·D14: students join by code or QR, get their groups and start', asy
   await expect(a.page.locator('.pz-chips .chip', { hasText: '다솜이' }).locator('em')).toHaveText('나');
   expect(await a.page.evaluate(() => [...window.__puzzle.state().tray].sort((x, y) => x - y))).toEqual(tray);
 
-  // D14: no student name anywhere in the database.
-  const dumps = await sql(`
-    select 'public.' || relname as t from pg_stat_user_tables where schemaname = 'public'
-  `);
-  const tables = [...dumps.rows.map((r) => r.t), 'auth.users', 'auth.identities', 'realtime.messages', 'private.join_failures'];
-  for (const table of tables) {
-    const { rows } = await sql(`select coalesce(string_agg(row_to_json(t)::text, ' '), '') as dump from ${table} t`);
-    for (const name of ['다솜이', '보람찬', '한결이']) expect(rows[0].dump, `${table} has ${name}`).not.toContain(name);
+  // D14: no student name anywhere in the database (jigsaw and every other schema the app could
+  // write to), nor in the rt server's output.
+  await a.page.waitForTimeout(2500); // past the server's 2-second board save
+  const { rows: tables } = await sql(
+    "select quote_ident(schemaname) || '.' || quote_ident(relname) as t from pg_stat_user_tables where schemaname in ('jigsaw', 'public', 'auth', 'storage')",
+  );
+  for (const { t } of tables) {
+    const { rows } = await sql(`select coalesce(string_agg(row_to_json(dumped_row)::text, ' '), '') as dump from ${t} dumped_row`);
+    for (const name of ['다솜이', '보람찬', '한결이']) expect(rows[0].dump, `${t} has ${name}`).not.toContain(name);
+  }
+  const log = readFileSync(RT_LOG_FILE, 'utf8');
+  expect(log, 'rt 서버 출력 파일: pnpm test:e2e 가 rt 서버를 띄우게 하세요').toContain('에서 시작');
+  for (const name of ['다솜이', '보람찬', '한결이']) expect(log).not.toContain(name);
+  for (const student of [a, b, c]) {
+    const { token } = (await savedEntry(student.page, cls.code)) ?? {};
+    if (token) expect(log).not.toContain(token);
   }
 
+  // No Supabase request from a student page: the rt server answers everything.
+  for (const student of [a, b, c]) expect(supabaseHosts(student.hosts)).toEqual([]);
+
   // The class ends: students are told, and the device forgets the class and the name.
-  await session.client.rpc('end_session', { p_session: session.id });
+  await control.end();
   await expect(b.page.getByRole('heading', { level: 1, name: '수업이 끝났어요' })).toBeVisible();
-  expect(await savedEntry(b.page)).toBeNull();
+  expect(await savedEntry(b.page, cls.code)).toBeNull();
   await b.page.screenshot({ path: testInfo.outputPath('student-5-ended.png') });
+  await expect(a.page.getByRole('heading', { level: 1, name: '수업이 끝났어요' })).toBeVisible();
+  expect(await savedEntry(a.page, cls.code)).toBeNull();
 
   for (const student of [a, b, c]) {
     expect(student.errors).toEqual([]);
     await student.context.close();
   }
+  control.close();
 });
 
 test('a student can fix the name while waiting, and comes back to it from home', async ({ browser }, testInfo) => {
-  const session = await openSession(2);
-  const s = await newStudent(browser, testInfo);
-  await s.page.goto(`/join?code=${session.code}`);
+  const cls = await openClass({ pieces: 12, groups: 2 });
+  const control = await classControl(cls);
+  const s = await studentContext(browser, testInfo, '민쥰');
+  await s.page.goto(`/join?code=${cls.code}`);
   await s.page.getByLabel('내 이름').fill('민쥰');
   await s.page.getByRole('button', { name: '다음' }).click();
   await expect(s.page.getByText('민쥰, 잘 들어왔어요!')).toBeVisible();
+  const memberId = await control.memberId('민쥰');
   await s.page.getByRole('button', { name: '이름 고치기' }).click();
   await expect(s.page.getByRole('heading', { level: 1, name: '이름을 고쳐 주세요' })).toBeVisible();
   await s.page.getByLabel('내 이름').fill('민준');
   await s.page.getByRole('button', { name: '바꾸기' }).click();
   await expect(s.page.getByText('민준, 잘 들어왔어요!')).toBeVisible();
-  expect((await savedEntry(s.page)).name).toBe('민준');
+  expect((await savedEntry(s.page, cls.code)).name).toBe('민준');
+  // The teacher sees the new name on the same student.
+  expect(await control.memberId('민준')).toBe(memberId);
 
   // Home shows a way back into the same class.
   await s.page.goto('/');
@@ -217,5 +185,68 @@ test('a student can fix the name while waiting, and comes back to it from home',
   await expect(s.page.getByText('민준, 잘 들어왔어요!')).toBeVisible();
   expect(s.errors).toEqual([]);
   await s.context.close();
+  control.close();
 });
 
+test('a saved class that is gone: reopening says it ended and forgets it', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone-390', 'one size is enough');
+  const s = await studentContext(browser, testInfo, '지난반');
+  // A token the rt server does not know (its class ended while this device was away).
+  const code = '987654';
+  await s.page.goto('/');
+  await s.page.evaluate(
+    ([key, value]) => localStorage.setItem(key, value),
+    [savedKeyOf(code), JSON.stringify({ v: 2, name: '지난반', code, token: 'A'.repeat(43), savedAt: Date.now() })],
+  );
+  await s.page.reload();
+  await expect(s.page.getByRole('link', { name: /이어서 하기/ })).toContainText('지난반');
+  await s.page.getByRole('link', { name: /이어서 하기/ }).click();
+  await expect(s.page.getByRole('heading', { level: 1, name: '이 수업은 끝났어요' })).toBeVisible();
+  expect(await savedEntry(s.page, code)).toBeNull();
+  await expectNoHorizontalOverflow(s.page);
+  expect(s.errors).toEqual([]);
+  await s.context.close();
+});
+
+test('too many wrong codes from this address: the student is asked to wait', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone-360', 'one size is enough');
+  const s = await studentContext(browser, testInfo, '기다림');
+  // The real block would stop every test of this run (one address): the answer is faked here.
+  await s.page.route('**/api/join', (route) =>
+    route.fulfill({
+      status: 429,
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': ORIGIN },
+      body: JSON.stringify({ ok: false, error: 'too_many_attempts' }),
+    }),
+  );
+  await s.page.goto('/join?code=123456');
+  await s.page.getByLabel('내 이름').fill('기다림');
+  await s.page.getByRole('button', { name: '다음' }).click();
+  await expect(s.page.getByRole('alert')).toHaveText('코드를 여러 번 틀렸어요. 잠시 뒤에 다시 입력해 주세요.');
+  await expectNoHorizontalOverflow(s.page);
+  await s.page.screenshot({ path: testInfo.outputPath('student-1-too-many.png') });
+  expect(s.errors).toEqual([]);
+  await s.context.close();
+});
+
+test('on a host without an rt server address, student screens say 준비 중 and load nothing remote', async ({ page, baseURL }, testInfo) => {
+  const host = 'http://jigsaw-preview.example.test';
+  const requested = [];
+  page.on('request', (r) => requested.push(r.url()));
+  await page.route(`${host}/**`, async (route) => {
+    const response = await route.fetch({ url: route.request().url().replace(host, baseURL) });
+    await route.fulfill({ response });
+  });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  for (const path of ['/join?code=123456', '/play']) {
+    await page.goto(`${host}${path}`);
+    await expect(page.getByRole('heading', { level: 1, name: '아직 들어갈 수 없어요' })).toBeVisible();
+    await expect(page.getByText('학생 입장은 준비 중이에요. 선생님께 알려 주세요.')).toBeVisible();
+  }
+  expect(requested.filter((u) => u.includes(':56321') || u.includes(':3400') || u.includes('socket.io') || u.includes('supabase'))).toEqual([]);
+  await expectNoHorizontalOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath('student-not-ready.png'), fullPage: true });
+  expect(errors).toEqual([]);
+});

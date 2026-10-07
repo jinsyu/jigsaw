@@ -1,7 +1,7 @@
 // E2E helpers for the teacher screens against the local rt server (pnpm rt:dev, started by
 // playwright.config.js) and the local Supabase stack: the seeded test teacher's token (no
 // Google sign-in locally), classes opened through the rt API, students played by Node
-// socket.io clients (the student screens move to the rt server in T22), and direct SQL.
+// socket.io clients (browser students: support/student.js), and direct SQL.
 import { execFileSync } from 'node:child_process';
 import pg from 'pg';
 import { io as connect } from 'socket.io-client';
@@ -117,9 +117,33 @@ const ask = async (socket, event, message = {}) => {
   return answer;
 };
 
-// The teacher's class socket from Node (to set up a class quickly, or end it).
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// The teacher's class socket from Node (to set up a class quickly, or end it). It also follows
+// what the server tells the teacher: the roster (names -> member ids, groups) and the overview
+// of every group (clusters with who holds them), for checks of the server's side.
 export async function classControl(cls) {
+  const roster = new Map(); // member id -> { id, name, group, color, online }
+  const groups = new Map(); // number -> overview group
   const socket = await connectSocket({ role: 'teacher', token: cls.token, sessionId: cls.id });
+  const setMembers = (list) => list.forEach((m) => roster.set(m.id, { ...roster.get(m.id), ...m }));
+  const setGroups = (list) => list.forEach((g) => groups.set(g.number, g));
+  socket.on('state', (state) => {
+    setMembers(state.roster ?? []);
+    setGroups(state.overview?.groups ?? []);
+  });
+  socket.on('overview', (overview) => {
+    setGroups(overview.groups ?? []);
+    setMembers(overview.members ?? []);
+  });
+  socket.on('events', (list) => {
+    for (const e of list) {
+      if (e.type === 'join') setMembers([e.member]);
+      if (e.type === 'groups') setMembers(e.members);
+      if (e.type === 'presence') setMembers([{ id: e.memberId, online: e.online }]);
+    }
+  });
+  const memberNamed = (name) => [...roster.values()].find((m) => m.name === name);
   return {
     socket,
     assign: (memberId, group) => ask(socket, 'assign', { memberId, group }),
@@ -127,12 +151,16 @@ export async function classControl(cls) {
     start: () => ask(socket, 'start'),
     end: () => ask(socket, 'end'),
     close: () => socket.disconnect(),
+    // The member id of a student, once the teacher has heard of them.
+    memberId: async (name) => (await until(() => memberNamed(name))).id,
+    member: (name) => memberNamed(name) ?? null,
+    // A cluster of group `number` as the server last told the teacher (overview, <= 1 s late).
+    cluster: (number, id) => groups.get(number)?.clusters.find((c) => c.id === id) ?? null,
+    group: (number) => groups.get(number) ?? null,
   };
 }
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-async function until(check, { timeout = 10_000, interval = 25 } = {}) {
+export async function until(check, { timeout = 10_000, interval = 25 } = {}) {
   const end = Date.now() + timeout;
   for (;;) {
     const value = check();

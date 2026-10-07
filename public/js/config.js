@@ -4,10 +4,10 @@
 //   (pnpm rt:dev, port 3400) and Supabase (pnpm db:start) on the same host, so a tablet on
 //   the same Wi-Fi reaches them through the address it opened the page with.
 // - Any other host: the hosted servers. The rt address and the Google client ID are filled
-//   in at T25, once rt.gyosil.app runs; until then the teacher screens show "준비 중".
+//   in at T25, once rt.gyosil.app runs; until then the teacher and student screens show "준비 중".
 //
-// supabaseUrl / publishableKey are still read by the student screens until they move to
-// the rt server (T22); the teacher screens never talk to Supabase.
+// Teacher and student screens talk only to the rt server. supabaseUrl / publishableKey are
+// read by nothing any more (supabase-client.js goes with the old structure in T23).
 
 const LOCAL_SUPABASE_PORT = 56321;
 const LOCAL_RT_PORT = 3400;
@@ -45,12 +45,12 @@ export function pickConfig(hostname) {
   };
 }
 
-// Student screens (Supabase, until T22).
+// Old structure (Supabase from the browser), removed in T23.
 export function isConfigured(config) {
   return Boolean(config.supabaseUrl && config.publishableKey);
 }
 
-// Teacher screens (rt server).
+// Teacher and student screens (rt server).
 export function hasRtServer(config) {
   return Boolean(config.rtUrl);
 }

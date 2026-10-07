@@ -1,42 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { presenceNames } from '../../public/js/student/presence.js';
 import { UNNAMED, applyGroupChanges, buildRoster, groupColumns, startBlocker } from '../../public/js/teacher/roster.js';
-
-// presenceNames: the student screens' Presence (until T22).
-const members = [
-  { id: 1, user_id: 'u1' },
-  { id: 2, user_id: 'u2' },
-  { id: 3, user_id: 'u3' },
-  { id: 4, user_id: 'u4' },
-];
-
-describe('presenceNames', () => {
-  it('accepts a name only when the key and payload match the same members row', () => {
-    const state = {
-      u1: [{ member: 1, name: ' 민준 ' }],
-      u2: [{ member: 3, name: '가짜' }], // payload names another row
-      u3: [{ member: '3', name: '서연' }],
-      stranger: [{ member: 4, name: '침입자' }],
-      u4: [{ member: 4, name: '   ' }],
-    };
-    const { names, unknownKeys } = presenceNames(state, members);
-    expect([...names]).toEqual([
-      [1, '민준'],
-      [3, '서연'],
-    ]);
-    expect(unknownKeys).toEqual(['stranger']);
-  });
-
-  it('uses the latest entry of a key (second tab)', () => {
-    const { names } = presenceNames({ u1: [{ member: 1, name: '민준' }, { member: 1, name: '민준2' }] }, members);
-    expect(names.get(1)).toBe('민준2');
-  });
-
-  it('copes with an empty or odd state', () => {
-    expect(presenceNames(undefined, members).names.size).toBe(0);
-    expect(presenceNames({ u1: null }, members).names.size).toBe(0);
-  });
-});
 
 // The rt server's roster (session.roster()): joining order, names from its memory.
 const roster = [

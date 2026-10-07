@@ -1,6 +1,6 @@
 import { enhanceCodeField } from './code-field.js';
 import { matchRoute } from './routes.js';
-import { readSaved } from './student/saved.js';
+import { latestSaved } from './student/saved.js';
 
 const TITLES = {
   join: '들어가기',
@@ -11,7 +11,7 @@ const TITLES = {
 
 function setupHome() {
   enhanceCodeField(document.querySelector('.code-form .code-field'));
-  const saved = readSaved(localStorage);
+  const saved = latestSaved(localStorage);
   if (saved) showResume(saved);
 }
 

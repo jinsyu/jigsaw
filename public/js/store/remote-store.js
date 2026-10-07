@@ -1,31 +1,33 @@
-// Supabase PuzzleStore (see puzzle-store.js): the same contract as local-store.js, backed by
-// the puzzle RPCs (take_from_tray, grab, drop, T5) and the group:<id> broadcasts.
+// Class PuzzleStore (see puzzle-store.js) on the rt server: the same contract as local-store.js,
+// so the puzzle screen does not know which one it has. The rt server decides (server/src/engine);
+// this store shows its decisions.
 //
-// It talks to the server only through `api` (supabase-api.js makes one from a supabase-js
-// client; unit tests pass a fake), so all the logic here runs without a network:
-// - Board snapshot: loaded on open, whenever the channel (re)subscribes, every `resyncMs`
-//   (broadcasts can be lost) and on request. Events that arrive while a snapshot is loading
-//   are applied again on top of it; every event sets absolute values, so that is safe.
-// - Events: 'take' / 'grab' / 'drop' / 'tray' / 'release' / 'end' broadcasts, and the
-//   results of my own calls (my own take/grab/drop broadcasts are skipped: the call result
-//   is applied already, and a late echo of my grab would hold a cluster I already dropped).
-// - Reasons: the server's reason codes map 1:1 with reason.replaceAll('_', '-').
-// - Realtime adds its own message id (uuid) to payloads without an id: only 'take' and
-//   'drop' carry a cluster id there, and only a number counts.
-// - Holds: heldAt is the server grab time on this device's clock (offset from the server
-//   time in grab and heartbeat answers), so snap.js judges the 10 s like the server.
+// It talks to the server only through `api` (student/live.js makes one from the class socket;
+// unit tests pass a fake), so all the logic here runs without a network:
+// - Board: the group part of the server's 'state' (on every connect, after a move to another
+//   group, and on request) replaces everything with applyBoard().
+// - Events: the group's batched 'events' (take / grab / drop / release / tray / complete) go
+//   through applyEvents(). My own take / grab / drop events are skipped: the answer to my
+//   message is applied already, and a late echo of my grab would hold a cluster I dropped.
+//   The server sends every earlier event of the group before a 'state' or an answer
+//   (broadcaster.flushGroupOf), so events and answers arrive in server order; an event that
+//   still does not fit the board here asks for a fresh state (onMismatch).
+// - Holds: heldAt is the server's grab time on this device's clock (offset from the server
+//   time in 'state' and in grab answers), so snap.js judges the 10 s like the server.
 //   startedAt and completedAt stay in server time, so their difference is the time taken.
+// - Dropping a cluster the server let go of meanwhile (10 s still, 60 s limit; answer
+//   'not-held'): grab it again and drop once more, so the move is not lost. If a friend holds
+//   it by then the drop is refused with 'held' and the screen slides it back (plan memo T22).
 import { clampPosition, progress as progressOf } from '../puzzle/snap.js';
 import { shuffledPieces } from './local-store.js';
 import { cellOfPiece, normalizeHints, pieceOfCell } from './puzzle-store.js';
 
-export const RESYNC_MS = 15_000;
 // A taken piece waits for the screen's drop() this long before its result is applied anyway.
 const TAKE_SETTLE_MS = 3000;
-
-export const reasonOf = (reason) => String(reason ?? 'failed').replaceAll('_', '-');
+const GROUP_EVENTS = new Set(['take', 'grab', 'drop', 'release', 'tray', 'complete']);
 
 const isId = (value) => Number.isSafeInteger(value) && value > 0;
+const isPiece = (value) => Number.isSafeInteger(value) && value >= 0;
 
 export class StoreError extends Error {
   constructor(message, cause) {
@@ -34,69 +36,51 @@ export class StoreError extends Error {
   }
 }
 
-// Throws a StoreError for transport failures ({ error } from supabase-js).
-function unwrap(name, { data, error }) {
-  if (error) throw new StoreError(`${name} failed: ${error.message ?? error}`, error);
-  return data;
-}
-
 /**
- * Builds the board from a snapshot: clusters with their pieces ({ col, row, owner_id, on_board }).
- * @returns {{ clusters: Map<number, object>, trayOwners: Map<number, string|null> }}
+ * The group board of a student 'state' (server/src/views.js) as the store keeps it.
+ * @param {{ clusters: Array, tray: number[], completedAt: number|null }} board
+ * @param {(serverMs: number) => number} toLocal
  */
-export function boardFromSnapshot(snapshot, cols, toLocal) {
+export function clustersFromBoard(board, toLocal) {
   const clusters = new Map();
-  const trayOwners = new Map(); // piece index -> owner uid, for pieces still in a tray
-  for (const row of snapshot.clusters ?? []) {
-    const cells = [];
-    for (const p of row.pieces ?? []) {
-      if (p.on_board) cells.push([p.col, p.row]);
-      else trayOwners.set(pieceOfCell([p.col, p.row], cols), p.owner_id ?? null);
-    }
-    if (cells.length === 0) continue;
-    clusters.set(Number(row.id), {
-      id: Number(row.id),
-      x: row.x,
-      y: row.y,
-      z: row.z ?? 0,
-      locked: row.locked === true,
-      heldBy: row.grabbed_by ?? null,
-      heldAt: row.grabbed_by && row.grabbed_at ? toLocal(row.grabbed_at) : null,
-      pieces: cells,
+  for (const c of board?.clusters ?? []) {
+    if (!isId(c.id) || !Array.isArray(c.pieces) || c.pieces.length === 0) continue;
+    clusters.set(c.id, {
+      id: c.id,
+      x: c.x,
+      y: c.y,
+      z: Number.isFinite(c.z) ? c.z : 0,
+      locked: c.locked === true,
+      heldBy: c.heldBy ?? null,
+      heldAt: c.heldBy && Number.isFinite(c.heldAt) ? toLocal(c.heldAt) : null,
+      pieces: c.pieces.map(([col, row]) => [col, row]),
     });
   }
-  return { clusters, trayOwners };
+  return clusters;
 }
 
 /**
  * @param {object} options
- * @param {object} options.api        { loadBoard(group), take(group, piece, x, y), grab(cluster),
- *                                      drop(cluster, x, y), subscribe(group, { onEvent, onStatus }) }
- * @param {number} options.groupId
- * @param {string} options.me         my user id
+ * @param {object} options.api        { take(piece, x, y), grab(clusterId), drop(clusterId, x, y),
+ *                                      release(clusterId?) }: Promises of the server's answer;
+ *                                      they reject when the server cannot be reached.
+ * @param {string} options.me         my member id
  * @param {object} options.layout     geometry.layoutFor()
  * @param {number} options.seed
- * @param {{ src: string, width: number, height: number }} options.picture
+ * @param {{ src: string, width: number, height: number, credit?: string }} options.picture
  * @param {string} options.groupName
  * @param {object} [options.hints]
  * @param {Array} [options.members]   [{ uid, name, color, online }]
- * @param {number} options.startedAt  ms, server time (sessions.started_at)
- * @param {() => void} [options.onEnd]  the class ended ('end' broadcast)
- * @param {() => void} [options.onNotPlaying]  an action was refused with not_playing (check the session)
- * @param {number} [options.resyncMs]
+ * @param {number} options.startedAt  ms, server time
+ * @param {object} options.board      the group board of the 'state' (clusters, tray, completedAt)
+ * @param {number} options.serverNow  the server time the state was made (ms)
+ * @param {() => void} [options.onNotPlaying]  an action was refused with not-playing
+ * @param {() => void} [options.onMismatch]    the board here no longer fits: ask for a fresh state
  * @param {() => number} [options.now]
- * @param {object} [options.timers]   { setTimeout, clearTimeout, setInterval, clearInterval }
+ * @param {object} [options.timers]   { setTimeout, clearTimeout }
  */
-export async function openRemoteStore(options) {
-  const store = createRemoteStore(options);
-  await store.resync();
-  store.connect();
-  return store;
-}
-
 export function createRemoteStore({
   api,
-  groupId,
   me,
   layout,
   seed,
@@ -105,9 +89,10 @@ export function createRemoteStore({
   hints: hintOptions,
   members = [],
   startedAt,
-  onEnd = () => {},
+  board,
+  serverNow,
   onNotPlaying = () => {},
-  resyncMs = RESYNC_MS,
+  onMismatch = () => {},
   now = () => Date.now(),
   timers = globalThis,
 }) {
@@ -120,16 +105,9 @@ export function createRemoteStore({
   let completedAt = null;
   let memberList = freezeMembers(members);
   let clockOffset = 0; // server ms - local ms
-  let loaded = false;
-  let loading = null;
-  let reloadQueued = false;
-  let pendingEvents = null; // events seen while a snapshot loads
   let disposed = false;
-  let ended = false;
-  let unsubscribeChannel = null;
-  let resyncTimer = 0;
   const takes = new Map(); // cluster id -> { result, timer } for taken pieces awaiting drop()
-  const taking = new Set(); // tray pieces whose take_from_tray is on its way
+  const taking = new Set(); // tray pieces whose take is on its way
   const listeners = new Set();
   let snapshot = null;
 
@@ -139,7 +117,7 @@ export function createRemoteStore({
     );
   }
 
-  const toLocal = (iso) => Date.parse(iso) - clockOffset;
+  const toLocal = (serverMs) => serverMs - clockOffset;
 
   // ---------- snapshot ----------
 
@@ -194,11 +172,36 @@ export function createRemoteStore({
     }
   }
 
-  // ---------- applying events (all absolute, so applying one twice changes nothing) ----------
+  // ---------- the server's board ----------
 
   function sortTray(list) {
     return [...new Set(list)].sort((a, b) => trayRank.get(a) - trayRank.get(b));
   }
+
+  function setClock(serverMs, localMs = now()) {
+    if (Number.isFinite(serverMs)) clockOffset = serverMs - localMs;
+  }
+
+  function loadBoard(next, serverMs) {
+    setClock(serverMs);
+    clusters = clustersFromBoard(next, toLocal);
+    tray = sortTray((next?.tray ?? []).filter((piece) => isPiece(piece) && piece < total && !taking.has(piece)));
+    completedAt = Number.isFinite(next?.completedAt) ? next.completedAt : null;
+    // Taken pieces waiting for drop() are in this board already, wherever they went.
+    for (const taken of takes.values()) {
+      timers.clearTimeout(taken.timer);
+      taken.stale = true;
+    }
+  }
+
+  /** A fresh 'state' of my group from the server: replaces the whole board. */
+  function applyBoard(next, serverMs) {
+    if (disposed) return;
+    loadBoard(next, serverMs);
+    emit({ type: 'sync' });
+  }
+
+  // ---------- applying events (absolute values: applying one twice changes nothing) ----------
 
   function removeFromTray(piece) {
     if (tray.includes(piece)) tray = tray.filter((p) => p !== piece);
@@ -224,7 +227,7 @@ export function createRemoteStore({
   }
 
   // Result of a drop or take: the survivor gets the absorbed pieces, its place and is released.
-  // Returns false when the board here does not know the clusters (time to resync).
+  // Returns false when the board here does not know the clusters.
   function applySettle(r) {
     if (!isId(r.id)) return false;
     let known = true;
@@ -236,7 +239,8 @@ export function createRemoteStore({
         known = false;
         continue;
       }
-      for (const cell of c.pieces) survivor = placeCell(cell, r.id);
+      // A copy: placeCell takes each cell out of `c`.
+      for (const cell of [...c.pieces]) survivor = placeCell(cell, r.id);
       clusters.delete(gone);
     }
     if (!survivor) return false;
@@ -246,142 +250,90 @@ export function createRemoteStore({
     survivor.locked = r.locked === true;
     survivor.heldBy = null;
     survivor.heldAt = null;
-    if (r.completed_at) completedAt ??= Date.parse(r.completed_at);
+    if (Number.isFinite(r.completedAt)) completedAt ??= r.completedAt;
     return known;
   }
 
   function applyTake(r) {
-    if (!Number.isInteger(r.piece) || !isId(r.cluster_id)) return false;
+    if (!isPiece(r.piece) || r.piece >= total || !isId(r.clusterId)) return false;
     removeFromTray(r.piece);
-    const c = placeCell(cellOfPiece(r.piece, layout.cols), r.cluster_id);
+    const c = placeCell(cellOfPiece(r.piece, layout.cols), r.clusterId);
     c.x = r.x;
     c.y = r.y;
     return applySettle(r);
   }
 
   function applyGrab(r) {
-    const c = clusters.get(r.cluster_id);
+    const c = clusters.get(r.clusterId);
     if (!c) return false;
     c.heldBy = r.by ?? null;
-    c.heldAt = r.grabbed_at ? toLocal(r.grabbed_at) : now();
+    c.heldAt = Number.isFinite(r.heldAt) ? toLocal(r.heldAt) : now();
     if (Number.isFinite(r.z)) c.z = r.z;
+    return true;
+  }
+
+  // Only the hold this release ends: an older release must not end a newer hold (mine).
+  function applyRelease(r) {
+    const c = clusters.get(r.clusterId);
+    if (c && (r.by == null || c.heldBy === r.by)) {
+      c.heldBy = null;
+      c.heldAt = null;
+    }
     return true;
   }
 
   function applyTray(r) {
     for (const p of Array.isArray(r.pieces) ? r.pieces : []) {
-      if (!Number.isInteger(p.col) || !Number.isInteger(p.row)) continue;
-      const piece = pieceOfCell([p.col, p.row], layout.cols);
-      if (p.owner === me) tray = sortTray([...tray, piece]);
-      else removeFromTray(piece);
+      if (!isPiece(p.piece) || p.piece >= total) continue;
+      if (p.to === me) tray = sortTray([...tray, p.piece]);
+      else removeFromTray(p.piece);
     }
     return true;
   }
 
-  function applyRelease(r) {
-    for (const id of Array.isArray(r.clusters) ? r.clusters : []) {
-      const c = clusters.get(id);
-      if (c) {
-        c.heldBy = null;
-        c.heldAt = null;
-      }
-    }
+  function applyComplete(r) {
+    if (Number.isFinite(r.completedAt)) completedAt ??= r.completedAt;
     return true;
   }
 
-  const APPLY = { take: applyTake, drop: applySettle, grab: applyGrab, tray: applyTray, release: applyRelease };
+  const APPLY = { take: applyTake, drop: applySettle, grab: applyGrab, release: applyRelease, tray: applyTray, complete: applyComplete };
 
-  // Returns whether the event fitted the board here.
-  function apply(type, payload) {
-    const fits = APPLY[type](payload);
-    if (pendingEvents) pendingEvents.push([type, payload]);
-    return fits;
-  }
-
-  function onEvent(type, payload = {}) {
+  /** The group's 'events' batch, in order. Other events (member, leave, …) are not the board's. */
+  function applyEvents(list) {
     if (disposed) return;
-    if (type === 'end') return endClass();
-    if (!APPLY[type]) return; // unknown events (and anything Realtime adds) are ignored
-    if ((type === 'take' || type === 'grab' || type === 'drop') && payload.by === me) return;
-    const fits = apply(type, payload);
-    emit({ type, by: payload.by ?? null, clusterId: payload.cluster_id ?? null, id: payload.id ?? null, completed: payload.completed_now === true });
-    if (!fits) resync();
-  }
-
-  function endClass() {
-    if (ended) return;
-    ended = true;
-    onEnd();
-  }
-
-  // ---------- loading ----------
-
-  async function load() {
-    pendingEvents = [];
-    try {
-      const board = await api.loadBoard(groupId);
-      const built = boardFromSnapshot(board, layout.cols, toLocal);
-      clusters = built.clusters;
-      tray = sortTray(
-        [...built.trayOwners].filter(([piece, owner]) => owner === me && !taking.has(piece)).map(([piece]) => piece),
-      );
-      completedAt = board.completed_at ? Date.parse(board.completed_at) : null;
-      for (const [type, payload] of pendingEvents) APPLY[type](payload);
-      loaded = true;
-    } finally {
-      pendingEvents = null;
-    }
-    emit({ type: 'sync' });
-  }
-
-  // One load at a time; a request during a load runs once more afterwards.
-  function resync() {
-    if (disposed) return Promise.resolve();
-    if (loading) {
-      reloadQueued = true;
-      return loading;
-    }
-    loading = load()
-      .catch((error) => {
-        if (!loaded) throw error;
-        console.error(error);
-      })
-      .finally(() => {
-        loading = null;
-        if (reloadQueued && !disposed) {
-          reloadQueued = false;
-          resync();
-        }
+    let fits = true;
+    for (const event of Array.isArray(list) ? list : []) {
+      const type = event?.type;
+      if (!GROUP_EVENTS.has(type)) continue;
+      if ((type === 'take' || type === 'grab' || type === 'drop') && event.by === me) continue;
+      if (!APPLY[type](event)) fits = false;
+      emit({
+        type,
+        by: event.by ?? null,
+        clusterId: event.clusterId ?? null,
+        id: event.id ?? null,
+        completed: type === 'complete',
       });
-    return loading;
-  }
-
-  function connect() {
-    if (unsubscribeChannel || disposed) return;
-    unsubscribeChannel = api.subscribe(groupId, {
-      onEvent,
-      onStatus(status) {
-        if (status === 'SUBSCRIBED') resync(); // catch up on anything sent while away
-      },
-    });
-    resyncTimer = timers.setInterval(() => resync(), resyncMs);
-  }
-
-  // ---------- clock ----------
-
-  // serverIso: the server's now() in an answer; sentAt / receivedAt: local ms around the call.
-  function noteServerTime(serverIso, sentAt, receivedAt) {
-    const server = Date.parse(serverIso);
-    if (!Number.isFinite(server)) return;
-    clockOffset = server - (sentAt + receivedAt) / 2;
+    }
+    if (!fits) onMismatch();
   }
 
   // ---------- actions ----------
 
+  async function call(name, promise) {
+    try {
+      return await promise;
+    } catch (error) {
+      // No answer: the server may or may not have done it. A fresh state tells.
+      onMismatch();
+      throw new StoreError(`${name} failed: ${error?.message ?? error}`, error);
+    }
+  }
+
   function refusal(answer) {
-    const reason = reasonOf(answer?.reason);
-    if (reason === 'not-playing') onNotPlaying(); // the class ended: let the owner check
-    else if (reason !== 'bad-position') resync();
+    const reason = String(answer?.reason ?? 'failed');
+    if (reason === 'not-playing') onNotPlaying();
+    else if (reason !== 'bad-position' && reason !== 'held' && reason !== 'rate-limited') onMismatch();
     return reason;
   }
 
@@ -394,14 +346,14 @@ export function createRemoteStore({
     emit({ type: 'tray' });
     let answer;
     try {
-      answer = unwrap('take_from_tray', await api.take(groupId, piece, x, y));
+      answer = await call('take', api.take(piece, x, y));
     } catch (error) {
       putBack(piece);
       throw error;
     }
     if (!answer?.ok) {
       const reason = refusal(answer);
-      if (reason === 'not-in-tray') taking.delete(piece); // not mine any more: the resync shows it
+      if (reason === 'not-in-tray') taking.delete(piece); // not mine any more: the fresh state shows it
       else putBack(piece);
       return { ok: false, reason };
     }
@@ -410,14 +362,13 @@ export function createRemoteStore({
     const cell = cellOfPiece(piece, layout.cols);
     const pos = clampPosition(layout, [cell], x, y);
     removeFromTray(piece);
-    const c = placeCell(cell, answer.cluster_id);
+    const c = placeCell(cell, answer.clusterId);
     Object.assign(c, { x: pos.x, y: pos.y, heldBy: me, heldAt: now(), locked: false });
     if (Number.isFinite(answer.z)) c.z = answer.z;
-    if (pendingEvents) pendingEvents.push(['take', { ...answer, by: me }]);
-    const timer = timers.setTimeout(() => settleTake(answer.cluster_id), TAKE_SETTLE_MS);
-    takes.set(answer.cluster_id, { result: answer, timer });
-    emit({ type: 'take', piece, clusterId: answer.cluster_id, by: me });
-    return { ok: true, clusterId: answer.cluster_id };
+    const timer = timers.setTimeout(() => settleTake(answer.clusterId), TAKE_SETTLE_MS);
+    takes.set(answer.clusterId, { result: answer, timer, stale: false });
+    emit({ type: 'take', piece, clusterId: answer.clusterId, by: me });
+    return { ok: true, clusterId: answer.clusterId };
   }
 
   function putBack(piece) {
@@ -431,10 +382,11 @@ export function createRemoteStore({
     if (!taken) return null;
     takes.delete(clusterId);
     timers.clearTimeout(taken.timer);
-    const fits = applyTake({ ...taken.result, by: me });
     const r = taken.result;
-    emit({ type: 'drop', clusterId, id: r.id, x: r.x, y: r.y, absorbed: r.absorbed, by: me, completed: r.completed_now === true });
-    if (!fits) resync();
+    if (taken.stale) return r; // a fresh board has it already
+    const fits = applyTake({ ...r, by: me });
+    emit({ type: 'drop', clusterId, id: r.id, x: r.x, y: r.y, absorbed: r.absorbed, by: me, completed: Number.isFinite(r.completedAt) });
+    if (!fits) onMismatch();
     return r;
   }
 
@@ -443,26 +395,25 @@ export function createRemoteStore({
     if (!cluster) return { ok: false, reason: 'not-found' };
     if (cluster.locked) return { ok: false, reason: 'locked' };
     const sentAt = now();
-    const answer = unwrap('grab', await api.grab(clusterId));
+    const answer = await call('grab', api.grab(clusterId));
     const receivedAt = now();
     if (!answer?.ok) {
-      const reason = reasonOf(answer?.reason);
-      if (reason === 'held' && answer.held_by) {
+      const reason = refusal(answer);
+      if (reason === 'held' && answer.heldBy) {
         const c = clusters.get(clusterId);
-        if (c && c.heldBy !== answer.held_by) {
-          // Someone else got there first: show it now, the broadcast fills in the time.
-          c.heldBy = answer.held_by;
+        if (c && c.heldBy !== answer.heldBy) {
+          // Someone else got there first: show it now, their grab event follows.
+          c.heldBy = answer.heldBy;
           c.heldAt = receivedAt;
-          emit({ type: 'grab', clusterId, by: answer.held_by });
+          emit({ type: 'grab', clusterId, by: answer.heldBy });
         }
-        return { ok: false, reason, heldBy: answer.held_by };
+        return { ok: false, reason, heldBy: answer.heldBy };
       }
-      return { ok: false, reason: refusal(answer) };
+      return { ok: false, reason };
     }
-    if (answer.grabbed_at) noteServerTime(answer.grabbed_at, sentAt, receivedAt);
-    const payload = { ...answer, by: me };
-    if (apply('grab', payload)) emit({ type: 'grab', clusterId, by: me });
-    else resync();
+    if (Number.isFinite(answer.heldAt)) setClock(answer.heldAt, (sentAt + receivedAt) / 2);
+    if (applyGrab({ clusterId, by: me, heldAt: answer.heldAt, z: answer.z })) emit({ type: 'grab', clusterId, by: me });
+    else onMismatch();
     return { ok: true };
   }
 
@@ -472,22 +423,33 @@ export function createRemoteStore({
       return { ok: true, id: r.id, x: r.x, y: r.y, absorbed: [...(r.absorbed ?? [])], progress: r.progress };
     }
     if (!Number.isFinite(x) || !Number.isFinite(y)) return { ok: false, reason: 'bad-position' };
-    const answer = unwrap('drop', await api.drop(clusterId, x, y));
+    let answer = await call('drop', api.drop(clusterId, x, y));
+    if (answer?.ok === false && answer.reason === 'not-held') {
+      // Let go by the server while the finger was still on it: hold it again and put it down.
+      const again = await grab(clusterId);
+      if (!again.ok) return again;
+      answer = await call('drop', api.drop(clusterId, x, y));
+    }
     if (!answer?.ok) return { ok: false, reason: refusal(answer) };
-    const payload = { ...answer, by: me };
-    const fits = apply('drop', payload);
-    emit({
-      type: 'drop',
-      clusterId,
-      id: answer.id,
-      x: answer.x,
-      y: answer.y,
-      absorbed: [...(answer.absorbed ?? [])],
-      by: me,
-      completed: answer.completed_now === true,
-    });
-    if (!fits) resync();
-    return { ok: true, id: answer.id, x: answer.x, y: answer.y, absorbed: [...(answer.absorbed ?? [])], progress: answer.progress };
+    const fits = applySettle(answer);
+    const absorbed = [...(answer.absorbed ?? [])];
+    emit({ type: 'drop', clusterId, id: answer.id, x: answer.x, y: answer.y, absorbed, by: me, completed: Number.isFinite(answer.completedAt) });
+    if (!fits) onMismatch();
+    return { ok: true, id: answer.id, x: answer.x, y: answer.y, absorbed, progress: answer.progress };
+  }
+
+  /** Lets go of everything I hold without moving it (the page was hidden). */
+  async function release() {
+    const answer = await call('release', api.release());
+    if (!answer?.ok) return { ok: false, reason: String(answer?.reason ?? 'failed') };
+    for (const c of clusters.values()) {
+      if (c.heldBy === me) {
+        c.heldBy = null;
+        c.heldAt = null;
+      }
+    }
+    emit({ type: 'release', by: me });
+    return { ok: true };
   }
 
   function subscribe(listener) {
@@ -495,7 +457,7 @@ export function createRemoteStore({
     return () => listeners.delete(listener);
   }
 
-  // Names and who is online come from Presence (outside the store).
+  // Names and who is online come with the class state (student/live.js), outside the store.
   function setMembers(list) {
     const next = freezeMembers(list);
     if (JSON.stringify(next) === JSON.stringify(memberList)) return;
@@ -503,21 +465,15 @@ export function createRemoteStore({
     emit({ type: 'members' });
   }
 
-  // The puzzle is done: no more periodic board reads (broadcasts still arrive).
-  function stopResync() {
-    timers.clearInterval(resyncTimer);
-    resyncTimer = 0;
-  }
-
   function dispose() {
     if (disposed) return;
     disposed = true;
     listeners.clear();
-    timers.clearInterval(resyncTimer);
     for (const { timer } of takes.values()) timers.clearTimeout(timer);
     takes.clear();
-    unsubscribeChannel?.();
   }
+
+  loadBoard(board, serverNow);
 
   return {
     getState,
@@ -527,12 +483,10 @@ export function createRemoteStore({
     drop,
     dispose,
     // Beyond the PuzzleStore contract, for the class screen:
-    connect,
-    resync,
-    stopResync,
+    release,
+    applyBoard,
+    applyEvents,
     setMembers,
-    noteServerTime,
-    onEvent,
     get clockOffset() {
       return clockOffset;
     },

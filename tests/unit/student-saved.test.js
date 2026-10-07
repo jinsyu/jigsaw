@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NAME_MAX, normalizeName, withParticle } from '../../public/js/student/names.js';
-import { SAVED_KEY, clearSaved, readSaved, writeSaved } from '../../public/js/student/saved.js';
+import { SAVED_PREFIX, clearSaved, latestSaved, readSaved, savedKey, writeSaved } from '../../public/js/student/saved.js';
 import { memberColor, NEUTRAL_COLOR } from '../../public/js/student/colors.js';
 
 function memoryStorage() {
@@ -9,6 +9,10 @@ function memoryStorage() {
     getItem: (k) => (map.has(k) ? map.get(k) : null),
     setItem: (k, v) => map.set(k, String(v)),
     removeItem: (k) => map.delete(k),
+    get length() {
+      return map.size;
+    },
+    key: (i) => [...map.keys()][i] ?? null,
     map,
   };
 }
@@ -31,42 +35,69 @@ describe('normalizeName', () => {
   });
 });
 
-describe('saved student entry', () => {
+describe('saved student entry (one per class code)', () => {
   const now = 1_800_000_000_000;
+  const TOKEN = 'k3J9xQ2vYw8LmN4pR7sT1uV6zA0bC5dE-fG_hI2jK3l';
 
-  it('round-trips the class and name', () => {
+  it('round-trips the name and the student token under the class code', () => {
     const storage = memoryStorage();
-    writeSaved(storage, { name: ' 민준 ', code: '482913', sessionId: 7, memberId: 31 }, now);
-    expect(readSaved(storage, now + 1000)).toEqual({ name: '민준', code: '482913', sessionId: 7, memberId: 31 });
-    expect(JSON.parse(storage.getItem(SAVED_KEY)).v).toBe(1);
+    writeSaved(storage, { name: ' 민준 ', code: '482913', token: TOKEN }, now);
+    expect(readSaved(storage, '482913', now + 1000)).toEqual({ name: '민준', code: '482913', token: TOKEN });
+    expect(JSON.parse(storage.getItem(savedKey('482913'))).v).toBe(2);
+    expect(savedKey('482913')).toBe(`${SAVED_PREFIX}482913`);
+    expect(readSaved(storage, '111111', now)).toBeNull();
   });
 
   it('drops and removes entries that are old, from the future, broken, partial or of another version', () => {
     const storage = memoryStorage();
+    const key = savedKey('482913');
     const bad = [
-      () => writeSaved(storage, { name: '민준', code: '482913', sessionId: 7, memberId: 31 }, now - 24 * 3600 * 1000),
-      () => writeSaved(storage, { name: '민준', code: '482913', sessionId: 7, memberId: 31 }, now + 1),
-      () => storage.setItem(SAVED_KEY, '{nope'),
-      () => storage.setItem(SAVED_KEY, JSON.stringify({ v: 2, name: '민준', savedAt: now })),
-      () => writeSaved(storage, { name: '서연', code: '12', sessionId: 7, memberId: 31 }, now),
-      () => writeSaved(storage, { name: '  ', code: '482913', sessionId: 7, memberId: 31 }, now),
+      () => writeSaved(storage, { name: '민준', code: '482913', token: TOKEN }, now - 24 * 3600 * 1000),
+      () => writeSaved(storage, { name: '민준', code: '482913', token: TOKEN }, now + 1),
+      () => storage.setItem(key, '{nope'),
+      () => storage.setItem(key, JSON.stringify({ v: 1, name: '민준', code: '482913', sessionId: 7, memberId: 31, savedAt: now })),
+      () => storage.setItem(key, JSON.stringify({ v: 2, name: '민준', code: '999999', token: TOKEN, savedAt: now })),
+      () => writeSaved(storage, { name: '  ', code: '482913', token: TOKEN }, now),
+      () => writeSaved(storage, { name: '서연', code: '482913', token: 'short' }, now),
+      () => writeSaved(storage, { name: '서연', code: '482913', token: '<script>'.repeat(4) }, now),
     ];
     for (const write of bad) {
       write();
-      expect(readSaved(storage, now)).toBeNull();
-      expect(storage.getItem(SAVED_KEY)).toBeNull();
+      expect(readSaved(storage, '482913', now)).toBeNull();
+      expect(storage.getItem(key)).toBeNull();
     }
+    writeSaved(storage, { name: '서연', code: '12', token: TOKEN }, now);
+    expect(storage.map.size).toBe(0);
   });
 
-  it('clearSaved removes the name with the class (the class ended)', () => {
+  it('latestSaved picks the newest class of this device and removes the old one-key entry', () => {
     const storage = memoryStorage();
-    writeSaved(storage, { name: '지호', code: '482913', sessionId: 7, memberId: 31 }, now);
-    clearSaved(storage);
-    expect(storage.map.size).toBe(0);
+    storage.setItem('jigsaw-student', JSON.stringify({ v: 1, name: '옛날' }));
+    storage.setItem('other-app', 'x');
+    writeSaved(storage, { name: '지호', code: '111111', token: TOKEN }, now - 5000);
+    writeSaved(storage, { name: '유나', code: '222222', token: TOKEN }, now - 1000);
+    writeSaved(storage, { name: '서연', code: '333333', token: TOKEN }, now - 25 * 3600 * 1000);
+    expect(latestSaved(storage, now)).toEqual({ name: '유나', code: '222222', token: TOKEN });
+    expect(storage.getItem('jigsaw-student')).toBeNull();
+    expect(storage.getItem(savedKey('333333'))).toBeNull(); // expired: removed on the way
+    expect(storage.getItem('other-app')).toBe('x');
+    expect(latestSaved(memoryStorage(), now)).toBeNull();
+  });
+
+  it('clearSaved removes the name and token of that class only (the class ended)', () => {
+    const storage = memoryStorage();
+    writeSaved(storage, { name: '지호', code: '482913', token: TOKEN }, now);
+    writeSaved(storage, { name: '지호', code: '111111', token: TOKEN }, now);
+    clearSaved(storage, '482913');
+    expect([...storage.map.keys()]).toEqual([savedKey('111111')]);
   });
 
   it('survives a storage that throws', () => {
     const broken = {
+      length: 1,
+      key: () => {
+        throw new Error('denied');
+      },
       getItem: () => {
         throw new Error('denied');
       },
@@ -75,8 +106,9 @@ describe('saved student entry', () => {
       },
       removeItem: () => {},
     };
-    expect(() => writeSaved(broken, { name: '유나', code: '482913', sessionId: 1, memberId: 1 }, now)).not.toThrow();
-    expect(readSaved(broken, now)).toBeNull();
+    expect(() => writeSaved(broken, { name: '유나', code: '482913', token: TOKEN }, now)).not.toThrow();
+    expect(readSaved(broken, '482913', now)).toBeNull();
+    expect(latestSaved(broken, now)).toBeNull();
   });
 });
 

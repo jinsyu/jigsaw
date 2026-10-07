@@ -27,25 +27,26 @@ describe('teamLine', () => {
 });
 
 describe('membersFromMates', () => {
-  it('keeps the name seen earlier for a friend who left, otherwise 친구', () => {
+  it('keeps the name seen earlier for a friend whose name is missing, otherwise 친구', () => {
     const seen = new Map();
     const here = [
-      { id: 1, uid: 'a', name: '나', color: 0, online: true, me: true },
-      { id: 2, uid: 'b', name: '서연', color: 1, online: true, me: false },
+      { id: 'm-a', name: '나', color: 0, online: true, me: true },
+      { id: 'm-b', name: '서연', color: 1, online: true, me: false },
     ];
     expect(membersFromMates(here, seen)).toEqual([
-      { uid: 'a', name: '나', color: 0, online: true },
-      { uid: 'b', name: '서연', color: 1, online: true },
+      { uid: 'm-a', name: '나', color: 0, online: true },
+      { uid: 'm-b', name: '서연', color: 1, online: true },
     ]);
+    // After a server restart names come back only when each device does.
     const later = [
       { ...here[0] },
       { ...here[1], name: null, online: false },
-      { id: 3, uid: 'c', name: null, color: 2, online: false, me: false },
+      { id: 'm-c', name: null, color: 2, online: false, me: false },
     ];
     expect(membersFromMates(later, seen)).toEqual([
-      { uid: 'a', name: '나', color: 0, online: true },
-      { uid: 'b', name: '서연', color: 1, online: false },
-      { uid: 'c', name: '친구', color: 2, online: false },
+      { uid: 'm-a', name: '나', color: 0, online: true },
+      { uid: 'm-b', name: '서연', color: 1, online: false },
+      { uid: 'm-c', name: '친구', color: 2, online: false },
     ]);
   });
 });

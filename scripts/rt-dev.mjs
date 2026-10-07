@@ -1,7 +1,10 @@
 // Starts the rt server against the local Supabase stack (pnpm db:start first).
 // Local values come from `pnpm db:status` at run time and are never written to a file.
 // Test hooks are on (local only). Usage: pnpm rt:dev   (PORT env, default 3400)
+// RT_LOG_FILE=<path>: the server's output also goes to that file, started empty (the E2E tests
+// read it to check that no student name is logged, spec D14).
 import { execFileSync, spawn } from 'node:child_process';
+import { createWriteStream } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
@@ -36,6 +39,18 @@ const env = {
 };
 
 const server = fileURLToPath(new URL('../server/src/index.js', import.meta.url));
-const child = spawn(process.execPath, [server], { env, stdio: 'inherit' });
+const logFile = process.env.RT_LOG_FILE;
+const child = spawn(process.execPath, [server], { env, stdio: logFile ? ['ignore', 'pipe', 'pipe'] : 'inherit' });
+if (logFile) {
+  const log = createWriteStream(logFile, { flags: 'w' });
+  child.stdout.on('data', (chunk) => {
+    process.stdout.write(chunk);
+    log.write(chunk);
+  });
+  child.stderr.on('data', (chunk) => {
+    process.stderr.write(chunk);
+    log.write(chunk);
+  });
+}
 for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => child.kill('SIGTERM'));
 child.on('exit', (code) => process.exit(code ?? 0));

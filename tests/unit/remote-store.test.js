@@ -2,396 +2,287 @@ import { describe, expect, it, vi } from 'vitest';
 import { layoutFor } from '../../public/js/puzzle/geometry.js';
 import { frameOrigin } from '../../public/js/puzzle/snap.js';
 import { isPuzzleStore } from '../../public/js/store/puzzle-store.js';
-import { boardFromSnapshot, createRemoteStore, openRemoteStore, reasonOf } from '../../public/js/store/remote-store.js';
+import { StoreError, clustersFromBoard, createRemoteStore } from '../../public/js/store/remote-store.js';
 
-// 4 x 3 picture: pw = ph = 100. Group 9, me = 'a', friend = 'b'.
+// 4 x 3 picture: pw = ph = 100. me = 'a', friend = 'b'. Times are server ms.
 const layout = layoutFor(4, 3, 4 / 3);
 const ME = 'a';
+const SERVER_NOW = 1_000_000;
 
-// A board row as PostgREST returns it (groups -> clusters -> pieces).
-const cluster = (id, x, y, cells, extra = {}) => ({
+// A cluster as the rt server sends it in a student 'state' (server/src/views.js).
+const cluster = (id, x, y, pieces, extra = {}) => ({
   id,
   x,
   y,
   z: extra.z ?? id,
   locked: extra.locked ?? false,
-  grabbed_by: extra.grabbed_by ?? null,
-  grabbed_at: extra.grabbed_at ?? null,
-  pieces: cells.map(([col, row, onBoard = true, owner = null]) => ({ col, row, on_board: onBoard, owner_id: owner })),
+  pieces,
+  heldBy: extra.heldBy ?? null,
+  heldAt: extra.heldAt ?? null,
 });
 
-// Fake server side: answers are queued per call and come back like supabase-js ({ data, error });
-// loadBoard returns `board` (changeable).
-function fakeApi(board) {
+// My tray: pieces 0, 1, 2. Board: cluster 20 = piece 5 (1,1).
+function startBoard() {
+  return { clusters: [cluster(20, 300, 200, [[1, 1]])], tray: [0, 1, 2], progress: { placed: 0, total: 12 }, completedAt: null };
+}
+
+// Fake class socket: answers are queued per message.
+function fakeApi() {
   const api = {
-    board,
-    answers: { take: [], grab: [], drop: [] },
+    answers: { take: [], grab: [], drop: [], release: [] },
     calls: [],
-    loads: 0,
-    handlers: null,
-    unsubscribed: false,
-    async loadBoard(groupId) {
-      api.calls.push(['loadBoard', groupId]);
-      api.loads += 1;
-      if (api.beforeLoad) await api.beforeLoad();
-      return structuredClone(api.board);
-    },
+    fail: null,
     async take(...args) {
       api.calls.push(['take', ...args]);
-      return { data: api.answers.take.shift(), error: null };
+      if (api.fail) throw api.fail;
+      return api.answers.take.shift();
     },
     async grab(...args) {
       api.calls.push(['grab', ...args]);
-      return { data: api.answers.grab.shift(), error: null };
+      if (api.fail) throw api.fail;
+      return api.answers.grab.shift();
     },
     async drop(...args) {
       api.calls.push(['drop', ...args]);
-      return { data: api.answers.drop.shift(), error: null };
+      if (api.fail) throw api.fail;
+      return api.answers.drop.shift();
     },
-    subscribe(groupId, handlers) {
-      api.handlers = handlers;
-      return () => {
-        api.unsubscribed = true;
-      };
-    },
-    send(event, payload) {
-      api.handlers.onEvent(event, payload);
+    async release(...args) {
+      api.calls.push(['release', ...args]);
+      return api.answers.release.shift() ?? { ok: true };
     },
   };
   return api;
 }
 
-const timers = () => ({
-  setTimeout: vi.fn(() => 1),
-  clearTimeout: vi.fn(),
-  setInterval: vi.fn(() => 2),
-  clearInterval: vi.fn(),
-});
+const timers = () => ({ setTimeout: vi.fn(() => 1), clearTimeout: vi.fn() });
 
-// Tray: a owns pieces 0,1,2 (cells (0,0),(1,0),(2,0)); b owns 3. Board: cluster 20 = piece 5 (1,1).
-function startBoard() {
-  return {
-    completed_at: null,
-    clusters: [
-      cluster(10, 0, 0, [[0, 0, false, ME]]),
-      cluster(11, 0, 0, [[1, 0, false, ME]]),
-      cluster(12, 0, 0, [[2, 0, false, ME]]),
-      cluster(13, 0, 0, [[3, 0, false, 'b']]),
-      cluster(20, 300, 200, [[1, 1]]),
-      cluster(21, 500, 50, [[3, 2]], { grabbed_by: 'b', grabbed_at: '2026-10-07T00:00:05.000Z' }),
-    ],
-  };
-}
-
-async function open(board = startBoard(), extra = {}) {
-  const api = fakeApi(board);
-  const t = timers();
-  const store = await openRemoteStore({
+function makeStore(options = {}) {
+  const api = fakeApi();
+  const onMismatch = vi.fn();
+  const onNotPlaying = vi.fn();
+  let clock = 5_000; // local ms: the server is 995 000 ms ahead
+  const store = createRemoteStore({
     api,
-    groupId: 9,
     me: ME,
     layout,
     seed: 7,
-    picture: { src: '/x.webp', width: 400, height: 300 },
+    picture: { src: '/p.png', width: 400, height: 300 },
     groupName: '1모둠',
     members: [
-      { uid: ME, name: '가', color: 0, online: true },
-      { uid: 'b', name: '나', color: 1, online: true },
+      { uid: 'a', name: '민준', color: 0, online: true },
+      { uid: 'b', name: '서연', color: 1, online: true },
     ],
-    startedAt: 1000,
-    now: () => Date.parse('2026-10-07T00:00:06.000Z'),
-    timers: t,
-    ...extra,
+    startedAt: SERVER_NOW - 60_000,
+    board: options.board ?? startBoard(),
+    serverNow: SERVER_NOW,
+    onMismatch,
+    onNotPlaying,
+    now: () => clock,
+    timers: options.timers ?? timers(),
   });
-  return { api, store, timers: t };
+  return { store, api, onMismatch, onNotPlaying, tick: (ms) => (clock += ms) };
 }
 
-const ids = (state) => state.clusters.map((c) => c.id);
+const clusterOf = (store, id) => store.getState().clusters.find((c) => c.id === id);
 
-describe('reasonOf', () => {
-  it('maps the server reasons 1:1 with dashes', () => {
-    expect(reasonOf('not_in_tray')).toBe('not-in-tray');
-    expect(reasonOf('held')).toBe('held');
-    expect(reasonOf('not_playing')).toBe('not-playing');
-    expect(reasonOf(undefined)).toBe('failed');
-  });
-});
-
-describe('boardFromSnapshot', () => {
-  it('keeps only clusters with pieces on the board and lists tray owners', () => {
-    const { clusters, trayOwners } = boardFromSnapshot(startBoard(), 4, (iso) => Date.parse(iso));
-    expect([...clusters.keys()]).toEqual([20, 21]);
-    expect(clusters.get(21)).toMatchObject({ heldBy: 'b', heldAt: Date.parse('2026-10-07T00:00:05.000Z') });
-    expect([...trayOwners]).toEqual([
-      [0, ME],
-      [1, ME],
-      [2, ME],
-      [3, 'b'],
-    ]);
+describe('clustersFromBoard', () => {
+  it('keeps clusters with pieces and moves hold times to this device clock', () => {
+    const board = { clusters: [cluster(3, 1, 2, [[0, 0]], { heldBy: 'b', heldAt: 900 }), cluster(4, 0, 0, [])] };
+    const map = clustersFromBoard(board, (ms) => ms - 100);
+    expect([...map.keys()]).toEqual([3]);
+    expect(map.get(3)).toMatchObject({ heldBy: 'b', heldAt: 800, pieces: [[0, 0]] });
   });
 });
 
 describe('createRemoteStore', () => {
-  it('implements the PuzzleStore contract and loads the board on open', async () => {
-    const { store, api, timers: t } = await open();
+  it('implements the PuzzleStore contract from the state board', () => {
+    const { store } = makeStore();
     expect(isPuzzleStore(store)).toBe(true);
     const state = store.getState();
-    expect(ids(state)).toEqual([20, 21]);
+    expect(state.me).toBe(ME);
     expect([...state.tray].sort()).toEqual([0, 1, 2]);
+    expect(state.clusters.map((c) => c.id)).toEqual([20]);
     expect(state.progress).toEqual({ placed: 0, total: 12, complete: false });
-    expect(state.hints).toEqual({ preview: false, outline: true, pictureButton: true, underlay: false });
-    expect(state.clusters[1]).toMatchObject({ heldBy: 'b' });
-    expect(api.calls).toEqual([['loadBoard', 9]]);
-    expect(t.setInterval).toHaveBeenCalledWith(expect.any(Function), 15000);
+    expect(state.startedAt).toBe(SERVER_NOW - 60_000);
   });
 
-  it('orders the tray by the seed, not by the picture position', async () => {
-    const board = startBoard();
-    board.clusters = Array.from({ length: 12 }, (_, i) => cluster(100 + i, 0, 0, [[i % 4, Math.floor(i / 4), false, ME]]));
-    const { store } = await open(board);
-    const tray = store.getState().tray;
-    expect([...tray].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-    expect(tray).not.toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-    const again = await open(structuredClone(board));
-    expect(again.store.getState().tray).toEqual(tray);
+  it('orders the tray by the seed, not by the picture position', () => {
+    const board = { ...startBoard(), tray: [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11] };
+    const a = makeStore({ board }).store.getState().tray;
+    const b = makeStore({ board: { ...board, tray: [...board.tray].reverse() } }).store.getState().tray;
+    expect(a).toEqual(b);
+    expect(a).not.toEqual([...a].sort((x, y) => x - y));
   });
 
-  it('takes a tray piece: held by me at the clamped spot until drop() settles the server result', async () => {
-    const { store, api } = await open();
-    api.answers.take.push({
-      ok: true,
-      cluster_id: 10,
-      piece: 0,
-      id: 20,
-      x: 200,
-      y: 200,
-      z: 7,
-      locked: false,
-      absorbed: [10],
-      progress: { placed: 0, total: 12, complete: false },
-    });
-    const changes = [];
-    store.subscribe((state, change) => changes.push(change.type));
-    const taken = await store.takeFromTray(0, -5000, 210);
-    expect(taken).toEqual({ ok: true, clusterId: 10 });
-    expect(api.calls.at(-1)).toEqual(['take', 9, 0, -5000, 210]);
-    let state = store.getState();
-    expect(state.tray).not.toContain(0);
-    expect(state.clusters.find((c) => c.id === 10)).toMatchObject({ x: 0, y: 210, heldBy: ME });
-
-    const dropped = await store.drop(10, -5000, 210);
-    expect(dropped).toEqual({ ok: true, id: 20, x: 200, y: 200, absorbed: [10], progress: { placed: 0, total: 12, complete: false } });
-    expect(api.calls.filter(([name]) => name === 'drop')).toEqual([]); // no second call
-    state = store.getState();
-    expect(state.clusters.find((c) => c.id === 10)).toBeUndefined();
-    expect(state.clusters.find((c) => c.id === 20)).toMatchObject({ x: 200, y: 200, z: 7, heldBy: null });
-    expect(state.clusters.find((c) => c.id === 20).pieces).toEqual([
-      [1, 1],
-      [0, 0],
-    ]);
-    expect(changes).toEqual(['tray', 'take', 'drop']);
+  it('takes a tray piece: held by me at the clamped spot until drop() settles the server answer', async () => {
+    const { store, api } = makeStore();
+    api.answers.take.push({ ok: true, piece: 0, clusterId: 31, id: 31, x: -10, y: 40, z: 9, locked: false, absorbed: [], progress: { placed: 0, total: 12, complete: false }, completedAt: null });
+    const taken = await store.takeFromTray(0, -500, 40);
+    expect(taken).toEqual({ ok: true, clusterId: 31 });
+    expect(api.calls[0]).toEqual(['take', 0, -500, 40]);
+    expect(store.getState().tray).not.toContain(0);
+    const held = clusterOf(store, 31);
+    expect(held.heldBy).toBe(ME);
+    expect(held.x).toBeGreaterThan(-500); // clamped like local-store
+    const dropped = await store.drop(31, -500, 40);
+    expect(dropped).toMatchObject({ ok: true, id: 31, x: -10, y: 40, absorbed: [] });
+    expect(clusterOf(store, 31)).toMatchObject({ x: -10, y: 40, heldBy: null, z: 9 });
+    expect(api.calls.filter(([name]) => name === 'drop')).toEqual([]); // take already dropped it
   });
 
   it('a piece leaves the tray at once and comes back if the take fails', async () => {
-    const { store, api } = await open();
-    let answer;
-    api.take = () => new Promise((resolve) => (answer = resolve));
-    const taking = store.takeFromTray(1, 10, 10);
-    expect(store.getState().tray).not.toContain(1);
-    // A board read meanwhile still has it in my tray on the server: it stays out.
-    await store.resync();
-    expect(store.getState().tray).not.toContain(1);
-    answer({ data: { ok: false, reason: 'bad_position' }, error: null });
-    expect(await taking).toEqual({ ok: false, reason: 'bad-position' });
-    expect(store.getState().tray).toContain(1);
+    const { store, api, onMismatch } = makeStore();
+    api.fail = new Error('timeout');
+    const before = store.getState().tray.length;
+    const pending = store.takeFromTray(1, 0, 0);
+    expect(store.getState().tray).toHaveLength(before - 1);
+    await expect(pending).rejects.toBeInstanceOf(StoreError);
+    expect(store.getState().tray).toHaveLength(before);
+    expect(onMismatch).toHaveBeenCalled(); // no answer: a fresh state tells what happened
+  });
 
-    api.take = async () => ({ data: null, error: { message: 'Failed to fetch' } });
-    await expect(store.takeFromTray(2, 10, 10)).rejects.toThrow(/take_from_tray failed/);
+  it('refusals keep the tray and are passed on', async () => {
+    const { store, api, onNotPlaying } = makeStore();
+    api.answers.take.push({ ok: false, reason: 'bad-position' });
+    expect(await store.takeFromTray(2, 0, 0)).toEqual({ ok: false, reason: 'bad-position' });
     expect(store.getState().tray).toContain(2);
-  });
-
-  it('maps refusals and does not touch the tray', async () => {
-    const { store, api } = await open();
-    api.answers.take.push({ ok: false, reason: 'not_in_tray' });
-    expect(await store.takeFromTray(1, 10, 10)).toEqual({ ok: false, reason: 'not-in-tray' });
-    expect(store.getState().tray).toContain(1);
-    expect(await store.takeFromTray(3, 10, 10)).toEqual({ ok: false, reason: 'not-in-tray' }); // b's piece: no call
-    expect(api.calls.filter(([n]) => n === 'take')).toHaveLength(1);
-  });
-
-  it('grab: first one wins; a refused grab shows who holds it', async () => {
-    const { store, api } = await open();
-    api.answers.grab.push({ ok: true, cluster_id: 20, z: 40, grabbed_at: '2026-10-07T00:00:06.000Z' });
-    expect(await store.grab(20)).toEqual({ ok: true });
-    expect(store.getState().clusters.at(-1)).toMatchObject({ id: 20, heldBy: ME, z: 40 });
-
-    api.answers.grab.push({ ok: false, reason: 'held', held_by: 'b' });
-    expect(await store.grab(21)).toEqual({ ok: false, reason: 'held', heldBy: 'b' });
-    api.answers.grab.push({ ok: false, reason: 'locked' });
-    expect(await store.grab(20)).toEqual({ ok: false, reason: 'locked' });
-    expect(await store.grab(999)).toEqual({ ok: false, reason: 'not-found' });
-  });
-
-  it('throws a StoreError on transport errors (the screen shows a message and resyncs)', async () => {
-    const { store, api } = await open();
-    api.grab = async () => ({ data: null, error: { message: 'Failed to fetch' } });
-    await expect(store.grab(20)).rejects.toThrow(/grab failed/);
-  });
-
-  it('applies friends\' broadcasts: grab, drop with merge, take, tray, release', async () => {
-    const { store, api } = await open();
-    api.send('grab', { by: 'b', cluster_id: 20, z: 30, grabbed_at: '2026-10-07T00:00:06.000Z', id: 'f3e1c0de-0000-4000-8000-000000000000' });
-    expect(store.getState().clusters.at(-1)).toMatchObject({ id: 20, heldBy: 'b', z: 30 });
-
-    api.send('drop', { by: 'b', cluster_id: 20, id: 21, x: 77, y: 88, z: 31, locked: false, absorbed: [20] });
-    let state = store.getState();
-    expect(ids(state)).toEqual([21]);
-    expect(state.clusters[0]).toMatchObject({ x: 77, y: 88, heldBy: null });
-    expect(state.clusters[0].pieces).toHaveLength(2);
-
-    api.send('take', { by: 'b', cluster_id: 13, piece: 3, id: 13, x: 5, y: 6, z: 32, locked: false, absorbed: [] });
-    expect(ids(store.getState())).toEqual([21, 13]);
-
-    api.send('tray', { pieces: [{ col: 0, row: 2, owner: ME }, { col: 0, row: 0, owner: 'b' }], id: 'uuid-from-realtime' });
-    state = store.getState();
-    expect(state.tray).toContain(8);
-    expect(state.tray).not.toContain(0);
-
-    api.send('grab', { by: 'b', cluster_id: 13, z: 33, grabbed_at: '2026-10-07T00:00:06.000Z' });
-    api.send('release', { clusters: [13] });
-    expect(store.getState().clusters.find((c) => c.id === 13).heldBy).toBeNull();
-  });
-
-  it('ignores the echo of my own grab/drop/take and unknown events', async () => {
-    const { store, api } = await open();
-    api.answers.grab.push({ ok: true, cluster_id: 20, z: 9, grabbed_at: '2026-10-07T00:00:06.000Z' });
-    await store.grab(20);
-    api.answers.drop.push({ ok: true, cluster_id: 20, id: 20, x: 1, y: 2, z: 9, locked: false, absorbed: [] });
-    await store.drop(20, 1, 2);
-    api.send('grab', { by: ME, cluster_id: 20, z: 9, grabbed_at: '2026-10-07T00:00:06.000Z' });
-    expect(store.getState().clusters.find((c) => c.id === 20).heldBy).toBeNull();
-    const before = store.getState();
-    api.send('presence_diff', { anything: 1 });
-    expect(store.getState()).toBe(before);
-  });
-
-  it('marks completion from a drop result, and progress counts locked pieces', async () => {
-    const board = startBoard();
-    board.clusters = [cluster(20, 300, 200, [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [2, 2]]), cluster(30, 10, 10, [[3, 2]])];
-    const { store, api } = await open(board);
-    const f = frameOrigin(layout);
-    api.send('drop', {
-      by: 'b',
-      cluster_id: 30,
-      id: 20,
-      x: f.x,
-      y: f.y,
-      z: 40,
-      locked: true,
-      absorbed: [30],
-      completed_at: '2026-10-07T00:00:06.000Z',
-      completed_now: true,
-    });
-    const state = store.getState();
-    expect(state.progress).toEqual({ placed: 12, total: 12, complete: true });
-    expect(state.completedAt).toBe(Date.parse('2026-10-07T00:00:06.000Z'));
-  });
-
-  it('resyncs when an event does not fit the board here (a missed broadcast)', async () => {
-    const { store, api } = await open();
-    api.board.clusters.push(cluster(50, 1, 1, [[0, 2]]));
-    api.send('drop', { by: 'b', cluster_id: 50, id: 50, x: 9, y: 9, z: 50, locked: false, absorbed: [] });
-    await vi.waitFor(() => expect(api.loads).toBe(2));
-    await vi.waitFor(() => expect(ids(store.getState())).toContain(50));
-  });
-
-  it('events that arrive while a snapshot loads are applied on top of it', async () => {
-    const { store, api } = await open();
-    let release;
-    api.beforeLoad = () => new Promise((resolve) => (release = resolve));
-    const loading = store.resync();
-    // The snapshot was taken before this drop: the drop must survive the reload.
-    api.send('drop', { by: 'b', cluster_id: 20, id: 20, x: 123, y: 45, z: 60, locked: false, absorbed: [] });
-    release();
-    await loading;
-    expect(store.getState().clusters.find((c) => c.id === 20)).toMatchObject({ x: 123, y: 45 });
-  });
-
-  it('one load at a time: requests during a load run once more afterwards', async () => {
-    const { store, api } = await open();
-    let release;
-    api.beforeLoad = () => new Promise((resolve) => (release = resolve));
-    const first = store.resync();
-    store.resync();
-    store.resync();
-    release();
-    api.beforeLoad = null;
-    await first;
-    await vi.waitFor(() => expect(api.loads).toBe(3)); // open + this one + one queued
-  });
-
-  it('reloads when the channel (re)subscribes and on the timer', async () => {
-    const { api, timers: t } = await open();
-    api.handlers.onStatus('SUBSCRIBED');
-    await vi.waitFor(() => expect(api.loads).toBe(2));
-    t.setInterval.mock.calls[0][0]();
-    await vi.waitFor(() => expect(api.loads).toBe(3));
-  });
-
-  it('an end broadcast ends the class once; not_playing asks the owner to check', async () => {
-    const onEnd = vi.fn();
-    const onNotPlaying = vi.fn();
-    const { store, api } = await open(startBoard(), { onEnd, onNotPlaying });
-    api.send('end', { session_id: 1 });
-    api.send('end', { session_id: 1 });
-    expect(onEnd).toHaveBeenCalledTimes(1);
-    api.answers.drop.push({ ok: false, reason: 'not_playing' });
-    expect(await store.drop(20, 1, 1)).toEqual({ ok: false, reason: 'not-playing' });
+    expect(await store.takeFromTray(9, 0, 0)).toEqual({ ok: false, reason: 'not-in-tray' });
+    api.answers.grab.push({ ok: false, reason: 'not-playing' });
+    expect(await store.grab(20)).toEqual({ ok: false, reason: 'not-playing' });
     expect(onNotPlaying).toHaveBeenCalledTimes(1);
   });
 
-  it('heldAt uses this device\'s clock (server offset from grab answers)', async () => {
-    let clock = Date.parse('2026-10-07T00:00:00.000Z');
-    const { store, api } = await open(startBoard(), { now: () => clock });
-    // The server is 60 s ahead: grabbed_at is server time.
-    api.grab = async () => {
-      clock += 100;
-      return { data: { ok: true, cluster_id: 20, z: 9, grabbed_at: '2026-10-07T00:01:00.050Z' }, error: null };
-    };
+  it('grab: a refused grab shows who holds it; a granted one sets the clock from the server', async () => {
+    const { store, api, tick } = makeStore();
+    api.answers.grab.push({ ok: false, reason: 'held', heldBy: 'b' });
+    expect(await store.grab(20)).toEqual({ ok: false, reason: 'held', heldBy: 'b' });
+    expect(clusterOf(store, 20).heldBy).toBe('b');
+    tick(1000);
+    api.answers.grab.push({ ok: true, z: 30, heldAt: SERVER_NOW + 5000 });
+    expect(await store.grab(20)).toEqual({ ok: true });
+    expect(clusterOf(store, 20)).toMatchObject({ heldBy: ME, z: 30, heldAt: 6000 });
+    expect(store.clockOffset).toBe(SERVER_NOW + 5000 - 6000);
+  });
+
+  it('dropping after the server let go (not-held) grabs again and drops once more', async () => {
+    const { store, api } = makeStore();
+    api.answers.drop.push({ ok: false, reason: 'not-held' });
+    api.answers.grab.push({ ok: true, z: 31, heldAt: SERVER_NOW });
+    api.answers.drop.push({ ok: true, clusterId: 20, id: 20, x: 333, y: 222, z: 31, locked: false, absorbed: [], progress: { placed: 0, total: 12, complete: false }, completedAt: null });
+    expect(await store.drop(20, 333, 222)).toMatchObject({ ok: true, id: 20, x: 333, y: 222 });
+    expect(api.calls.map(([name]) => name)).toEqual(['drop', 'grab', 'drop']);
+    expect(clusterOf(store, 20)).toMatchObject({ x: 333, y: 222, heldBy: null });
+  });
+
+  it('… and when a friend holds it by then, the drop is refused with held (the screen slides it back)', async () => {
+    const { store, api } = makeStore();
+    api.answers.drop.push({ ok: false, reason: 'not-held' });
+    api.answers.grab.push({ ok: false, reason: 'held', heldBy: 'b' });
+    expect(await store.drop(20, 333, 222)).toEqual({ ok: false, reason: 'held', heldBy: 'b' });
+    expect(clusterOf(store, 20)).toMatchObject({ x: 300, y: 200, heldBy: 'b' });
+  });
+
+  it("applies friends' events: grab, take, drop with a merge, tray, release, complete", () => {
+    const { store, onMismatch } = makeStore();
+    const changes = [];
+    store.subscribe((_, change) => changes.push(change.type));
+    store.applyEvents([
+      { type: 'grab', by: 'b', clusterId: 20, z: 40, heldAt: SERVER_NOW + 1000 },
+      { type: 'member', memberId: 'b', online: true },
+    ]);
+    expect(clusterOf(store, 20)).toMatchObject({ heldBy: 'b', heldAt: 5000 + 1000, z: 40 });
+    // b takes piece 4 (0,1) and it joins cluster 20 (piece 5 (1,1)): survivor 20.
+    store.applyEvents([
+      { type: 'take', by: 'b', piece: 4, clusterId: 32, id: 20, x: 300, y: 200, z: 41, locked: false, absorbed: [32], progress: { placed: 0, total: 12 } },
+    ]);
+    expect(clusterOf(store, 20).pieces).toEqual([[1, 1], [0, 1]]);
+    expect(clusterOf(store, 32)).toBeUndefined();
+    store.applyEvents([{ type: 'release', by: 'b', clusterId: 20, reason: 'idle' }]);
+    expect(clusterOf(store, 20).heldBy).toBeNull();
+    store.applyEvents([{ type: 'tray', pieces: [{ piece: 7, from: 'c', to: ME }, { piece: 0, from: ME, to: 'b' }] }]);
+    expect(store.getState().tray).toContain(7);
+    expect(store.getState().tray).not.toContain(0);
+    const { ox, oy } = frameOrigin(layout);
+    store.applyEvents([
+      { type: 'drop', by: 'b', clusterId: 20, id: 20, x: ox, y: oy, z: 42, locked: true, absorbed: [], progress: { placed: 2, total: 12 } },
+      { type: 'complete', completedAt: SERVER_NOW + 9000 },
+    ]);
+    expect(clusterOf(store, 20)).toMatchObject({ locked: true, x: ox, y: oy });
+    expect(store.getState().progress).toEqual({ placed: 2, total: 12, complete: false });
+    expect(store.getState().completedAt).toBe(SERVER_NOW + 9000);
+    expect(changes).toEqual(['grab', 'take', 'release', 'tray', 'drop', 'complete']);
+    expect(onMismatch).not.toHaveBeenCalled();
+  });
+
+  it('a cluster of several pieces absorbed into another keeps every piece', () => {
+    const board = { ...startBoard(), clusters: [cluster(20, 300, 200, [[1, 1]]), cluster(21, 0, 0, [[2, 1], [3, 1], [3, 2]])] };
+    const { store, onMismatch } = makeStore({ board });
+    store.applyEvents([{ type: 'drop', by: 'b', clusterId: 21, id: 20, x: 300, y: 200, z: 5, locked: false, absorbed: [21], progress: { placed: 0, total: 12 } }]);
+    expect(store.getState().clusters).toHaveLength(1);
+    expect(clusterOf(store, 20).pieces).toEqual([[1, 1], [2, 1], [3, 1], [3, 2]]);
+    expect(onMismatch).not.toHaveBeenCalled();
+  });
+
+  it('an old release does not end a newer hold, and my own take/grab/drop echoes are skipped', async () => {
+    const { store, api } = makeStore();
+    api.answers.grab.push({ ok: true, z: 50, heldAt: SERVER_NOW });
     await store.grab(20);
-    expect(store.clockOffset).toBe(60_000);
-    api.send('grab', { by: 'b', cluster_id: 20, z: 10, grabbed_at: '2026-10-07T00:01:01.000Z' });
-    expect(store.getState().clusters.find((c) => c.id === 20).heldAt).toBe(Date.parse('2026-10-07T00:00:01.000Z'));
+    // The friend's hold ended (idle) in the same step the server gave the cluster to me.
+    store.applyEvents([
+      { type: 'release', by: 'b', clusterId: 20, reason: 'idle' },
+      { type: 'grab', by: ME, clusterId: 20, z: 50, heldAt: SERVER_NOW },
+      { type: 'drop', by: ME, clusterId: 20, id: 20, x: 0, y: 0, absorbed: [] },
+    ]);
+    expect(clusterOf(store, 20)).toMatchObject({ heldBy: ME, x: 300, y: 200 });
+    store.applyEvents([{ type: 'release', by: ME, clusterId: 20, reason: 'limit' }]);
+    expect(clusterOf(store, 20).heldBy).toBeNull();
   });
 
-  it('members come from outside (Presence) and dispose stops everything', async () => {
-    const { store, api, timers: t } = await open();
-    const listener = vi.fn();
-    store.subscribe(listener);
-    store.setMembers([{ uid: ME, name: '가', color: 0, online: true }, { uid: 'b', name: '나', color: 1, online: false }]);
-    expect(store.getState().members[1]).toMatchObject({ uid: 'b', online: false });
-    expect(listener).toHaveBeenCalledTimes(1);
-    // The same list again (the class is read every few seconds): no redraw.
-    store.setMembers([{ uid: ME, name: '가', color: 0, online: true }, { uid: 'b', name: '나', color: 1, online: false }]);
-    expect(listener).toHaveBeenCalledTimes(1);
+  it('an event that does not fit the board asks for a fresh state, which replaces everything', () => {
+    const { store, onMismatch } = makeStore();
+    store.applyEvents([{ type: 'drop', by: 'b', clusterId: 77, id: 77, x: 0, y: 0, absorbed: [78] }]);
+    expect(onMismatch).toHaveBeenCalledTimes(1);
+    store.applyBoard({ clusters: [cluster(77, 10, 20, [[0, 0], [1, 0]], { heldBy: 'b', heldAt: SERVER_NOW + 100 })], tray: [2], completedAt: null }, SERVER_NOW + 200);
+    expect(store.getState().clusters.map((c) => c.id)).toEqual([77]);
+    expect(store.getState().tray).toEqual([2]);
+    expect(clusterOf(store, 77).heldAt).toBe(5000 - 100); // offset from the new state's time
+  });
+
+  it('a fresh state while a taken piece waits for drop(): the state wins', async () => {
+    const t = timers();
+    const { store, api } = makeStore({ timers: t });
+    api.answers.take.push({ ok: true, piece: 0, clusterId: 31, id: 20, x: 300, y: 200, z: 9, locked: false, absorbed: [31], progress: { placed: 0, total: 12 }, completedAt: null });
+    await store.takeFromTray(0, 280, 190);
+    store.applyBoard({ clusters: [cluster(20, 300, 200, [[1, 1], [0, 0]])], tray: [1, 2], completedAt: null }, SERVER_NOW);
+    expect(t.clearTimeout).toHaveBeenCalled();
+    expect(await store.drop(31, 280, 190)).toMatchObject({ ok: true, id: 20 });
+    expect(clusterOf(store, 20).pieces).toEqual([[1, 1], [0, 0]]);
+    expect(api.calls.filter(([name]) => name === 'drop')).toEqual([]);
+  });
+
+  it('release() lets go of everything I hold (the page was hidden)', async () => {
+    const { store, api } = makeStore({ board: { ...startBoard(), clusters: [cluster(20, 0, 0, [[1, 1]], { heldBy: ME, heldAt: SERVER_NOW })] } });
+    expect(await store.release()).toEqual({ ok: true });
+    expect(api.calls).toEqual([['release']]);
+    expect(clusterOf(store, 20).heldBy).toBeNull();
+  });
+
+  it('members come from outside and dispose stops listeners and timers', async () => {
+    const t = timers();
+    const { store, api } = makeStore({ timers: t });
+    const seen = [];
+    store.subscribe((state) => seen.push(state.members.length));
+    store.setMembers([{ uid: 'a', name: '민준', color: 0, online: true }]);
+    store.setMembers([{ uid: 'a', name: '민준', color: 0, online: true }]); // same: no change
+    expect(seen).toEqual([1]);
+    api.answers.take.push({ ok: true, piece: 0, clusterId: 31, id: 31, x: 0, y: 0, absorbed: [], progress: { placed: 0, total: 12 } });
+    await store.takeFromTray(0, 0, 0);
+    const heard = seen.length;
     store.dispose();
-    expect(api.unsubscribed).toBe(true);
-    expect(t.clearInterval).toHaveBeenCalled();
-    api.send('grab', { by: 'b', cluster_id: 20, z: 1, grabbed_at: '2026-10-07T00:00:06.000Z' });
-    expect(listener).toHaveBeenCalledTimes(1);
-  });
-
-  it('stopResync ends the periodic board reads only', async () => {
-    const { store, api, timers: t } = await open();
-    store.stopResync();
-    expect(t.clearInterval).toHaveBeenCalledWith(2);
-    api.send('grab', { by: 'b', cluster_id: 20, z: 50, grabbed_at: '2026-10-07T00:00:06.000Z' });
-    expect(store.getState().clusters.at(-1)).toMatchObject({ id: 20, heldBy: 'b' });
-  });
-
-  it('createRemoteStore does not load until asked', () => {
-    const api = fakeApi(startBoard());
-    createRemoteStore({ api, groupId: 9, me: ME, layout, seed: 7, picture: {}, groupName: '', startedAt: 0, timers: timers() });
-    expect(api.loads).toBe(0);
+    expect(t.clearTimeout).toHaveBeenCalled();
+    store.applyEvents([{ type: 'grab', by: 'b', clusterId: 20 }]);
+    store.applyBoard(startBoard(), SERVER_NOW);
+    expect(seen).toHaveLength(heard);
   });
 });

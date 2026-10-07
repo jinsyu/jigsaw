@@ -8,6 +8,10 @@
 // - After 'groups' / 'start' students are moved between group rooms and get a full 'state';
 //   group rooms get 'mates' (names of their students) when membership, names or presence change.
 // - After 'end' every socket of the class gets the event and is disconnected.
+// - flushGroupOf() sends a group's batch at once. sockets.js calls it before a student's 'state'
+//   and before answering a student's puzzle message, so a screen receives every earlier event
+//   of its group before the state or the answer (it can drop events that came before 'state'
+//   and apply everything after it in server order, plan memo T22).
 import { groupMates, studentState } from './views.js';
 
 export const GROUP_BATCH_MS = 100;
@@ -28,6 +32,8 @@ export function createBroadcaster(io, { now, pictureUrl = async () => null, log 
   const memberRoom = new Map(); // member id -> current group room
 
   function flushGroup(room) {
+    const timer = groupTimers.get(room);
+    if (timer !== undefined) timers.clearTimeout(timer);
     groupTimers.delete(room);
     const events = groupBuffers.get(room);
     groupBuffers.delete(room);
@@ -93,8 +99,18 @@ export function createBroadcaster(io, { now, pictureUrl = async () => null, log 
         return null;
       })
       .then((url) => {
-        if (session.member(memberId)) io.to(rooms.member(memberId)).emit('state', studentState(session, memberId, now(), url));
+        const member = session.member(memberId);
+        if (!member) return;
+        flushGroupOf(session, member.group);
+        io.to(rooms.member(memberId)).emit('state', studentState(session, memberId, now(), url));
       });
+  }
+
+  // Sends what is batched for group `number` of the class now (see the header).
+  function flushGroupOf(session, number) {
+    if (number === null || number === undefined) return;
+    const room = rooms.group(session.id, number);
+    if (groupBuffers.has(room)) flushGroup(room);
   }
 
   function dispatch(session, events) {
@@ -127,11 +143,8 @@ export function createBroadcaster(io, { now, pictureUrl = async () => null, log 
         if (group != null) matesFor.add(group);
         markOverview(session);
       } else if (payload.type === 'end') {
-        for (const [room, timer] of groupTimers) {
-          if (room.startsWith(`g:${session.id}:`)) {
-            timers.clearTimeout(timer);
-            flushGroup(room);
-          }
+        for (const room of [...groupTimers.keys()]) {
+          if (room.startsWith(`g:${session.id}:`)) flushGroup(room);
         }
         setImmediate(() => io.in(rooms.session(session.id)).disconnectSockets(true));
       }
@@ -147,15 +160,12 @@ export function createBroadcaster(io, { now, pictureUrl = async () => null, log 
 
   // Sends everything still batched (shutdown).
   function flushAll() {
-    for (const [room, timer] of [...groupTimers]) {
-      timers.clearTimeout(timer);
-      flushGroup(room);
-    }
+    for (const room of [...groupTimers.keys()]) flushGroup(room);
     for (const [sid, timer] of [...overviewTimers]) {
       timers.clearTimeout(timer);
       flushOverview(sid);
     }
   }
 
-  return { dispatch, attachStudent, sendState, flushAll };
+  return { dispatch, attachStudent, sendState, flushGroupOf, flushAll };
 }

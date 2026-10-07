@@ -1,133 +1,98 @@
-// A student's group puzzle in class: reads the session (grid, seed, picture, help settings),
-// opens the Supabase store for the group, mounts the puzzle screen and keeps it going:
-// - redistribute_stale every REDISTRIBUTE_MS (idempotent on the server, every screen of the
-//   group calls it) so the tray of a student gone for a minute is dealt to the others;
-// - back from the background: heartbeat first, then a fresh board and redistribute_stale
-//   (otherwise this student's own tray could be dealt away, T6 review);
+// A student's group puzzle in class: the picture (built-in file, or the teacher's picture through
+// the signed URL the rt server sent with the state), the class store for the group
+// (remote-store.js on the class socket, student/live.js) and the puzzle screen:
+// - board states and events from the socket go to the store (kept while the picture loads);
+// - the page hidden: let go of everything held (spec rule 6); back: ask for a fresh state;
 // - every piece in the frame: the completion screen.
-// Names and who is online come in through setMates() (Presence, student/live.js).
+// The rt server decides everything (holds, the one-minute rule, completion); nothing runs on
+// a timer here.
 import { layoutFor } from '../puzzle/geometry.js';
 import { mountPlayScreen } from '../play/play-screen.js';
-import { hintsFromSession } from '../store/puzzle-store.js';
-import { openRemoteStore } from '../store/remote-store.js';
-import { createSupabaseApi } from '../store/supabase-api.js';
-import { renderCelebration } from './celebrate.js';
+import { createRemoteStore } from '../store/remote-store.js';
+import { h } from '../teacher/dom.js';
 import { exposeTestHook } from '../test-hooks.js';
+import { renderCelebration } from './celebrate.js';
 
-export const REDISTRIBUTE_MS = 20_000;
 const BUILTIN_INDEX = '/images/builtin/index.json';
-const SESSION_FIELDS =
-  'cols, rows, aspect, seed, piece_count, builtin_key, image_id, started_at, ' +
-  'hint_preview, hint_outline, hint_picture_button, hint_underlay';
 
-// Members for the store from the live class state. A friend who left keeps the name this
-// screen saw while they were here (`seen`: uid -> name, updated here); never seen: '친구'.
+// Members for the store from the class mates. A friend whose name this screen has not got
+// (after a server restart, until their device is back) keeps the name seen before (`seen`:
+// id -> name, updated here); never seen: '친구'.
 export function membersFromMates(mates, seen = new Map()) {
-  return mates
-    .filter((m) => m.uid)
-    .map((m) => {
-      if (m.name) seen.set(m.uid, m.name);
-      return { uid: m.uid, name: seen.get(m.uid) ?? '친구', color: m.color ?? 0, online: m.me || m.online };
-    });
+  return mates.map((m) => {
+    if (m.name) seen.set(m.id, m.name);
+    return { uid: m.id, name: seen.get(m.id) ?? '친구', color: m.color ?? 0, online: m.me || m.online };
+  });
 }
 
-// Built-in key -> its file, or the teacher's picture from the private bucket as a blob: URL
-// (no expiring signed URL, and blob: is allowed by the CSP img-src everywhere).
-// Outside built-in pictures carry their credit line (same rule as play/demo.js: none for
-// our own drawings, '자체 제작', and none for teachers' pictures).
-async function loadPictureInfo(client, session) {
-  if (session.builtin_key) {
-    const response = await fetch(BUILTIN_INDEX);
+async function imageSize(src) {
+  const img = new Image();
+  img.src = src;
+  await img.decode();
+  return { width: img.naturalWidth, height: img.naturalHeight };
+}
+
+// Built-in key -> its file. The teacher's picture is read once through its signed URL into a
+// blob: URL (allowed by the CSP img-src everywhere, and it does not expire mid-class).
+// Outside built-in pictures carry their credit line (none for our own drawings, '자체 제작',
+// and none for teachers' pictures; same rule as play/demo.js).
+export async function loadPictureInfo(setup, fetchImpl = globalThis.fetch) {
+  if (setup.builtinKey) {
+    const response = await fetchImpl(BUILTIN_INDEX);
     if (!response.ok) throw new Error(`built-in pictures: HTTP ${response.status}`);
-    const found = (await response.json()).images.find((image) => image.key === session.builtin_key);
-    if (!found) throw new Error(`unknown built-in picture: ${session.builtin_key}`);
+    const found = (await response.json()).images.find((image) => image.key === setup.builtinKey);
+    if (!found) throw new Error(`unknown built-in picture: ${setup.builtinKey}`);
     const credit = found.category !== '자체 제작' && found.credit ? found.credit : undefined;
     return { src: found.src, width: found.width, height: found.height, credit, revoke: () => {} };
   }
-  if (!session.image_id) throw new Error('the session has no picture');
-  const { data: image, error } = await client.from('images').select('path, width, height').eq('id', session.image_id).maybeSingle();
-  if (error) throw error;
-  if (!image) throw new Error('the picture is not readable');
-  const { data: blob, error: downloadError } = await client.storage.from('images').download(image.path);
-  if (downloadError) throw downloadError;
-  const src = URL.createObjectURL(blob);
-  return { src, width: image.width, height: image.height, revoke: () => URL.revokeObjectURL(src) };
+  if (!setup.pictureUrl) throw new Error('the class picture has no address');
+  const response = await fetchImpl(setup.pictureUrl, { credentials: 'omit', cache: 'no-store' });
+  if (!response.ok) throw new Error(`picture: HTTP ${response.status}`);
+  const src = URL.createObjectURL(await response.blob());
+  try {
+    return { src, ...(await imageSize(src)), revoke: () => URL.revokeObjectURL(src) };
+  } catch (error) {
+    URL.revokeObjectURL(src);
+    throw error;
+  }
 }
 
 /**
+ * Opens the puzzle of my group. Returns a handle at once; `ready` settles when the screen is up
+ * (or rejects when it could not open). Board states and events given before that are kept.
  * @param {object} options
- * @param {object} options.client     supabase-js (student)
  * @param {HTMLElement} options.main
- * @param {number} options.sessionId
- * @param {{ id: number, number: number }} options.group
- * @param {string} options.userId
- * @param {Array} options.mates       live.js mates
- * @param {{ beat: () => Promise<void>, refresh: () => Promise<void> }} options.live
- * @param {() => void} options.onEnded
- * @param {() => boolean} [options.isCurrent]  false once the student moved on (another group,
- *   class over) while this was loading: nothing is drawn and null is returned.
+ * @param {ReturnType<import('./live.js').connectClass>} options.live
+ * @param {object} options.setup     session part of the state (grid, seed, picture, hints, startedAt)
+ * @param {string} options.memberId
+ * @param {number} options.groupNumber
+ * @param {Array} options.mates      model mates
+ * @param {object} options.board     my group's board from the state
+ * @param {number} options.serverNow
  */
-export async function openPuzzle({ client, main, sessionId, group, userId, mates, live, onEnded, isCurrent = () => true }) {
+export function openPuzzle({ main, live, setup, memberId, groupNumber, mates, board, serverNow }) {
   let disposed = false;
+  let store = null;
   let screen = null;
+  let picture = null;
   let celebrated = false;
   let currentMates = mates;
-  let redistributeTimer = 0;
+  let latest = { board, serverNow };
+  let pending = []; // event batches while the store does not exist yet
+  let connected = true;
+  let removeHook = () => {};
+  let unsubscribe = () => {};
   const seenNames = new Map();
+  const band = h('p', { class: 'st-band', role: 'status', hidden: true }, h('i', { class: 'dot' }), '연결이 끊겼어요. 다시 연결하는 중이에요…');
 
-  const { data: session, error } = await client.from('sessions').select(SESSION_FIELDS).eq('id', sessionId).maybeSingle();
-  if (error) throw error;
-  if (!session) throw new Error('the session is not readable');
-  const picture = await loadPictureInfo(client, session);
-  const startedAt = Date.parse(session.started_at);
-  const store = await openRemoteStore({
-    api: createSupabaseApi(client),
-    groupId: group.id,
-    me: userId,
-    layout: layoutFor(session.cols, session.rows, session.aspect),
-    seed: Number(session.seed),
-    picture: {
-      src: picture.src,
-      width: picture.width,
-      height: picture.height,
-      ...(picture.credit ? { credit: picture.credit } : {}),
-    },
-    groupName: `${group.number}모둠`,
-    hints: hintsFromSession(session),
-    members: membersFromMates(mates, seenNames),
-    startedAt,
-    onEnd: onEnded,
-    onNotPlaying: () => live.refresh(),
-  }).catch((cause) => {
-    picture.revoke();
-    throw cause;
-  });
-
-  // After time in the background this screen may count as gone itself: signal first.
-  let mayBeStale = false;
-  async function redistribute() {
-    if (disposed || celebrated || document.visibilityState === 'hidden') return;
-    if (mayBeStale) {
-      await live.beat();
-      mayBeStale = false;
-    }
-    const { data, error: rpcError } = await client.rpc('redistribute_stale', { p_group: group.id });
-    if (rpcError) console.error(rpcError);
-    else if (data?.ok && data.pieces?.length) store.onEvent('tray', { pieces: data.pieces });
-  }
-
-  // Once complete nothing on the board can change: stop the board reads and redistribution
-  // (heartbeat and the class reads in live.js go on, so the end of the class is still seen).
   function celebrate() {
     if (celebrated || disposed) return;
     celebrated = true;
-    clearInterval(redistributeTimer);
-    store.stopResync();
     const state = store.getState();
     screen?.destroy();
     screen = null;
     renderCelebration(main, {
-      groupNumber: group.number,
+      groupNumber,
       names: membersFromMates(currentMates, seenNames)
         .filter((m) => seenNames.has(m.uid))
         .map((m) => m.name),
@@ -137,70 +102,110 @@ export async function openPuzzle({ client, main, sessionId, group, userId, mates
     });
   }
 
-  async function onVisible() {
-    if (disposed) return;
+  function onVisibility() {
+    if (disposed || !store) return;
     if (document.visibilityState === 'hidden') {
-      mayBeStale = true;
-      return;
-    }
-    try {
-      await live.beat();
-      mayBeStale = false;
-      if (celebrated) return;
-      await store.resync();
-      await redistribute();
-    } catch (cause) {
-      console.error(cause);
+      // The screen lets go of a dragged piece itself (play-screen.js); this lets go on the server.
+      store.release().catch((error) => console.error(error));
+    } else {
+      live.sync();
     }
   }
 
-  if (!isCurrent()) {
-    store.dispose();
-    picture.revoke();
-    return null;
-  }
-  if (store.getState().progress.complete) celebrate();
-  else {
-    screen = await mountPlayScreen(main, store, { onComplete: celebrate });
-    document.title = `${group.number}모둠 퍼즐 | 함께 퍼즐`;
-  }
-  // A board reloaded after the drop that finished it (missed broadcast) also completes.
-  const unsubscribe = store.subscribe((state) => {
-    if (state.progress.complete) celebrate();
-  });
-  if (!celebrated) redistributeTimer = setInterval(() => redistribute().catch((e) => console.error(e)), REDISTRIBUTE_MS);
-  document.addEventListener('visibilitychange', onVisible);
-  window.addEventListener('online', onVisible);
+  async function open() {
+    const loaded = await loadPictureInfo(setup);
+    if (disposed) {
+      loaded.revoke();
+      return null;
+    }
+    picture = loaded;
+    store = createRemoteStore({
+      api: live.api,
+      me: memberId,
+      layout: layoutFor(setup.cols, setup.rows, setup.aspect),
+      seed: Number(setup.seed),
+      picture: {
+        src: picture.src,
+        width: picture.width,
+        height: picture.height,
+        ...(picture.credit ? { credit: picture.credit } : {}),
+      },
+      groupName: `${groupNumber}모둠`,
+      hints: setup.hints,
+      members: membersFromMates(currentMates, seenNames),
+      startedAt: setup.startedAt,
+      board: latest.board,
+      serverNow: latest.serverNow,
+      onMismatch: () => live.sync(),
+    });
+    for (const list of pending) store.applyEvents(list);
+    pending = [];
 
-  // Test hook (local stack only, test-hooks.js): read-only state and the board camera.
-  const removeHook = exposeTestHook('__puzzle', {
-    state: () => store.getState(),
-    camera: () => screen?.board.camera ?? null,
-    boardToClient: (x, y) => screen?.board.boardToClient(x, y) ?? null,
-    dragging: () => screen?.board.dragging ?? null,
-    holders: () => screen?.board.holders ?? [],
-    redistribute,
-    resync: () => store.resync(),
-  });
+    if (store.getState().progress.complete) celebrate();
+    else {
+      screen = await mountPlayScreen(main, store, { onComplete: celebrate });
+      if (disposed) return null;
+      document.title = `${groupNumber}모둠 퍼즐 | 함께 퍼즐`;
+      (main.querySelector('.pz-board') ?? main).append(band);
+      band.hidden = connected;
+    }
+    // A board that arrives complete (a missed moment, a fresh state) completes too.
+    unsubscribe = store.subscribe((state) => {
+      if (state.progress.complete) celebrate();
+    });
+    document.addEventListener('visibilitychange', onVisibility);
 
-  return {
-    store,
+    // Test hook (local stack only, test-hooks.js): read-only state and the board camera.
+    removeHook = exposeTestHook('__puzzle', {
+      state: () => store.getState(),
+      camera: () => screen?.board.camera ?? null,
+      boardToClient: (x, y) => screen?.board.boardToClient(x, y) ?? null,
+      dragging: () => screen?.board.dragging ?? null,
+      holders: () => screen?.board.holders ?? [],
+      sync: () => live.sync(),
+    });
+    return handle;
+  }
+
+  const handle = {
+    groupNumber,
+    get store() {
+      return store;
+    },
+    ready: null,
+    applyBoard(next, now) {
+      if (disposed) return;
+      if (store) store.applyBoard(next, now);
+      else {
+        latest = { board: next, serverNow: now };
+        pending = [];
+      }
+    },
+    applyEvents(list) {
+      if (disposed || !list.length) return;
+      if (store) store.applyEvents(list);
+      else pending.push(list);
+    },
     setMates(next) {
       currentMates = next;
-      store.setMembers(membersFromMates(next, seenNames));
+      store?.setMembers(membersFromMates(next, seenNames));
     },
-    noteServerTime: (iso, sentAt, receivedAt) => store.noteServerTime(iso, sentAt, receivedAt),
+    setConnected(ok) {
+      connected = ok;
+      band.hidden = ok;
+    },
     dispose() {
       if (disposed) return;
       disposed = true;
-      clearInterval(redistributeTimer);
-      document.removeEventListener('visibilitychange', onVisible);
-      window.removeEventListener('online', onVisible);
+      document.removeEventListener('visibilitychange', onVisibility);
       unsubscribe();
       screen?.destroy();
-      store.dispose();
-      picture.revoke();
+      store?.dispose();
+      picture?.revoke();
+      band.remove();
       removeHook();
     },
   };
+  handle.ready = open();
+  return handle;
 }

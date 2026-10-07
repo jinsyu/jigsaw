@@ -1,6 +1,6 @@
 // Student puzzle screen (mockups student-phone #4, student-tablet). Reads and
 // changes puzzle data only through a PuzzleStore, so the in-memory demo store
-// and the Supabase store (T11) plug in the same way.
+// and the class store on the rt server (remote-store.js) plug in the same way.
 import { makePuzzle } from '../puzzle/geometry.js';
 import { HOLD_MS, isHeldByOther } from '../puzzle/snap.js';
 import { cellOfPiece, isPuzzleStore, normalizeHints, pieceOfCell } from '../store/puzzle-store.js';
@@ -245,7 +245,11 @@ export async function mountPlayScreen(main, store, { onComplete } = {}) {
       return grabbed;
     }
     const result = await store.drop(clusterId, x, y);
-    if (!result.ok) board.setClusters(store.getState().clusters);
+    if (!result.ok) {
+      // The server let go of it during the drag and a friend took it meanwhile (remote store).
+      if (result.reason === 'held') showToast('친구가 잡고 있는 조각이에요.');
+      board.setClusters(store.getState().clusters);
+    }
     return result;
   }
 

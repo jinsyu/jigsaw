@@ -6,6 +6,7 @@
 //
 // Messages (each with an acknowledgement callback):
 //   students: take { piece, x, y } · grab { clusterId } · drop { clusterId, x, y } · release { clusterId? }
+//             · sync {} (answered { ok: true }, then a fresh 'state')
 //   teacher:  assign { memberId, group } · randomize · start · end
 // A message from the wrong role is answered { ok: false, reason: 'forbidden' }, a malformed one
 // 'bad-request', too many per second 'rate-limited'. Students act only on their own group's
@@ -131,15 +132,24 @@ export function attachSockets({ httpServer, config, registry, persistence, now, 
     const open = (studentSockets.get(memberId) ?? 0) + 1;
     studentSockets.set(memberId, open);
     if (open === 1) deliver(session, session.memberOnline(memberId));
-    urlOf(session).then((url) => {
-      if (socket.connected && session.member(memberId)) socket.emit('state', studentState(session, memberId, now(), url));
-    });
+    sendStudentState(socket, session);
     socket.on('disconnect', () => {
       const left = (studentSockets.get(memberId) ?? 1) - 1;
       if (left > 0) return studentSockets.set(memberId, left);
       studentSockets.delete(memberId);
       const current = registry.session(sessionId);
       if (current) deliver(current, current.memberOffline(memberId));
+    });
+  }
+
+  // One full state to this socket; every earlier event of the student's group goes out first.
+  function sendStudentState(socket, session) {
+    const { memberId } = socket.data;
+    urlOf(session).then((url) => {
+      const member = session.member(memberId);
+      if (!socket.connected || !member) return;
+      broadcaster.flushGroupOf(session, member.group);
+      socket.emit('state', studentState(session, memberId, now(), url));
     });
   }
 
@@ -154,16 +164,26 @@ export function attachSockets({ httpServer, config, registry, persistence, now, 
 
   function handle(socket, event, message, bucket) {
     const isStudentMessage = Object.hasOwn(STUDENT_MESSAGES, event);
-    if (!isStudentMessage && !TEACHER_MESSAGES.has(event)) return { ok: false, reason: 'unknown-message' };
+    if (!isStudentMessage && !TEACHER_MESSAGES.has(event) && event !== 'sync') return { ok: false, reason: 'unknown-message' };
     if (!bucket.take()) return { ok: false, reason: 'rate-limited' };
     if (!isObject(message)) return { ok: false, reason: 'bad-request' };
     const session = registry.session(socket.data.sessionId);
     if (!session) return { ok: false, reason: 'not-playing' };
 
+    // A student screen asks for its state again (its board stopped fitting the events).
+    if (event === 'sync') {
+      if (socket.data.role !== 'student') return { ok: false, reason: 'forbidden' };
+      sendStudentState(socket, session);
+      return { ok: true };
+    }
+
     if (isStudentMessage) {
       if (socket.data.role !== 'student') return { ok: false, reason: 'forbidden' };
       const [action, valid, args] = STUDENT_MESSAGES[event];
       if (!valid(message)) return { ok: false, reason: 'bad-request' };
+      // Everything that happened in the group before this message reaches the student before
+      // the answer, so the screen applies events and answers in server order.
+      broadcaster.flushGroupOf(session, session.member(socket.data.memberId)?.group);
       const { result, events } = session.puzzle(socket.data.memberId, action, ...args(message));
       deliver(session, events);
       return result;
