@@ -1,170 +1,240 @@
 # Plan: 모둠 협동 직소 퍼즐 (함께 퍼즐)
 
-기준 문서: `docs/spec.md`(승인), `docs/research.md`, 화면 목업 `docs/mockups/*.png`·`docs/mockups/src/*.html`(화면 구성·문구·색은 목업을 따른다).
-`[사용자 작업]` 표시는 에이전트가 할 수 없는 일(계정·프로젝트 생성, OAuth 등록, 비밀번호 입력, 도메인 연결)이다. T14 전까지는 전부 로컬 Supabase로 개발·검증한다.
+기준 문서: `docs/spec.md`(2026-10-08 서버 구조 변경 반영, 승인), `docs/research.md`, 화면 목업 `docs/mockups/*.png`·`docs/mockups/src/*.html`(화면 구성·문구·색은 목업을 따른다), gyosil 공용 원칙 `~/dev/class-rpg-game/docs/platform.md`.
+`[사용자 작업]` 표시는 에이전트가 할 수 없는 일(계정·대시보드 설정, OAuth 등록, 비밀값 입력, 서버 접속 권한)이다. **T24 까지는 원격(Supabase gyosil·rt 서버·Vercel)에 아무것도 적용하지 않고 로컬(로컬 Supabase + 로컬 rt 서버)에서 완성·검증한다.** 원격 적용·배포는 T25 하나에서만 한다. 예외로 main 푸시는 태스크마다 하며 Vercel 에 자동 배포되지만, 운영 rt 주소가 T25 까지 비어 있어 운영 화면은 '준비 중'을 유지한다(메모 '푸시와 배포').
+
+## 완료된 태스크 (이전 구조: 브라우저 → Supabase 직접)
+
+T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰고, Supabase 직접 접속 부분(RPC·RLS·Realtime·익명 로그인·pg_cron)은 T14~T23 에서 rt 서버 구조로 바꾼다. 아래 세부 내용은 기록용이다.
 
 - [x] T1: 프로젝트 초기화 (정적 사이트 뼈대, Vitest·Playwright, 기본 SEO·파비콘, 빈 배포 가능 상태) — DoD: -
   - pnpm `package.json`(개발 의존성만: vitest, @playwright/test). 빌드 단계 없음.
-  - 폴더 구조: `public/`(배포 루트: `index.html`, `privacy.html` 자리, `css/`, `js/`, `images/`), `supabase/`, `tests/unit`·`tests/db`·`tests/e2e`·`tests/fixtures`, `scripts/`.
-  - `vercel.json`: `outputDirectory: "public"`(migrations·tests가 공개되지 않게), 화면 경로(`/teacher/...`, `/join` 등) → `index.html` 재작성, 기본 보안 헤더.
-  - `scripts/serve.mjs`: 의존성 없는 로컬 정적 서버(같은 재작성 규칙). Playwright `webServer` 로 사용.
-  - 목업 `common.css`를 바탕으로 기본 스타일, 첫 화면 뼈대(학생 '코드 입력' 크게, 교사 '수업 만들기' 작게)와 경로 분기(`js/app.js`).
-  - SEO: title·description·canonical(`https://jigsaw.gyosil.app`)·OG(og 이미지 1200x630), `robots.txt`, `sitemap.xml`, 파비콘(SVG + PNG 32·180, 목업 `iconPiece` 모양).
-  - 시험: Vitest 예제 1개, Playwright 스모크(첫 화면 표시, 360·390·1024·1440px 가로 넘침 없음).
-
+  - 폴더 구조: `public/`(배포 루트), `supabase/`, `tests/unit`·`tests/db`·`tests/e2e`·`tests/fixtures`, `scripts/`.
+  - `vercel.json`: `outputDirectory: "public"`, 화면 경로 → `index.html` 재작성, 기본 보안 헤더. `scripts/serve.mjs` 로컬 정적 서버.
+  - SEO·파비콘·robots·sitemap, 4개 너비 스모크.
 - [x] T2: 퍼즐 기하·맞춤 판정 JS 모듈 + 공용 시험 사례 표 — DoD: D7
-  - `public/js/puzzle/geometry.js`: 시드 rng, 조각 수(12·24·48·70) → 격자(4x3, 6x4, 8x6, 10x7, 세로 그림은 행열 바꿈), 조각 모양(목업 `common.js` `makePuzzle`·`edge` 재사용, Path2D/SVG path 둘 다).
-  - 좌표 규약: 완성 그림 너비 = cols x 100 단위, 높이는 그림 비율로. 덩어리 위치 (x, y) = 완성 그림 원점의 판 위 위치. 판 = 각 변 약 √3배(넓이 3배).
-  - `public/js/puzzle/snap.js`: `findMerges(clusters, droppedId, tol)` — 이웃 조각을 가진 덩어리끼리 원점 차이가 허용 거리 안이면 합치고, 합친 뒤 다시 검사(연쇄). 합친 위치는 큰 덩어리(같으면 id 작은 쪽) 기준으로 정한다. 진행률(맞춘 조각 = 2개 이상 덩어리에 속한 조각 수)·완성 판정. (T5 에서 바뀜: 판 가운데 틀 원점 `frameOrigin` 가까이 오면 제자리에 고정, 고정된 쪽이 합치기 기준, 진행률 = 고정된 조각 수, 완성 = 모든 조각 고정, 허용 거리 40)
-  - 판 경계 고정(clamp) 규칙도 여기서 정의.
-  - `tests/fixtures/snap-cases.json`: 입력(격자, 덩어리 목록, 놓은 덩어리, 허용 거리) → 기대 결과(합쳐진 덩어리, 최종 위치, 완성 여부). 경계값(허용 거리 딱 안/밖), 대각선(이웃 아님), 연쇄 합치기, 판 밖 놓기 포함 15개 이상.
-  - Vitest: 같은 시드 → 같은 모양, 모든 사례 통과.
+  - `public/js/puzzle/geometry.js`, `public/js/puzzle/snap.js`(`resolveDrop`·`resolveDropWithHolds`·`grabRefusal`·`progress`·`clampPosition`, 허용 거리 40, 잡기 10초), `tests/fixtures/snap-cases.json`.
+- [x] T3: 로컬 Supabase·스키마·RLS·실시간 권한·저장소 — DoD: D12, D14 (T14~T23 에서 대체)
+- [x] T4: 수업 흐름 RPC + 자동 정리 — DoD: D3, D4, D5, D14 (T16·T18 로 대체)
+- [x] T5: 퍼즐 RPC + JS·SQL 맞춤 판정 교차 검사 — DoD: D5, D6, D7, D10 (T15 로 대체, SQL 판정 없앰)
+- [x] T6: 끊김 처리 RPC — DoD: D8, D9 (T15 로 대체)
+- [x] T7: 교사 로그인·내 수업·수업 만들기·코드/QR — DoD: D1 (로그인·데이터 연결은 T20·T21 에서 교체)
+- [x] T8: 그림 올리기·내 그림 관리 — DoD: D2 (브라우저 WebP 변환은 유지, 저장 경로는 T20·T21 에서 교체)
+- [x] T9: 학생 입장·기다리기 + 교사 대기실 모둠 편성 — DoD: D3, D4, D14 (T21·T22 에서 연결 교체)
+- [x] T10: 학생 퍼즐 화면 — 판·상자·확대 — DoD: D5, D13 (`puzzle-store.js` 계약·`local-store.js` 는 그대로)
+- [x] T11: 협동 동기화·끊김·완성 화면 — DoD: D6~D10 (T22 에서 연결 교체)
+- [x] T12: 교사 모둠 한눈에 보기·수업 끝내기 — DoD: D10, D11, D14 (T21 에서 폴링 → 서버 푸시)
+- [x] T13: 내장 그림 약 20장·출처 표기, 개인정보 처리방침, 외부 스크립트 점검 — DoD: D15
+  - 내장 그림·출처 표기·`privacy.html`. 처리방침의 처리 장소·학생 정보 설명과 CSP 허용 목록은 새 구조에 맞춰 T23 에서 다시 고친다.
+- ~~T14 / T14a: 원격 배포(브라우저 직접 접속 구조로 gyosil 이전)~~ → 폐기. 아래 T14~T25 로 다시 나눔.
 
-- [x] T3: 로컬 Supabase·스키마·RLS·실시간 권한·저장소 — DoD: D12, D14
-  - `npx supabase init` / `npx supabase start`(docker). CLI 전역 설치 없이 `npx` 로만. `package.json` 스크립트(`db:start`, `db:reset`, `test:db`).
-  - `supabase/config.toml`: 익명 로그인 켜기, 로컬 전용 이메일·비밀번호 로그인(시험용 교사), **익명 가입 한도 상향**(학교는 한 IP로 30명 이상이 들어옴).
-  - 마이그레이션: `images`, `sessions`(코드, 그림, 조각 수, cols·rows, 그림 비율, 시드, 상태, 시작 시각), `groups`, `members`(이름 열 없음, 색 번호, last_seen), `clusters`, `pieces`. 교사 = 익명이 아닌 사용자(`auth.jwt()->>'is_anonymous'`).
-  - RLS: 교사는 자기 수업 전체, 학생은 자기 수업 행·자기 모둠 행만 읽기. 조각·덩어리 쓰기는 직접 불가(RPC만).
-  - `realtime.messages` 정책: `group:<id>` 는 그 모둠 학생·담당 교사만, `session:<id>`(Presence) 는 그 수업 참가자·교사만.
-  - Storage: 비공개 버킷 `images`(경로 `<teacher_uid>/<id>.webp`), 교사 본인만 쓰기·지우기, 그 그림을 쓰는 수업의 학생은 읽기.
-  - `supabase/seed.sql`: 시험용 교사 계정. `tests/db/` 공용 도우미(교사·학생 클라이언트 만들기, service 키는 `npx supabase status -o env` 에서 읽고 저장소에 커밋하지 않음).
-  - 시험: 다른 모둠·다른 수업 행 읽기·쓰기 거부, 학생이 테이블 직접 update 거부, 다른 모둠 채널 구독 거부, members 에 이름 열이 없음.
+## 서버 전환 태스크
 
-- [x] T4: 수업 흐름 RPC + 자동 정리 — DoD: D3, D4, D5, D14
-  - `create_session`(열린 수업 사이에서 겹치지 않는 6자리 코드, 시드), `join_session(code)`(틀린 코드·닫힌 수업 → 정해진 오류 코드, 같은 uid 재입장은 기존 행 반환), `assign_member(member, group|null)`, `randomize_groups`, `start_session`, `end_session`.
-  - `start_session`: 모둠마다 조각·덩어리 생성, 모둠원 수로 무작위 고르게 나누기(최대 1개 차이), 색 번호 부여, `realtime.send` 로 `session:<id>` 에 시작 알림.
-  - 시작 후 배정된 학생은 상자 없음. 시작 후 다른 모둠으로 옮긴 학생의 상자 조각은 원래 모둠 접속자에게 나눈다.
-  - `end_session`: 상태 종료, members 삭제, 그 학생 익명 계정(`auth.users`) 삭제, 각 모둠·수업 채널에 종료 알림.
-  - pg_cron: 24시간 지난 members·익명 계정 삭제(입장 실패로 남은 익명 계정 포함), 종료 30일 뒤 sessions(연쇄 삭제) 삭제.
-  - 시험: 24조각·5명 → 5·5·5·5·4, 틀린 코드 오류, 교사가 아닌 사용자 호출 거부, 종료 후 members·익명 계정 0개, cron 함수 직접 호출로 정리 확인.
+- [x] T14: 보류 중인 T14a 변경 보관·정리, 퍼즐 모듈 Node 실행 확인 — DoD: D7
+  - 작업 트리의 T14a 변경(코드·시험·`supabase/` 전체, `docs/` 제외)을 보관 브랜치(예: `archive/t14a`)에 커밋해 남긴다 **[사용자 확인: 보관 브랜치 커밋]**. 그 뒤 main 작업 트리를 HEAD(`5be89bc`) 상태로 되돌린다. 이때 `docs/spec.md`·`docs/plan.md` 는 되돌리지 않는다.
+  - T14a 의 SQL 마이그레이션(`2026100800*`)·`supabase-names.js`·원격 주소 `config.js`·스키마 접두 변경은 버린다. Supabase 와 상관없는 변경(퍼즐 모듈·자석 `magnet.js` 수정, 시험 격리·중복 정리 등)만 diff 에서 골라 다시 적용하고, 고른 목록을 보고에 적는다.
+  - `snap.js`·`geometry.js`·(조각 나누기 등) 판정에 쓰는 모듈이 DOM·브라우저 전용 API 없이 Node 에서 import 되는지 확인한다. `Path2D` 처럼 브라우저 전용인 부분은 호출할 때만 쓰이게 정리한다.
+  - 검증: `tests/unit/node-import.test.js`(Vitest `environment: node` 로 퍼즐 모듈 import·`resolveDropWithHolds` 실행)를 추가하고, 기존 단위·DB·E2E 시험을 HEAD 상태에서 모두 통과시킨다(전환 중 기준선).
+  - 결과: 보관 브랜치 `archive/t14a-browser-direct`(커밋 `a399116`, 원격 푸시). 다시 적용한 변경 0건(퍼즐·자석 모듈 변경도 SQL 함수 이름 주석뿐이라 버림). 퍼즐 모듈은 이미 Node 에서 import 되어 코드 수정 없음. D7 완료 표시는 서버 `drop` 경로로 증명하는 T15 에서 한다.
 
-- [x] T5: 퍼즐 RPC(꺼내기·잡기·놓기·합치기·완성) + JS·SQL 맞춤 판정 교차 검사 — DoD: D5, D6, D7, D10
-  - `take_from_tray(piece, x, y)`: 상자 주인만 성공.
-  - `grab(cluster)`: 원자적 update 하나로 먼저 온 쪽만 성공(비어 있음, 또는 잡은 지 10초 지남, 또는 잡은 사람 끊김일 때만 뺏을 수 있음).
-  - `drop(cluster, x, y)`: 잡은 사람만, 판 경계 고정, 맞춤 판정·연쇄 합치기·제자리(틀) 고정(모둠 행을 잠가 같은 모둠의 놓기를 차례로 처리), 모든 조각이 제자리에 고정되면 `groups.completed_at` 기록. 고정된 덩어리는 잡을 수 없다(`locked`).
-  - 결과는 `realtime.send` 로 `group:<id>` 에 방송(잡기·놓기·합치기·완성). 끄는 도중 움직임은 방송하지 않는다.
-  - 맞춤 판정은 순수 SQL 함수로 분리하고, `tests/db/snap-parity.test.js` 가 `tests/fixtures/snap-cases.json` 의 모든 사례를 JS `resolveDropWithHolds` 와 SQL 함수(그리고 `drop`·`take_from_tray` RPC) 양쪽에 넣어 결과가 같은지 검사한다(spec 위험 요소 'SQL 맞춤 판정' 대응).
-  - 시험: 남의 상자 조각 꺼내기 거부, 동시 grab 두 개(Promise.all) 중 하나만 성공, 합치기 뒤 함께 움직임, 완성 시각 기록, 방송 메시지 수신.
+- [ ] T15: 서버 퍼즐 엔진(모둠 판 상태, 순수 로직) — DoD: D5, D6, D7, D8, D9, D10
+  - `server/package.json`(type module, Node 24, 의존성은 이 태스크에서는 없음), `server/src/engine/board.js`: 모둠 하나의 판 상태(덩어리·조각·상자 주인·잡기·접속)와 동작 `takeFromTray`·`grab`·`drop`·`release`·`memberOnline/Offline`·`tick(now)`. 판정은 `public/js/puzzle/snap.js`·`geometry.js` 를 import 해서 쓴다(복사 금지).
+  - 조각 나누기(`shuffledPieces` 등)는 `local-store.js` 에서 공용 모듈(예: `public/js/puzzle/deal.js`)로 옮겨 화면 데모 저장소와 서버가 같이 쓴다.
+  - 규칙: 먼저 도착한 잡기만 성공, 고정 덩어리 잡기 거부, 남의 상자 조각 거부, 잡은 채 10초 무동작 또는 끊김 → 놓임, 끊긴 지 1분 → 상자 남은 조각을 접속 중인 모둠원에게 고르게(늦게 온 학생 포함, 접속자 없으면 안 나눔, 한 번만), 같은 학생이 1분 안에 돌아오면 상자 그대로, 모든 조각 고정 → 완성 시각. 잡기 연장 상한(처음 잡은 뒤 최대 60초, 넘으면 놓임)을 둔다.
+  - 시계는 주입(`now()`), 결과는 '보낼 이벤트 목록'으로 돌려준다(소켓과 분리).
+  - 검증: `tests/server/board.test.js`(Vitest). 24조각·5명이면 5·5·5·5·4로 나뉘는지, 동시 잡기는 하나만 성공하는지, 남의 조각 거부, 가짜 시계로 10초·1분·연장 상한, 재분배를 한 번만 하는지, 완성을 시험한다. 그리고 **`snap-cases.json` 전 사례를 엔진의 `drop` 경로로 통과**(D7)시킨다.
 
-- [x] T6: 끊김 처리 RPC(신호·자동 놓기·상자 나누기) — DoD: D8, D9
-  - `heartbeat()`: last_seen 갱신(학생 화면이 5초마다 호출). 끊김 기준 약 15초.
-  - 잡은 지 10초가 지났거나 잡은 사람이 끊긴 덩어리는 다른 학생이 `grab` 가능(T5 조건 시험 포함).
-  - `redistribute_stale(group)`: last_seen 이 1분 넘은 학생의 상자 남은 조각을 같은 모둠 접속자(시작 후 들어온 학생 포함)에게 고르게 나누고 방송. 모둠 화면들이 주기적으로 호출해도 한 번만 일어나게(멱등).
-  - 1분 안에 같은 uid 로 돌아오면 상자가 그대로임을 시험. 접속자가 아무도 없으면 나누지 않는다.
-  - 시험은 시각을 직접 조작(last_seen·grabbed_at 을 과거로 update)해 빠르게.
+- [ ] T16: 서버 수업 흐름 엔진(수업·입장·편성·시작·끝내기, 순수 로직) — DoD: D3, D4, D5, D14
+  - `server/src/engine/session.js`·`registry.js`:
+    - 수업 만들기: 열린 수업끼리 겹치지 않는 6자리 코드와 시드를 정한다.
+    - 학생 입장: 코드와 이름을 받아 member id와 무작위 학생 토큰을 만든다. 엔진에는 토큰 해시만 둔다. 틀린 코드·닫힌 수업은 정해진 오류로 답한다. 같은 토큰으로 다시 들어오면 기존 member 를 돌려준다.
+    - 편성·시작: 모둠 배정·무작위 나누기, 시작 시 모둠별 판 생성·색 번호를 맡는다.
+    - 시작 후 처리: 들어온 학생은 상자 없이 배정한다. 다른 모둠으로 옮긴 학생의 상자 조각은 원래 모둠 접속자에게 나눈다. 빈 모둠 규칙(아래 메모)을 따른다.
+    - 끝내기: 수업을 닫으면 모든 토큰을 무효로 하고 종료 이벤트를 보낸다. 열린 수업 수 상한도 여기서 지킨다.
+  - 이름은 member 객체의 메모리 필드에만 둔다. 저장용 직렬화(`toRecord()`)에는 이름이 들어가지 않는다.
+  - 교사 한눈에 보기 요약(모둠별 축소판용 덩어리 위치·진행률·완성·학생 접속)을 만드는 함수.
+  - 검증: `tests/server/session.test.js`. 코드가 겹치지 않는지, 틀린 코드 오류, 재입장 복귀, 무작위 나누기, 시작 후 배정, 모둠 이동 시 재분배, 빈 모둠, 끝내기 후 토큰 거부, `toRecord()` 결과 어디에도 이름 문자열이 없는지 확인한다.
 
-- [x] T7: 교사 로그인·내 수업·수업 만들기·코드/QR — DoD: D1
-  - supabase-js 를 CDN(버전 고정 ESM)에서 불러온다. `public/js/config.js` 가 주소로 로컬/원격 Supabase URL·공개 키를 고른다(공개 키만, 비밀 키 없음). 원격 값은 T14에서 채운다.
-  - 로그인 화면은 구글 버튼만. 로컬·E2E에서는 시험용 교사로 세션을 주입해 로그인한다(이메일 입력 화면은 만들지 않음).
-  - 목업대로 내 수업, 새 수업(그림 고르기 탭: 내장 / 내 그림 / 올리기, 조각 수 12·24·48·70 미리보기, 모둠 수), '수업 열기' → 대기실에 큰 6자리 코드·주소·QR.
-  - QR은 실제 QR 라이브러리(예: qrcode-generator, MIT)를 `public/js/vendor/` 에 고정 버전으로 둔다. QR 주소는 코드가 채워진 입장 주소.
-  - 내장 그림은 이 단계에서 목업 장면 6장(자체 제작 SVG → WebP)과 목록 파일(`images/builtin/index.json`: 키, 제목, 분류, 가로·세로, 출처)로 시작한다.
-  - E2E: 시험용 교사로 수업을 열면 6자리 코드와 QR이 보인다.
+- [ ] T17: 새 DB 스키마·마이그레이션 스크립트·권한 시험 — DoD: D12, D14
+  - `supabase/migrations/20261009000000_jigsaw_schema.sql`(이름에 `jigsaw_`):
+    - 스키마·기록: `create schema jigsaw`, `jigsaw.schema_migrations`.
+    - 테이블: `teachers`, `images`, `sessions`, `groups`(판 상태 사본 `board jsonb`), `members`(이름 열 없음, `token_hash`).
+    - 권한: 모든 테이블 RLS 켜고 정책은 0개. `anon`·`authenticated`·`public` 에서 스키마·테이블·시퀀스·함수 권한을 회수하고, `alter default privileges` 로 앞으로 만들 객체도 막는다. 권한은 `service_role` 에만 준다.
+    - 버킷: 비공개 `jigsaw-images`(정책 없음).
+    - 이전 구조의 `public` 테이블·마이그레이션(`20261007*`)은 T23 까지 로컬에 함께 둔다(기존 화면·시험이 계속 돌게). 두 구조는 이름이 겹치지 않는다.
+  - `scripts/db/migrate.sh`: `SUPABASE_DB_URL` 로 psql 접속하고, `jigsaw_` 가 들어간 파일만 이름 순으로 한 번씩 적용한다. 파일마다 트랜잭션으로 묶고 `jigsaw.schema_migrations` 에 기록한다. 첫 파일이 기록 테이블을 만드는 경우도 처리한다. 비밀번호는 출력하지 않는다.
+  - 로컬 전용 준비(`supabase/seed.sql`):
+    - 시험 교사(`auth.users` + `jigsaw.teachers`)를 만든다.
+    - 원격에 이미 있는 `core.profiles` 를 흉내 내는 최소 스텁을 둔다. 스텁은 seed 에만 두고 jigsaw 마이그레이션에는 넣지 않는다. 원격 `core.profiles` 열 구성은 T20 전에 사용자에게 확인한다.
+  - `supabase/config.toml` 은 로컬에서 Data API 노출 스키마에 `jigsaw` 를 넣는다(원격 대시보드 설정 흉내).
+  - 검증: `tests/server/db/permissions.test.js`(로컬 Supabase)로 아래를 확인한다.
+    - 공개 키(anon)와 로그인 사용자(authenticated) 키로 `jigsaw` 의 모든 테이블 select·insert 가 거부된다. 버킷 목록·파일 읽기·올리기도 거부된다.
+    - service_role 로는 된다.
+    - `migrate.sh` 를 두 번 실행해도 두 번째는 아무것도 적용하지 않는다. 다른 앱 흉내 스키마가 있는 DB 에서도 그것을 건드리지 않는다.
 
-- [x] T8: 그림 올리기·내 그림 관리 — DoD: D2
-  - 브라우저에서 긴 변 2000px 이하로 줄여 캔버스로 다시 그려 WebP로 저장(다시 그리기로 EXIF 제거). `toBlob` 결과가 WebP가 아니면(구형 사파리) WASM 인코더(@jsquash/webp)를 그때만 불러와 대체.
-  - Storage 업로드 + `images` 행, '내 그림' 목록(교사 본인만), 지우기 = Storage 파일 삭제 + 행 삭제. 쓰는 중인 열린 수업이 있으면 지우기를 막는다.
-  - 올리기 화면에 "학생 얼굴이 나온 사진은 학교 방침을 확인한 뒤 올려 주세요" 안내(목업 문구).
-  - 시험: EXIF 있는 JPEG(시험 파일) 업로드 → 저장 파일이 WebP·긴 변 ≤2000·EXIF 없음, 지우면 Storage 에서 사라짐, 다른 교사는 목록·파일 접근 불가.
+- [ ] T18: 저장 계층(write-behind·재시작 복구·정리 작업) — DoD: D14, D17
+  - `@supabase/supabase-js` 추가. `server/src/db.js` 는 service_role 클라이언트를 `db: { schema: 'jigsaw' }` 로 고정한다. 다른 스키마 접근 코드는 두지 않는다.
+  - 저장 시점은 아래와 같다.
+    - 즉시 저장: 수업 만들기·입장(members 행)·편성·시작·완성·끝내기.
+    - 묶어 저장: 판 변경은 모둠별 최대 2초에 한 번(`groups.board`). 저장이 실패하면 다시 시도하고 로그를 남긴다.
+    - SIGTERM 을 받으면 남은 저장을 마치고 끝난다.
+  - 시작할 때 열린 수업(대기·진행)을 읽어 엔진에 복구한다. 잡기는 모두 놓인 상태로, 학생은 '끊김' 상태로 시작한다(이름은 재접속 때 채워짐). 재접속이 없으면 1분 규칙이 그대로 적용된다.
+  - 정리 작업(서버 내부 10분 주기): 시작 24시간 지난 열린 수업 종료, 종료 수업의 members 삭제, 종료 30일 지난 sessions 삭제. `auth.users` 는 건드리지 않는다.
+  - 검증: `tests/server/db/persistence.test.js`(로컬 Supabase)로 아래를 확인한다.
+    - 엔진 상태를 저장한 뒤 새 엔진으로 복구하면 판·상자·배정이 같다.
+    - 2초 묶음 저장이 동작하고, SIGTERM 전에 저장을 마친다.
+    - 정리 작업 3가지가 맞게 지운다. 시각은 행을 직접 과거로 바꿔 시험한다.
+    - DB 전체 덤프(jigsaw 스키마)에 시험 학생 이름 문자열이 없다.
 
-- [x] T9: 학생 입장·기다리기 + 교사 대기실 모둠 편성 — DoD: D3, D4, D14
-  - 학생: 코드(QR로 들어오면 미리 채움)·이름 입력 → 익명 로그인 → `join_session` → 틀리면 "코드를 다시 확인해 주세요". 이름은 localStorage 와 `session:<id>` Presence 에만.
-  - 기다리기 화면("선생님이 모둠을 정하고 있어요", 배정되면 내 모둠 표시). 같은 기기로 다시 열면 같은 이름·모둠으로 복귀.
-  - 교사 대기실(목업 teacher-lobby): Presence 로 들어온 이름 표시, 모둠 칸으로 끌어 넣기(마우스·터치 모두, pointer events), '무작위로 나누기', '시작하기'. 빈 모둠 처리는 메모 참고.
-  - 시작 알림을 받으면 학생은 퍼즐 화면(T10)으로 이동.
-  - E2E(브라우저 컨텍스트 여러 개): 학생 입장 1초 안에 교사 화면에 이름 표시, 끌어 넣기·무작위 → 시작 → 각 학생 화면에 자기 모둠 표시. DB 전체에서 학생 이름 문자열이 없음을 확인.
+- [ ] T19: rt 서버 — HTTP·socket.io·학생 연결·보안 제한 — DoD: D3, D6, D11, D12, D16, D17
+  - `socket.io` 를 추가한다. `server/src/index.js` 는 `node:http` + socket.io 로 `PORT`(기본 3400)에서 돈다. 환경변수는 `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `ALLOWED_ORIGINS`, `NODE_ENV` 이다. 로컬 값은 `npx supabase status -o env` 에서 읽는 개발 스크립트로 채운다(커밋 안 함).
+  - HTTP 경로: `GET /health`(버전·가동 시간·수업 수, 비밀값 없음), `POST /api/join`(코드+이름 → member·토큰).
+  - 소켓 연결과 방:
+    - 학생: 토큰과 이름으로 인증하고, 수업 방과 모둠 방에 들어간다.
+    - 교사: 교사 토큰으로 인증한다. T20 전에는 시험용 서명 토큰을 쓴다.
+    - 이벤트: 대기실 명단·편성·시작·꺼내기·잡기·놓기·놓아주기·끝내기를 엔진에 연결한다.
+    - 방송: 모둠 방은 0.1초 묶음으로 보낸다. 교사 방에는 바뀐 모둠 요약을 1초 이내 묶음으로 보낸다(폴링 없음).
+    - 다시 연결하면 전체 상태 한 벌을 보낸다.
+  - 끊김 감지: socket.io `pingInterval`·`pingTimeout` 을 끊김이 약 15초 안에 잡히게 정한다. 끊기면 엔진에 '끊김'을 알린다.
+  - 보안·제한(D16):
+    - 허용 Origin 이 아닌 HTTP·소켓 요청은 거부한다(CORS 포함).
+    - 크기 상한: 본문 크기, 소켓 메시지 크기(`maxHttpBufferSize`).
+    - 빈도 제한: IP당 연결·요청은 넉넉히(학교 NAT, 예: 연결 200), 연결별 메시지(예: 초당 30), 틀린 코드는 IP당 짧은 시간 반복 시 잠시 거부.
+    - 수량 상한: 열린 수업 수, 전체 연결 수.
+    - 로그에는 이름·토큰·IP 를 남기지 않는다.
+  - 로컬 전용 시험 훅(`NODE_ENV!=='production'` 이고 `RT_TEST_HOOKS=1` 일 때만): 엔진 시계 앞당기기. 운영에서는 경로 자체가 없다.
+  - `package.json` 스크립트 `rt:dev`·`test:server` 를 만들고, Playwright `webServer` 에 rt 서버를 추가한다.
+  - 검증: `tests/server/socket.test.js`(로컬 Supabase + 실제 서버 + socket.io-client 여러 개)로 아래를 확인한다.
+    - 입장한 이름이 교사 소켓에 1초 안에 도착한다(D3).
+    - 동시 잡기는 하나만 성공하고, 다른 학생은 잡힌 이벤트를 받는다(D6).
+    - 다른 모둠·수업 대상 메시지는 거부된다(D12).
+    - 교사 요약이 3초 안에 도착한다(D11).
+    - 잘못된 Origin, 빈도 초과, 큰 메시지, 상한 초과가 거부된다(D16).
+    - `/health` 가 응답한다.
+    - 서버 프로세스를 죽였다 다시 띄우면 수업이 복구되고 소켓이 재접속한다(D17).
 
-- [x] T10: 학생 퍼즐 화면 — 판·상자·확대(혼자 조작) — DoD: D5, D13
-  - 목업 student-phone(세로: 상자 아래)·student-tablet(가로: 상자 오른쪽). 위쪽 모둠 이름·진행률·모둠원 칩·'완성 그림' 버튼(작게 보기).
-  - Canvas 2D: 조각 비트맵 캐시, devicePixelRatio 상한 2, 두 손가락 확대·이동, 그림은 원본 2048px 이하로 불러온다.
-  - 상자에서 끌어 판에 놓기 → `take_from_tray`. 상자에는 내 조각만, 남의 조각은 상자에 나타나지 않는다.
-  - 판 위 덩어리 끌기 → `grab`/`drop`(혼자일 때 동작까지). 놓을 때 JS 판정으로 바로 붙여 보여 주고 서버 결과로 확정, 붙으면 `navigator.vibrate`.
-  - E2E: 360·390·1024·1440px 가로 넘침 없음, 터치 흉내로 꺼내기·옮기기·두 손가락 확대.
+- [ ] T20: 교사 인증·시작하기·수업·그림 API — DoD: D1, D2, D12
+  - `POST /api/teacher/login`:
+    - 입력은 GIS ID 토큰과 nonce 다. 서버가 Supabase `signInWithIdToken`(공개 키 클라이언트, 세션 저장 안 함)으로 uid·이메일을 확인한다.
+    - `jigsaw.teachers` 에 있으면 서버 서명 교사 토큰(12시간)을, 없으면 '시작하기 필요'를 돌려준다.
+    - 토큰 교환은 함수 하나로 분리해 시험에서 대체할 수 있게 한다.
+  - `POST /api/teacher/start`: 이름·약관 동의를 받아 `core.profiles` 의 공용 정보를 읽거나 쓰고(platform.md, 열 구성은 사용자 확인), `jigsaw.teachers` 행을 만든다.
+  - 로컬 전용 `POST /api/dev/teacher-token`(T19 시험 훅과 같은 조건): seed 시험 교사의 교사 토큰을 발급한다. `scripts/lib/local-teacher.mjs` 를 이것으로 바꾼다.
+  - 수업: `POST /api/sessions`(그림·조각 수·모둠 수·도움 설정 → 코드), `GET /api/sessions`(내 수업).
+  - 그림:
+    - 올리기(`POST /api/images`, 원본 바이트): WebP 서명(RIFF/WEBP)·3MB 이하·헤더의 가로세로 긴 변 2000 이하인지 검사한 뒤 `jigsaw-images/<uid>/<id>.webp` 에 저장하고 행을 만든다.
+    - 조회·삭제: 목록, 서명 URL 발급(교사 본인 그림, 그리고 그 그림을 쓰는 수업의 학생 연결에 전체 상태와 함께 줌), 지우기(열린 수업에서 쓰면 거부, Storage API 로 파일 삭제 후 행 삭제, 결과를 화면에 알림).
+  - 검증: `tests/server/teacher-api.test.js`(로컬 Supabase)로 아래를 확인한다.
+    - 교사 토큰: 위조·만료 토큰이 거부되고, teachers 에 없는 uid 는 수업 만들기가 거부된다(D1). 토큰 교환은 대체 함수로 시험한다.
+    - 시작하기를 하면 teachers 행이 생긴다.
+    - 그림 형식·크기 위반이 거부된다.
+    - 다른 교사의 그림 목록·삭제·서명 URL 요청이 거부된다(D12).
+    - 열린 수업 그림 지우기가 거부되고, 지우면 Storage 파일도 사라진다(D2).
+    - 실제 구글 로그인은 T25 에서 확인한다.
 
-- [x] T11: 협동 동기화·끊김·완성 화면 — DoD: D6, D7, D8, D9, D10
-  - `group:<id>` 비공개 채널 구독: 잡기 → 다른 화면에 잡은 학생 색 테두리 + 이름표, 놓기 → 새 자리로 미끄러지듯 이동, 합치기 반영. 입장·재연결 시 전체 상태를 한 번 조회해 맞춘다.
-  - 잡은 채 10초 가만히 있으면 화면이 스스로 놓기. 화면을 벗어나거나(visibilitychange) 연결이 끊기면 놓기 시도.
-  - 5초마다 `heartbeat`, 주기적으로 `redistribute_stale`, 나눠 받은 조각이 상자에 나타남.
-  - 완성: 모둠원 모두에게 축하 화면·완성 그림·걸린 시간(순위 없음).
-  - E2E(학생 3명 컨텍스트): 동시 잡기 한 명만 성공·다른 화면 테두리, 붙은 조각이 모든 화면에서 함께 움직임, 한 명 컨텍스트 닫기 → 다른 학생이 그 덩어리 잡기, 1분 뒤 상자 나뉨(시험에서는 시각 조작 도우미 사용), 마지막 조각 → 모두에게 축하 화면.
+- [ ] T21: 화면 전환 ① 교사 화면 — DoD: D1, D2, D3, D4, D11
+  - `public/js/rt-client.js`: rt 주소를 고른다(`config.js`: 로컬 주소면 `http://localhost:3400`). 운영 rt 주소는 T25 까지 비워 둔다. 비어 있으면 교사·학생 화면은 지금처럼 '준비 중'을 보인다(이 태스크부터 main 푸시가 곧 운영 배포이므로). 이를 E2E(`csp.spec`·`teacher.spec` 의 '준비 중' 시험)로 계속 확인한다. fetch 래퍼와 socket.io 클라이언트(고정 버전 ESM, `public/js/vendor/socket.io-<버전>.esm.min.js`)를 둔다.
+  - 로그인 화면은 GIS 버튼이다. nonce 는 원본·해시를 만들어 원본을 서버로 보낸다. 받은 교사 토큰은 localStorage 에 두고 만료되면 다시 로그인한다. 로컬·E2E 는 dev 교사 토큰을 주입한다. 처음 오는 교사는 '함께 퍼즐 시작하기' 화면(이름·약관 동의, 목업 문체)을 거친다.
+  - 연결 교체: `teacher/data.js`·`pictures.js`·`upload.js`(WebP 변환은 그대로, 전송만 rt 로)·`lobby-view.js`(Presence 대신 서버 명단)·`overview-data.js`(3초 폴링 대신 서버 푸시)를 rt 연결로 바꾼다. 교사 화면은 supabase-js 를 import 하지 않는다.
+  - 공통: 서버 연결이 끊기면 "다시 연결하는 중" 띠를 보이고 자동으로 재접속한다.
+  - 검증: E2E `teacher-create`·`teacher`(대기실·편성·시작)·`upload`·`upload-webkit`·`overview` 를 새 구조(정적 서버 + 로컬 rt + 로컬 Supabase)로 고쳐 통과시킨다. 4개 너비 검사를 포함하고, 교사 화면이 연 네트워크 요청에 `*.supabase.co`·로컬 Supabase REST 주소가 없는지 확인한다(그림 서명 URL 제외).
 
-- [x] T12: 교사 모둠 한눈에 보기·수업 끝내기 — DoD: D10, D11, D14
-  - 목업 teacher-overview: 모둠 격자(판 축소판·진행률·'완성' 표시), 3초마다 모둠 상태 조회 RPC 하나로 갱신(실시간 구독 안 함), 모둠을 누르면 크게 보기, 학생 모둠 옮기기, 전자칠판 크기 대응.
-  - '수업 끝내기' → `end_session` → 학생 화면에 "수업이 끝났어요" 안내.
-  - E2E: 갱신 간격 약 3초, 모둠 완성 시 '완성' 표시, 끝내기 뒤 members·익명 계정 삭제 확인.
+- [ ] T22: 화면 전환 ② 학생 화면 — DoD: D3, D4, D5, D6, D7, D8, D9, D10, D13, D14
+  - 입장: 코드·이름을 `POST /api/join` 으로 보낸다. 토큰·이름은 수업 코드별 localStorage 키에 둔다. 다시 열면 저장된 토큰으로 바로 재접속하고, 수업이 끝났다는 안내를 받으면 그 키를 지운다. 익명 로그인 코드는 없앤다.
+  - 퍼즐 저장소: `store/remote-store.js` 를 소켓 기반으로 다시 쓴다(`puzzle-store.js` 계약 그대로, 화면 코드는 바꾸지 않음). `student/live.js`·`presence.js`·`puzzle.js` 의 Realtime·heartbeat·`redistribute_stale` 호출을 없앤다. 놓을 때 화면이 JS 판정으로 바로 붙여 보이고, 서버 결과로 확정한다.
+  - 숨김·재접속: 화면이 숨겨지면 놓아주기를 보낸다. 재접속하면 전체 상태를 다시 맞춘다. 연결이 끊기면 "다시 연결하는 중"을 보인다.
+  - 검증: E2E `join`·`play`·`coop`(학생 3명)·`disconnect` 를 고쳐 통과시킨다. 1분 규칙은 rt 시험 훅으로 시계를 앞당긴다.
+    - 협동: 동시 잡기는 한 명만 성공하고 다른 화면에 테두리가 보인다. 붙은 덩어리는 모든 화면에서 함께 움직인다.
+    - 끊김·복귀: 한 명을 닫으면 다른 학생이 그 덩어리를 잡는다. 1분 뒤 상자가 나뉘고, 1분 안에 같은 기기로 돌아오면 상자가 그대로다.
+    - 완성·화면: 마지막 조각을 놓으면 모두에게 축하 화면이 뜬다. 4개 너비와 터치 동작을 검사한다.
+    - 개인정보: DB 덤프와 서버 로그 출력에 학생 이름이 없다(D14).
 
-- [ ] T13: 내장 그림 약 20장·출처 표기, 개인정보 처리방침, 외부 스크립트 점검 — DoD: D15
-  - 내장 그림: 자체 제작 SVG 장면과 출처·라이선스가 확인된 그림(공공누리 1유형, CC0)만. WebP 긴 변 2000px 이하, `index.json` 에 출처·라이선스 기록, 출처 화면(또는 처리방침 아래)에 표기. 고른 목록은 사용자 확인을 받는다.
-  - `privacy.html`: 수집 항목(교사 구글 이메일, 교사 그림, 학생은 익명 식별자만·이름은 저장 안 함), 보관 기간(spec 데이터 표), 삭제 방법(내 그림 지우기, 수업 끝내기, 자동 정리, 탈퇴 문의), 학습지원 소프트웨어 관련 근거. 모든 화면 아래에 링크.
-  - 광고·외부 분석 스크립트 없음 확인: CSP 헤더(자기 도메인 + supabase-js CDN + Supabase 주소만), 시험으로 외부 요청 도메인 목록 검사.
+- [ ] T23: 이전 구조 제거·CSP·처리방침·전체 E2E — DoD: D12, D14, D15, D16, D17
+  - 삭제 대상:
+    - 마이그레이션·시험: `supabase/migrations/20261007*`, `tests/db/*`(살릴 것은 T17~T19 서버 시험으로 이미 옮김), `snap-parity`.
+    - 화면 모듈: `public/js/supabase-client.js`·`store/supabase-api.js`.
+    - 설정: supabase-js CDN 참조, `config.toml` 의 익명 로그인·익명 가입 한도, pg_cron 관련 설정.
+  - 정리 뒤 로컬 DB 에 jigsaw 스키마만 남는지 확인한다.
+  - CSP(`vercel.json`, `scripts/lib/local-csp.mjs`):
+    - `connect-src`: `'self'`, `https://rt.gyosil.app`, `wss://rt.gyosil.app`, 그림 서명 URL 용 Supabase Storage 주소, 구글 로그인 주소.
+    - `script-src`·`frame-src`·`style-src`: `https://accounts.google.com/gsi/client`·`frame` 등 GIS 가 요구하는 주소만.
+    - `style-src`·`font-src`: Pretendard 글꼴용 `https://cdn.jsdelivr.net`(지금 `index.html`·`privacy.html` 그대로, 자체 호스팅 안 함). `script-src` 에서는 jsDelivr 를 뺀다(supabase-js CDN 제거).
+    - `img-src`: 그림 서명 URL 을 `<img>`·SVG `<image>` 로 직접 쓰면 Supabase Storage 주소를 넣는다.
+    - 로컬 주소는 로컬 CSP 에만 넣는다.
+  - `privacy.html`:
+    - 학생: 익명 계정 없음, 이름은 수업 중 서버 메모리와 기기에만 둔다.
+    - 처리 장소: Vercel, AWS Lightsail 서울, Supabase 서울.
+    - IP: 요청 제한용으로 메모리에서만 쓴다.
+    - 보관 기간: spec 데이터 표대로.
+    - 삭제 방법·탈퇴: jigsaw 데이터만 삭제한다.
+  - 검증:
+    - `csp.test`·`csp.spec`: 외부 요청 도메인 목록 검사를 새 허용 목록으로 하고, 교사 수업 만들기 화면을 포함한다(D15).
+    - `privacy.test`.
+    - 전체 E2E(교사 1 + 학생 5, 4개 너비).
+    - 재시작 복구 E2E: 퍼즐 중 rt 서버를 죽였다 다시 띄우면 학생·교사 화면이 자동 재접속하고 판이 이어진다(D17).
+    - `no-test-credentials`: service_role·시험 교사 값이 `public/` 에 없다(D16).
 
-- [ ] T14: 원격 배포·운영 설정·전체 E2E 최종 점검 — DoD: D1, D13
-  - [사용자 작업] Supabase 원격 프로젝트 생성, `npx supabase link` 와 `db push`(DB 비밀번호 입력), 익명 로그인 켜기, 익명 가입 한도 상향, pg_cron 확장 확인.
-  - [사용자 작업] Google Cloud OAuth 클라이언트 등록(승인된 리디렉션: Supabase 콜백), Supabase 구글 공급자 설정, Auth 리디렉션 허용 주소에 `https://jigsaw.gyosil.app` 추가.
-  - [사용자 작업] GitHub 저장소 연결, Vercel 프로젝트 생성·연결, `jigsaw.gyosil.app` 도메인 DNS 연결.
-  - 에이전트: `config.js` 에 원격 URL·공개 키(사용자에게 받은 값) 반영, 배포 확인, 실제 구글 로그인으로 수업 열기까지 사용자와 함께 확인.
-  - 전체 흐름 E2E(교사 1 + 학생 5, 로컬)를 4개 너비에서 다시 실행, 실패 없음 확인. 시범 수업 점검표(학교망 WebSocket, MDM 분류, 메시지 사용량 측정 방법)를 README에 남긴다.
+- [ ] T24: 서버 설치·배포 스크립트와 운영 문서(로컬에서 작성·점검) — DoD: D16, D17
+  - `scripts/rt/setup.sh`(Ubuntu 24.04, 여러 번 실행해도 안전):
+    - 사용자·폴더: 전용 사용자 `jigsaw-rt`, 저장소를 `/opt/jigsaw` 에 clone. 서버는 `server/` 만 실행한다.
+    - 설치: Node 24(공식 저장소, 버전 고정), corepack pnpm.
+    - 메모리·로그: 스왑 1GB, journald 보관 14일.
+    - systemd 유닛 `jigsaw-rt.service`: `EnvironmentFile=/etc/jigsaw-rt.env`, `Restart=always`, `NODE_OPTIONS=--max-old-space-size=…`, 종료 시 SIGTERM 대기 시간.
+    - Caddy: `/etc/caddy/Caddyfile` 에 `rt.gyosil.app` → `localhost:3400` reverse_proxy 를 넣는다. 기존 설정이 있으면 덮지 않고 알린다.
+    - `/etc/jigsaw-rt.env` 가 없으면 값이 빈 틀만 권한 600 으로 만들고 멈춘다. 비밀값은 사용자가 넣는다.
+  - `scripts/rt/deploy.sh`: `git pull --ff-only` → `pnpm install --prod --frozen-lockfile`(server) → `systemctl restart` → `/health` 확인. 실패하면 이전 커밋으로 되돌리는 방법을 출력한다.
+  - `server/.env.example`(키 이름만), `docs/ops.md`(설치·배포·로그 보기·되돌리기·스냅숏 복원·시범 수업 점검표: 학교망 WebSocket/롱폴링, MDM 분류, 서버 메모리 실측).
+  - `docs/ops.md` 에 교사 탈퇴 수동 절차를 적는다: 문의 메일로 요청을 받으면 운영자가 실행할 SQL(그 교사의 `jigsaw` 데이터와 `jigsaw-images` 파일만 삭제, `auth.users`·`core.profiles` 는 건드리지 않음).
+  - DB 백업: platform.md 2.5 대로 `jigsaw` 스키마를 매일 `pg_dump` 하는 스크립트(`scripts/db/backup.sh`, 접속 정보는 환경변수)와 복원 방법을 `docs/ops.md` 에 둔다.
+  - Caddy 접근 로그는 끈다(IP 를 보관하지 않음, spec 데이터 표).
+  - 검증:
+    - `shellcheck` 를 통과한다.
+    - Docker `ubuntu:24.04` 컨테이너(Node 24 설치)에서 setup.sh 를 systemd·Caddy 단계는 건너뛰는 옵션으로 실행해 Node 설치·의존성 설치·서버 기동·`/health` 까지 확인한다.
+    - systemd 유닛·Caddyfile 은 문법 검사(`systemd-analyze verify`, `caddy validate`)를 한다. 컨테이너에서 가능한 범위만 하고 못 한 것은 보고한다.
+
+- [ ] T25: 원격 적용·배포·실제 기기 최종 점검 — DoD: D1, D2, D12, D13, D15, D16, D17
+  - [사용자 작업] gyosil Supabase 대시보드
+    - Data API → Exposed schemas 에 `jigsaw` 추가.
+    - 원격 `core.profiles` 구성 확인 결과를 알려 주기(T20 에서 먼저 확인했으면 생략).
+    - 익명 로그인 켜기·Redirect URL 추가는 **하지 않는다**(새 구조에서 필요 없음).
+  - [사용자 작업] Google Cloud OAuth 클라이언트 → 승인된 JavaScript 원본에 `https://jigsaw.gyosil.app` 추가. 클라이언트 ID(공개 값)를 알려 주기.
+  - [사용자 작업] 원격 마이그레이션: `SUPABASE_DB_URL=… bash scripts/db/migrate.sh` 를 사용자가 직접 실행(DB 비밀번호는 에이전트에게 주지 않음).
+  - [사용자 작업] rt 서버
+    - SSH 로 `scripts/rt/setup.sh` 실행.
+    - `/etc/jigsaw-rt.env` 에 비밀값을 직접 입력: `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `SESSION_SECRET`(`openssl rand -hex 32`), `GOOGLE_CLIENT_ID`, `ALLOWED_ORIGINS=https://jigsaw.gyosil.app`.
+    - 서버가 저장소를 받을 수 있게 GitHub 접근을 준비(공개 저장소가 아니면 읽기 전용 deploy key).
+    - Lightsail 자동 스냅숏 켜기.
+    - (선택) UptimeRobot 으로 `https://rt.gyosil.app/health` 감시.
+  - [사용자 작업] Vercel 프로젝트·`jigsaw.gyosil.app` 연결 확인(이미 되어 있으면 생략).
+  - 순서: 원격 마이그레이션 → rt 서버 설치·기동·`/health` → `config.js` 의 운영 rt 주소를 `https://rt.gyosil.app` 으로 채우고, '준비 중' 시험을 운영 주소 시험으로 바꾼 커밋을 푸시(Vercel 배포). 이 커밋은 rt 서버가 뜬 뒤에만 푸시한다.
+  - [사용자 작업] DB 백업: platform.md 2.5 대로 `jigsaw` 스키마 매일 `pg_dump`(T24 스크립트)를 설정한다. 접속 비밀번호는 사용자가 넣는다.
+  - 에이전트 점검:
+    - 원격 권한: 공개 키로 `jigsaw` REST 요청(`Accept-Profile: jigsaw`)이 거부되는지 curl 로 확인한다(D12).
+    - 서버: `jigsaw.gyosil.app` 이 아닌 Origin 거부를 확인한다(D16). 실제 서버에서 `systemctl kill` 뒤 자동 재시작·수업 복구도 확인한다(D17).
+    - 사용자와 함께: 실제 구글 로그인 → 시작하기 → 수업 열기(D1), 그림 올리기·지우기(D2).
+    - 기기: 휴대폰·태블릿 실기기로 한 모둠 흐름을 돌리고(D13), 배포된 화면의 CSP 헤더와 외부 요청을 확인한다(D15).
 
 ## 메모
 
 ### 순서의 이유
-- 가장 불확실한 부분(맞춤 판정을 JS·SQL 양쪽에 같게, RLS·Realtime 권한)을 화면보다 먼저 만든다(T2~T6). 화면 태스크는 검증된 RPC 위에 올린다.
-- T14 전까지 원격 계정이 하나도 필요 없다. 구글 로그인은 로컬에서 시험용 교사 세션 주입으로 대신하고, 실제 구글 로그인은 T14에서 확인한다. 사용자는 T14의 `[사용자 작업]` 을 언제든 미리 해 둘 수 있다.
-- 태스크가 14개로 보통보다 많다. 서버(RPC·RLS)와 화면이 각각 무거워 한 세션 크기를 지키려고 나눴다.
+- **기준선 먼저(T14)**: 보류 중인 T14a 를 보관하고 HEAD 로 돌려 기존 시험이 모두 통과하는 상태에서 시작한다. 이전 구조의 마이그레이션·시험은 T23 까지 로컬에 남겨 두어, 화면을 옮기는 동안에도 아직 옮기지 않은 화면과 시험이 돈다.
+- **가장 불확실한 판정·동시성을 소켓·DB 없이 먼저(T15·T16)**: 순수 로직이라 가짜 시계로 빠르게 시험한다. 그다음 저장(T17·T18), 네트워크(T19·T20), 화면(T21·T22) 순서로 올린다.
+- **원격은 마지막(T25)**: T24 까지 원격 계정·비밀값이 하나도 필요 없다. 사용자는 T25 의 `[사용자 작업]` 을 언제든 미리 해 둘 수 있다(Exposed schemas 추가는 jigsaw 테이블이 없어도 무해).
+- 태스크가 12개(T14~T25)로 많은 편이다. 서버(엔진·저장·네트워크)와 화면 전환이 각각 무거워 한 세션 크기를 지키려고 나눴다.
 
 ### 주의할 점
-- **좌표·허용 거리 상수는 한 곳에서**: JS `snap.js` 상수와 SQL 함수 상수가 어긋나지 않게, 공용 사례 표에 허용 거리 값을 함께 넣고 교차 검사로 지킨다. 실수 비교는 경계에서 오차가 날 수 있으니 사례 표 경계값은 1e-6 이상 떨어뜨린다.
-- **동시성**: `grab` 은 조건부 update 한 번(행 잠금)으로 처리하고, `drop` 은 모둠 행 `for update` 로 같은 모둠 합치기를 차례로 처리한다. 트랜잭션 안 `now()` 는 고정값임에 유의.
-- **realtime.send**: 비공개 채널은 클라이언트에서 `private: true` + `realtime.setAuth()` 가 필요하고 `realtime.messages` RLS 정책이 있어야 받는다. 로컬 Supabase 버전에서 동작을 T3에서 먼저 확인한다.
-- **익명 가입 한도**: Supabase 기본값은 IP당 시간당 30회다. 한 반이 학교 IP 하나로 들어오므로 로컬·원격 모두 올려야 한다(T3, T14).
-- **Storage 직접 삭제 금지**: SQL로 `storage.objects` 를 지우면 막히거나 파일이 남는다. 그림 지우기는 Storage API로 한다. 교사 그림은 교사가 지울 때까지 보관하고 자동 정리는 하지 않는다(사용자 결정, T8 후속에서 '1년 미사용 그림 자동 정리'를 뺌).
-- **학생 이름**: DB 행, RPC 인자, 방송 payload, 로그 어디에도 넣지 않는다. 이름은 Presence 상태와 localStorage 에만. T9·T12 시험에서 DB 덤프에 이름 문자열이 없는지 검사한다.
-- **빈 모둠**(가정, 사용자가 다르게 원하면 T9 전에 알려 주세요): 시작할 때 학생이 0명인 모둠은 퍼즐을 만들지 않고 한눈에 보기에서 '학생 없음'으로 표시한다. 그 모둠에 나중에 학생을 넣으면 그때 퍼즐을 만들고 그 학생에게 조각을 모두 준다.
-- **코드 추측**: 6자리 코드는 열린 수업 동안만 유효하다. `join_session` 실패가 짧은 시간에 반복되면 잠시 거부하는 정도의 제한을 둔다.
-- **웹 품질**: 모든 화면은 `~/.claude/standards/web-quality.md`(SEO·파비콘, 360·390·1024·1440px 반응성, 성능)를 지킨다. 화면 태스크마다 4개 너비 Playwright 검사를 함께 넣는다.
-- **목업 재사용**: `docs/mockups/src/common.js` 의 `rng`·`edge`·`makePuzzle` 는 ES 모듈로 옮겨 쓴다. 목업의 QR(`qrSVG`)은 가짜이므로 쓰지 않는다.
-- **CDN 고정**: supabase-js 와 WASM 인코더는 버전을 고정해 불러오고, CSP 허용 목록에 그 도메인만 넣는다. 단위 시험은 CDN 없이 도는 순수 모듈만 대상으로 한다.
-
-### T3 리뷰 참고사항 (이후 태스크)
-- **T4**: 모둠 이동·`end_session` 뒤에도 Realtime 권한 캐시 때문에 예전 `group:<id>` 채널을 계속 받을 수 있다 → 모둠을 옮기면 클라이언트가 다시 구독하게 하고 동작을 시험한다. 익명 계정 삭제 기준은 '그 수업 members 의 user_id'.
-- **T5**: Supabase 이미지는 `extra_float_digits = 0` 이라 float8 → JSON·text 가 15자리로 잘린다. T3 마이그레이션이 API 역할에 `extra_float_digits = 1` 을 걸었지만, float8 을 JSON·text 로 만드는 함수(realtime.send 내용 등)는 `set extra_float_digits = 1` 을 직접 붙인다.
-- **T9**: Presence 키는 클라이언트가 정한다 → 대기실 이름은 members 와 대조하고, Presence 키를 그대로 믿지 않는다.
-- **T14**: `supabase config push` 금지(로컬 auth 설정이 원격에 올라감), seed 원격 적용 금지, 이메일 공급자 끄기(구글만), 익명 가입 한도 상향, 공개 Realtime 채널 접근 끄기(비공개만), `extra_float_digits` alter role 이 원격에 적용됐는지 확인.
-
-### T4 리뷰 참고사항 (T5 에서 반드시 처리)
-1. `private.deal_tray` 의 moved update WHERE 에 `not p.on_board` 와 기대 주인 조건을 다시 넣거나, 모둠 행 `for update` 잠금을 T5·T6 과 공유한다 — 교사 이동 중 학생 `take_from_tray` 와 경쟁하면 판 위 조각에 주인이 다시 생긴다(reviewer 가 두 연결로 재현). T5 에서 시험으로 막는다.
-2. `join_session`: 수업 종료로 익명 계정이 삭제된 뒤 남은 JWT 로 호출하면 원시 FK 오류(23503)가 난다 → 시작할 때 `auth.users` 존재를 확인하고, 없으면 정해진 오류(`account_gone`)를 돌려준다. T9 화면은 이를 받으면 익명 로그인을 다시 한다.
-3. `assign_member` 주석(343행 근처)과 실제 응답(`member_not_found` / `forbidden`)이 어긋난다 → 주석 또는 응답을 정리한다.
-4. 참고: cleanup 의 24시간 자동 종료는 `end` 방송·잡기 해제가 없다 → 화면은 수업 상태 조회로 종료를 감지한다(T11·T12). `start_session` 은 색 번호를 다시 매기지만 `groups` 방송이 없다 → 화면은 `start` 를 받으면 members 를 다시 읽는다(T9·T11). 내장 그림 `p_aspect` 범위 제한(예 1/2000~2000)을 검토한다.
-
-### T6 리뷰 참고사항 (T11 에서 처리)
-- 화면은 `heartbeat` 를 5초마다 따로 보내고, 백그라운드에서 돌아오면 `redistribute_stale` 보다 `heartbeat` 를 먼저 부른다(호출자 자신이 1분 넘게 끊긴 상태면 자기 상자가 나뉠 수 있음 — `disconnect.sql` 121~129행).
-- 모둠원이 아닌 상자 주인도 끊긴 것으로 보고 나눈다(방어용).
-- Realtime 이 방송 payload 에 메시지 `id`(uuid)를 덧붙인다 → 화면은 무시한다.
-- T14 관찰: `heartbeat` 호출 빈도 제한 없음(사용량 확인).
-- 나중: `private.cleanup_expired` 가 members → auth.users 삭제 순서라 잠금 순서와 반대다(24시간 넘은 수업 대상, 영향 작음) — cleanup 을 손볼 때 `lock_board` 를 먼저 잡는다.
-
-### T9 리뷰 참고사항
-- Presence 위조: 같은 수업 학생이 다른 학생의 uid 를 Presence 키로 써서 이름을 사칭할 수 있다. 서버는 Presence 내용을 검사하지 않고, 막으려면 이름을 저장해야 해 D14(이름 미저장)와 충돌하므로 완전 차단은 불가. 화면은 members 행과 대조한 이름만 보여 준다(교실 안 장난 수준의 위험).
-- 들어왔다가 나간 학생도 members 에 남아 대기실에 '나감'으로 보이고 무작위 나누기에 포함된다 → T11 에서 시작 때 그 학생 상자 조각이 어떻게 처리되는지(1분 뒤 나누기) 확인한다.
-- `tests/db/rls.test.js` '교사 읽기'는 공유 시험 교사의 수업 목록 전체를 기대하므로, E2E 와 동시에 돌리거나 남은 시험 수업이 있으면 실패한다 → 시험 격리 개선 필요. (T12 후속에서 처리: 이 시험이 만든 수업으로 좁힘)
-- 학생 모듈이 `public/js/teacher/dom.js`(h, nodes, pieceIcon)를 재사용한다 → 나중에 공용 위치(예: `public/js/dom.js`)로 옮긴다.
-
-### 규칙 변경 반영 리뷰 참고사항
-1. 수업 만들기 '수업 열기' 버튼이 1440×900 에서 화면 밖으로 밀린다(옆 패널이 화면보다 길다) → 그림 분류 탭 작업 때 패널 max-height + 버튼 sticky, 또는 도움 설정 접기로 처리한다.
-2. 학생 화면이 sessions 의 hint_* 를 읽어 쓰는 연결(`hintsFromSession`)은 T11 원격 저장소에서 한다.
-3. 판 크기는 수업 행에 저장하지 않는다(배포 전이라 단순하게). 배포 뒤 판 크기를 다시 바꾸면 sessions 에 판 비율을 저장해야 한다.
-4. csp.spec 에 교사 수업 만들기 화면을 추가하는 것을 권장한다.
-
-### T11 리뷰 참고사항
-- 서버 `grab` 은 잡은 사람의 재잡기를 무조건 허용한다(화면은 움직이는 동안 6초마다 연장) → 조작된 클라이언트가 덩어리를 계속 붙잡을 수 있다. 연장 상한(예: 처음 잡은 시각부터 최대 N초)을 검토한다.
-- REST 요청량: 학생 1명당 live 재조회 15초마다 3회, 판 재조회 15초마다 1회, redistribute 20초마다 1회, heartbeat 5초마다 1회 → 30명이면 약 15회/초. T14 에서 실측한다.
-- 재동기화 중 읽은 판이 아주 잠깐 화면을 덮을 수 있다(읽는 동안 들어온 방송은 다시 적용하지만, 읽기 시작 전에 끝난 내 동작과의 순서는 보장하지 않음).
-- `startPuzzle` 이 여는 도중 모둠 이동이 겹치면 이전 모둠 화면이 잠깐 그려질 가능성이 있다(`isCurrent` 로 대부분 막음, 가능성 낮음).
-
-### T12 리뷰 참고사항 (T12 후속에서 모두 처리)
-- 처리: 완성 배지는 그림 아래 빈 곳에(축소판·크게 보기, 픽셀 검사), coop.spec 이 `tests/e2e/support/puzzle.js` 를 씀, 내 그림 수업의 한눈에 보기 E2E, `session_overview` anon 호출 거부 시험, 시험 훅(`__puzzle`·`__puzzleDemo`·`__overview`)은 로컬 주소에서만(`public/js/test-hooks.js`), 잡은 표시는 서버 `held_by_other` 와 같은 기준(마이그레이션 `20261007180000`), rls '교사 읽기'는 이 시험이 만든 수업으로 좁힘.
-
-### T8 후속 참고사항
-- `private.stale_images`(1년 안 쓴 그림 목록) 함수는 자동 정리를 하지 않기로 해 쓰지 않는다 → gyosil 이전 때 drop 한다.
-- 그림 지우기는 화면 검사(열린 수업 확인)와 서버 정책 거부 사이에 경쟁이 있을 수 있다. 서버가 거부하면 오류 없이 0건 삭제로 끝나므로, `deleteImage` 가 삭제 결과(지운 행 수)를 확인해 화면에 알리도록 하는 것을 권장한다.
+- **푸시와 배포**: T14 확인 결과, `jigsaw.gyosil.app` 은 Vercel(`icn1`)로 공개 중이고 main 푸시가 곧 운영 배포다. 지금 `config.js` 의 운영 값(REMOTE)이 비어 있어 운영 화면은 '준비 중'을 보인다. 사용자 결정은 '태스크마다 main 푸시, rt 미연결이면 준비 중 유지'다. 그래서 T21~T24 동안 운영 rt 주소는 비워 두고, T25 에서 rt 서버가 뜬 뒤 채운다.
+- **교사 로그인 세션(T20)**: `signInWithIdToken` 으로 uid·이메일을 확인한 직후 그 Supabase 세션을 `signOut` 해 refresh 토큰을 남기지 않을지 검토하고, 결정을 T20 보고에 적는다.
+- **퍼즐 규칙은 한 곳에서**: 서버는 `public/js/puzzle/*` 를 import 한다. 복사본을 만들지 않는다. 화면 판정과 서버 판정은 같은 코드라서, 화면의 즉시 표시와 서버 확정 결과가 다르면 버그다.
+- **한 프로세스, 차례 처리**: 엔진 동작은 동기 함수로 처리하고, DB 저장은 엔진 밖에서 비동기로 한다. 엔진 처리 중에 `await` 를 넣지 않는다(동시 잡기 판정이 깨짐).
+- **학생 이름**: DB 행, 저장 jsonb, 로그, `/health`, 오류 메시지 어디에도 넣지 않는다. 서버 메모리와 소켓 방송(같은 수업 화면용)에만 있다. T16·T18·T22 시험에서 확인한다.
+- **service_role 키**: `server/` 밖에서 import 하지 않는다. `public/` 에 없음을 시험(`no-test-credentials`)으로 지킨다. 서버 코드는 `jigsaw` 스키마 클라이언트만 만든다.
+- **권한 회수**: 공용 프로젝트는 `public`·새 스키마에 기본 권한이 붙을 수 있다. 마이그레이션마다 새 테이블 권한을 회수하고 T17 권한 시험을 테이블 목록 전체로 돌린다(테이블을 추가하면 시험이 자동으로 포함하게).
+- **학교 NAT**: 한 반 30명 이상이 IP 하나로 들어온다. IP 단위 한도로 학생을 막지 않게 넉넉히 잡고, 남용 제한은 연결·토큰 단위로 한다.
+- **빈 모둠**: 시작할 때 학생이 0명인 모둠은 퍼즐을 만들지 않고 한눈에 보기에서 '학생 없음'으로 표시한다. 나중에 그 모둠에 학생을 넣으면 그때 퍼즐을 만들고 그 학생에게 조각을 모두 준다.
+- **코드 추측**: 6자리 코드는 열린 수업 동안만 유효하다. 틀린 코드가 짧은 시간에 반복되면 잠시 거부한다.
+- **시험 훅**: 화면 시험 훅(`test-hooks.js`)과 서버 시험 훅(시계 앞당기기, dev 교사 토큰)은 로컬에서만 켠다. 운영 빌드·운영 환경변수에서는 경로가 없어야 한다(T19·T20 시험).
+- **웹 품질**: 모든 화면은 `~/.claude/standards/web-quality.md` 를 지킨다. 화면 태스크(T21·T22)마다 4개 너비 Playwright 검사를 함께 넣는다.
+- **CDN 없음**: 외부 스크립트는 구글 GIS 하나뿐이다. socket.io 클라이언트·WASM 인코더·QR 은 `public/js/vendor/` 에 고정 버전으로 둔다. 예외는 Pretendard 글꼴 CSS·글꼴 파일(jsDelivr, 스크립트 아님)이다.
+- **원격 금지 사항**: `supabase db push`·`config push`·원격 `db reset`·`seed.sql` 원격 적용·`alter role`·`auth.users` 삭제·공용 확장 추가 금지. 파괴적 SQL(`drop`, `truncate`)은 실행 전에 사용자 확인.
+- **그림 지우기 결과**: 서버가 거부하거나 실패하면 화면에 알린다(이전 T8 후속 권장 사항).
