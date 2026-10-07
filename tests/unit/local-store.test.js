@@ -57,7 +57,7 @@ describe('createLocalStore', () => {
     const state = store.getState();
     expect(state.tray).toEqual([0, 2, 3, 4, 5]);
     expect(state.clusters).toEqual([
-      { id: result.clusterId, x: 50, y: 60, z: expect.any(Number), heldBy: 'a', pieces: [[1, 0]] },
+      { id: result.clusterId, x: 50, y: 60, z: expect.any(Number), locked: false, heldBy: 'a', pieces: [[1, 0]] },
     ]);
     expect(listener).toHaveBeenCalledWith(state, expect.objectContaining({ type: 'take', piece: 1 }));
   });
@@ -86,7 +86,8 @@ describe('createLocalStore', () => {
 
     expect(result.ok).toBe(true);
     expect(result.absorbed).toHaveLength(1);
-    expect(result.progress).toEqual({ placed: 2, total: 12, complete: false });
+    // Joined but not in the frame yet: progress counts locked pieces only.
+    expect(result.progress).toEqual({ placed: 0, total: 12, complete: false });
     const { clusters, progress } = store.getState();
     expect(clusters).toHaveLength(1);
     expect(clusters[0]).toMatchObject({ x: 100, y: 100, heldBy: null });
@@ -94,15 +95,15 @@ describe('createLocalStore', () => {
       [0, 0],
       [1, 0],
     ]);
-    expect(progress.placed).toBe(2);
+    expect(progress.placed).toBe(0);
   });
 
   it('does not snap outside the tolerance or to diagonal pieces', async () => {
     const store = makeStore();
     await place(store, 0, 100, 100);
-    await place(store, 1, 100 + 40, 100);
+    await place(store, 1, 100 + 41, 100);
     await place(store, 5, 100, 100); // (1, 1) is diagonal to (0, 0) but below (1, 0)
-    // (1, 1) touches (1, 0) which sits at +40: 40 > 30, so no merge at all.
+    // (1, 1) touches (1, 0) which sits at +41: 41 > 40, so no merge at all.
     expect(store.getState().clusters).toHaveLength(3);
     expect(store.getState().progress.placed).toBe(0);
   });
@@ -133,6 +134,24 @@ describe('createLocalStore', () => {
     expect(await store.drop(51, 0, 0)).toEqual({ ok: false, reason: 'not-held' });
     expect(await store.grab(999)).toEqual({ ok: false, reason: 'not-found' });
     expect(store.getState().clusters.find((c) => c.id === 50)).toMatchObject({ x: 10, y: 10, heldBy: 'b' });
+  });
+
+  it('refuses to grab or drop a cluster locked in the frame, and progress stays', async () => {
+    const store = makeStore();
+    const frameX = (layout.boardWidth - layout.width) / 2;
+    const frameY = (layout.boardHeight - layout.height) / 2;
+    const placed = await place(store, 0, frameX + 5, frameY - 5);
+    expect(placed).toMatchObject({ ok: true, x: frameX, y: frameY, progress: { placed: 1 } });
+    const before = store.getState();
+    const [locked] = before.clusters;
+    expect(locked.locked).toBe(true);
+
+    expect(await store.grab(locked.id)).toEqual({ ok: false, reason: 'locked' });
+    expect(await store.drop(locked.id, 300, 300)).toEqual({ ok: false, reason: 'locked' });
+    const after = store.getState();
+    expect(after).toBe(before);
+    expect(after.clusters[0]).toMatchObject({ x: frameX, y: frameY, locked: true, heldBy: null });
+    expect(after.progress).toEqual({ placed: 1, total: 12, complete: false });
   });
 
   it('raises a grabbed cluster to the top', async () => {

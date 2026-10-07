@@ -21,6 +21,7 @@ const env = () => inject('supabase');
 let pool = null;
 const createdUsers = new Set();
 const openClients = new Set();
+const openDbClients = new Set();
 
 export function anonClient() {
   const client = createClient(env().url, env().anonKey, CLIENT_OPTIONS);
@@ -63,6 +64,24 @@ export async function sql(text, params = []) {
   // extra_float_digits = 1: read float8 back exactly (the image default 0 rounds to 15 digits).
   pool ??= new pg.Pool({ connectionString: env().dbUrl, max: 2, options: '-c extra_float_digits=1' });
   return pool.query(text, params);
+}
+
+// A dedicated connection (for tests that hold a transaction open while another one runs).
+export async function dbClient() {
+  const client = new pg.Client({ connectionString: env().dbUrl, options: '-c extra_float_digits=1' });
+  await client.connect();
+  openDbClients.add(client);
+  return client;
+}
+
+// Starts a transaction on `client` that runs as the given anonymous student, the way
+// PostgREST would (role authenticated + JWT claims), so RPCs see auth.uid().
+export async function beginAsStudent(client, userId) {
+  await client.query('begin');
+  await client.query('set local role authenticated');
+  await client.query("select set_config('request.jwt.claims', $1, true)", [
+    JSON.stringify({ sub: userId, role: 'authenticated', is_anonymous: true }),
+  ]);
 }
 
 async function insertSession(teacherId, { pieceCount, aspect, imageId }) {
@@ -226,6 +245,8 @@ export async function cleanup() {
     ]);
     createdUsers.clear();
   }
+  for (const client of openDbClients) await client.end().catch(() => {});
+  openDbClients.clear();
   await pool?.end();
   pool = null;
 }

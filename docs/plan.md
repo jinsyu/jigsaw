@@ -15,7 +15,7 @@
 - [x] T2: 퍼즐 기하·맞춤 판정 JS 모듈 + 공용 시험 사례 표 — DoD: D7
   - `public/js/puzzle/geometry.js`: 시드 rng, 조각 수(12·24·48·70) → 격자(4x3, 6x4, 8x6, 10x7, 세로 그림은 행열 바꿈), 조각 모양(목업 `common.js` `makePuzzle`·`edge` 재사용, Path2D/SVG path 둘 다).
   - 좌표 규약: 완성 그림 너비 = cols x 100 단위, 높이는 그림 비율로. 덩어리 위치 (x, y) = 완성 그림 원점의 판 위 위치. 판 = 각 변 약 √2배(넓이 2배).
-  - `public/js/puzzle/snap.js`: `findMerges(clusters, droppedId, tol)` — 이웃 조각을 가진 덩어리끼리 원점 차이가 허용 거리 안이면 합치고, 합친 뒤 다시 검사(연쇄). 합친 위치는 큰 덩어리(같으면 id 작은 쪽) 기준으로 정한다. 진행률(맞춘 조각 = 2개 이상 덩어리에 속한 조각 수)·완성 판정.
+  - `public/js/puzzle/snap.js`: `findMerges(clusters, droppedId, tol)` — 이웃 조각을 가진 덩어리끼리 원점 차이가 허용 거리 안이면 합치고, 합친 뒤 다시 검사(연쇄). 합친 위치는 큰 덩어리(같으면 id 작은 쪽) 기준으로 정한다. 진행률(맞춘 조각 = 2개 이상 덩어리에 속한 조각 수)·완성 판정. (T5 에서 바뀜: 판 가운데 틀 원점 `frameOrigin` 가까이 오면 제자리에 고정, 고정된 쪽이 합치기 기준, 진행률 = 고정된 조각 수, 완성 = 모든 조각 고정, 허용 거리 40)
   - 판 경계 고정(clamp) 규칙도 여기서 정의.
   - `tests/fixtures/snap-cases.json`: 입력(격자, 덩어리 목록, 놓은 덩어리, 허용 거리) → 기대 결과(합쳐진 덩어리, 최종 위치, 완성 여부). 경계값(허용 거리 딱 안/밖), 대각선(이웃 아님), 연쇄 합치기, 판 밖 놓기 포함 15개 이상.
   - Vitest: 같은 시드 → 같은 모양, 모든 사례 통과.
@@ -38,12 +38,12 @@
   - pg_cron: 24시간 지난 members·익명 계정 삭제(입장 실패로 남은 익명 계정 포함), 종료 30일 뒤 sessions(연쇄 삭제) 삭제.
   - 시험: 24조각·5명 → 5·5·5·5·4, 틀린 코드 오류, 교사가 아닌 사용자 호출 거부, 종료 후 members·익명 계정 0개, cron 함수 직접 호출로 정리 확인.
 
-- [ ] T5: 퍼즐 RPC(꺼내기·잡기·놓기·합치기·완성) + JS·SQL 맞춤 판정 교차 검사 — DoD: D5, D6, D7, D10
+- [x] T5: 퍼즐 RPC(꺼내기·잡기·놓기·합치기·완성) + JS·SQL 맞춤 판정 교차 검사 — DoD: D5, D6, D7, D10
   - `take_from_tray(piece, x, y)`: 상자 주인만 성공.
   - `grab(cluster)`: 원자적 update 하나로 먼저 온 쪽만 성공(비어 있음, 또는 잡은 지 10초 지남, 또는 잡은 사람 끊김일 때만 뺏을 수 있음).
-  - `drop(cluster, x, y)`: 잡은 사람만, 판 경계 고정, 맞춤 판정·연쇄 합치기(모둠 행을 잠가 같은 모둠의 놓기를 차례로 처리), 모든 조각이 한 덩어리면 `groups.completed_at` 기록.
+  - `drop(cluster, x, y)`: 잡은 사람만, 판 경계 고정, 맞춤 판정·연쇄 합치기·제자리(틀) 고정(모둠 행을 잠가 같은 모둠의 놓기를 차례로 처리), 모든 조각이 제자리에 고정되면 `groups.completed_at` 기록. 고정된 덩어리는 잡을 수 없다(`locked`).
   - 결과는 `realtime.send` 로 `group:<id>` 에 방송(잡기·놓기·합치기·완성). 끄는 도중 움직임은 방송하지 않는다.
-  - 맞춤 판정은 순수 SQL 함수로 분리하고, `tests/db/snap-parity.test.js` 가 `tests/fixtures/snap-cases.json` 의 모든 사례를 JS `findMerges` 와 SQL 함수 양쪽에 넣어 결과가 같은지 검사한다(spec 위험 요소 'SQL 맞춤 판정' 대응).
+  - 맞춤 판정은 순수 SQL 함수로 분리하고, `tests/db/snap-parity.test.js` 가 `tests/fixtures/snap-cases.json` 의 모든 사례를 JS `resolveDropWithHolds` 와 SQL 함수(그리고 `drop`·`take_from_tray` RPC) 양쪽에 넣어 결과가 같은지 검사한다(spec 위험 요소 'SQL 맞춤 판정' 대응).
   - 시험: 남의 상자 조각 꺼내기 거부, 동시 grab 두 개(Promise.all) 중 하나만 성공, 합치기 뒤 함께 움직임, 완성 시각 기록, 방송 메시지 수신.
 
 - [ ] T6: 끊김 처리 RPC(신호·자동 놓기·상자 나누기) — DoD: D8, D9

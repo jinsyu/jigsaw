@@ -239,9 +239,10 @@ test('take pieces from the tray, snap them together and complete the picture', a
   expect(s.clusters).toHaveLength(1);
   expect(s.clusters[0].x).toBeCloseTo(ox, 0);
 
-  // 2. Its neighbour 45 units off: too far to snap (tolerance 30).
+  // 2. Its neighbour 45 units off: too far to snap (tolerance 40). The first piece sits
+  //    exactly on the frame, so it is locked and already counts as placed.
   await dragFromTray(page, input, neighbour, ox + 45, oy);
-  await expect(page.locator('.pz-count')).toHaveText('0 / 24');
+  await expect(page.locator('.pz-count')).toHaveText('1 / 24');
   expect((await state(page)).clusters).toHaveLength(2);
 
   // 3. Drag the neighbour on the board onto its place: it snaps.
