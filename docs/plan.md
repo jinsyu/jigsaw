@@ -46,7 +46,7 @@
   - 맞춤 판정은 순수 SQL 함수로 분리하고, `tests/db/snap-parity.test.js` 가 `tests/fixtures/snap-cases.json` 의 모든 사례를 JS `resolveDropWithHolds` 와 SQL 함수(그리고 `drop`·`take_from_tray` RPC) 양쪽에 넣어 결과가 같은지 검사한다(spec 위험 요소 'SQL 맞춤 판정' 대응).
   - 시험: 남의 상자 조각 꺼내기 거부, 동시 grab 두 개(Promise.all) 중 하나만 성공, 합치기 뒤 함께 움직임, 완성 시각 기록, 방송 메시지 수신.
 
-- [ ] T6: 끊김 처리 RPC(신호·자동 놓기·상자 나누기) — DoD: D8, D9
+- [x] T6: 끊김 처리 RPC(신호·자동 놓기·상자 나누기) — DoD: D8, D9
   - `heartbeat()`: last_seen 갱신(학생 화면이 5초마다 호출). 끊김 기준 약 15초.
   - 잡은 지 10초가 지났거나 잡은 사람이 끊긴 덩어리는 다른 학생이 `grab` 가능(T5 조건 시험 포함).
   - `redistribute_stale(group)`: last_seen 이 1분 넘은 학생의 상자 남은 조각을 같은 모둠 접속자(시작 후 들어온 학생 포함)에게 고르게 나누고 방송. 모둠 화면들이 주기적으로 호출해도 한 번만 일어나게(멱등).
@@ -136,3 +136,10 @@
 2. `join_session`: 수업 종료로 익명 계정이 삭제된 뒤 남은 JWT 로 호출하면 원시 FK 오류(23503)가 난다 → 시작할 때 `auth.users` 존재를 확인하고, 없으면 정해진 오류(`account_gone`)를 돌려준다. T9 화면은 이를 받으면 익명 로그인을 다시 한다.
 3. `assign_member` 주석(343행 근처)과 실제 응답(`member_not_found` / `forbidden`)이 어긋난다 → 주석 또는 응답을 정리한다.
 4. 참고: cleanup 의 24시간 자동 종료는 `end` 방송·잡기 해제가 없다 → 화면은 수업 상태 조회로 종료를 감지한다(T11·T12). `start_session` 은 색 번호를 다시 매기지만 `groups` 방송이 없다 → 화면은 `start` 를 받으면 members 를 다시 읽는다(T9·T11). 내장 그림 `p_aspect` 범위 제한(예 1/2000~2000)을 검토한다.
+
+### T6 리뷰 참고사항 (T11 에서 처리)
+- 화면은 `heartbeat` 를 5초마다 따로 보내고, 백그라운드에서 돌아오면 `redistribute_stale` 보다 `heartbeat` 를 먼저 부른다(호출자 자신이 1분 넘게 끊긴 상태면 자기 상자가 나뉠 수 있음 — `disconnect.sql` 121~129행).
+- 모둠원이 아닌 상자 주인도 끊긴 것으로 보고 나눈다(방어용).
+- Realtime 이 방송 payload 에 메시지 `id`(uuid)를 덧붙인다 → 화면은 무시한다.
+- T14 관찰: `heartbeat` 호출 빈도 제한 없음(사용량 확인).
+- 나중: `private.cleanup_expired` 가 members → auth.users 삭제 순서라 잠금 순서와 반대다(24시간 넘은 수업 대상, 영향 작음) — cleanup 을 손볼 때 `lock_board` 를 먼저 잡는다.
