@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "key": "sea",
+      "title": "바다 친구들",
+      "category": "자연",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/sea.webp",
+      "thumb": "/images/builtin/sea-thumb.webp",
+      "source": "함께 퍼즐 자체 제작",
+      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+    },
+    {
+      "key": "village",
+      "title": "숲속 마을",
+      "category": "자연",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/village.webp",
+      "thumb": "/images/builtin/village-thumb.webp",
+      "source": "함께 퍼즐 자체 제작",
+      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+    },
+    {
+      "key": "space",
+      "title": "우주 여행",
+      "category": "과학",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/space.webp",
+      "thumb": "/images/builtin/space-thumb.webp",
+      "source": "함께 퍼즐 자체 제작",
+      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+    },
+    {
+      "key": "garden",
+      "title": "꽃밭",
+      "category": "자연",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/garden.webp",
+      "thumb": "/images/builtin/garden-thumb.webp",
+      "source": "함께 퍼즐 자체 제작",
+      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+    },
+    {
+      "key": "classroom",
+      "title": "우리 반 교실",
+      "category": "학교",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/classroom.webp",
+      "thumb": "/images/builtin/classroom-thumb.webp",
+      "source": "함께 퍼즐 자체 제작",
+      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+    },
+    {
+      "key": "friends",
+      "title": "우리 반 친구들",
+      "category": "학교",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/friends.webp",
+      "thumb": "/images/builtin/friends-thumb.webp",
+      "source": "함께 퍼즐 자체 제작",
+      "license": "함께 퍼즐 수업용으로 자유롭게 사용"
+    }
+  ]
+}
