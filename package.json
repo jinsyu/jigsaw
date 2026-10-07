@@ -6,10 +6,17 @@
     "dev": "node scripts/serve.mjs",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "assets": "node scripts/assets.mjs"
+    "assets": "node scripts/assets.mjs",
+    "test:db": "vitest run --config vitest.db.config.js",
+    "db:start": "npx --yes supabase@2.120.0 start",
+    "db:stop": "npx --yes supabase@2.120.0 stop",
+    "db:reset": "npx --yes supabase@2.120.0 db reset",
+    "db:status": "npx --yes supabase@2.120.0 status -o env"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
+    "@supabase/supabase-js": "2.117.2",
+    "pg": "^8.23.1",
     "vitest": "^5.0.3"
   }
 }

@@ -20,7 +20,7 @@
   - `tests/fixtures/snap-cases.json`: 입력(격자, 덩어리 목록, 놓은 덩어리, 허용 거리) → 기대 결과(합쳐진 덩어리, 최종 위치, 완성 여부). 경계값(허용 거리 딱 안/밖), 대각선(이웃 아님), 연쇄 합치기, 판 밖 놓기 포함 15개 이상.
   - Vitest: 같은 시드 → 같은 모양, 모든 사례 통과.
 
-- [ ] T3: 로컬 Supabase·스키마·RLS·실시간 권한·저장소 — DoD: D12, D14
+- [x] T3: 로컬 Supabase·스키마·RLS·실시간 권한·저장소 — DoD: D12, D14
   - `npx supabase init` / `npx supabase start`(docker). CLI 전역 설치 없이 `npx` 로만. `package.json` 스크립트(`db:start`, `db:reset`, `test:db`).
   - `supabase/config.toml`: 익명 로그인 켜기, 로컬 전용 이메일·비밀번호 로그인(시험용 교사), **익명 가입 한도 상향**(학교는 한 IP로 30명 이상이 들어옴).
   - 마이그레이션: `images`, `sessions`(코드, 그림, 조각 수, cols·rows, 그림 비율, 시드, 상태, 시작 시각), `groups`, `members`(이름 열 없음, 색 번호, last_seen), `clusters`, `pieces`. 교사 = 익명이 아닌 사용자(`auth.jwt()->>'is_anonymous'`).
@@ -124,3 +124,9 @@
 - **웹 품질**: 모든 화면은 `~/.claude/standards/web-quality.md`(SEO·파비콘, 360·390·1024·1440px 반응성, 성능)를 지킨다. 화면 태스크마다 4개 너비 Playwright 검사를 함께 넣는다.
 - **목업 재사용**: `docs/mockups/src/common.js` 의 `rng`·`edge`·`makePuzzle` 는 ES 모듈로 옮겨 쓴다. 목업의 QR(`qrSVG`)은 가짜이므로 쓰지 않는다.
 - **CDN 고정**: supabase-js 와 WASM 인코더는 버전을 고정해 불러오고, CSP 허용 목록에 그 도메인만 넣는다. 단위 시험은 CDN 없이 도는 순수 모듈만 대상으로 한다.
+
+### T3 리뷰 참고사항 (이후 태스크)
+- **T4**: 모둠 이동·`end_session` 뒤에도 Realtime 권한 캐시 때문에 예전 `group:<id>` 채널을 계속 받을 수 있다 → 모둠을 옮기면 클라이언트가 다시 구독하게 하고 동작을 시험한다. 익명 계정 삭제 기준은 '그 수업 members 의 user_id'.
+- **T5**: Supabase 이미지는 `extra_float_digits = 0` 이라 float8 → JSON·text 가 15자리로 잘린다. T3 마이그레이션이 API 역할에 `extra_float_digits = 1` 을 걸었지만, float8 을 JSON·text 로 만드는 함수(realtime.send 내용 등)는 `set extra_float_digits = 1` 을 직접 붙인다.
+- **T9**: Presence 키는 클라이언트가 정한다 → 대기실 이름은 members 와 대조하고, Presence 키를 그대로 믿지 않는다.
+- **T14**: `supabase config push` 금지(로컬 auth 설정이 원격에 올라감), seed 원격 적용 금지, 이메일 공급자 끄기(구글만), 익명 가입 한도 상향, 공개 Realtime 채널 접근 끄기(비공개만), `extra_float_digits` alter role 이 원격에 적용됐는지 확인.
