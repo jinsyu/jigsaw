@@ -12,6 +12,8 @@
 -- - Applied remotely with scripts/db/migrate.sh, which records each file in
 --   jigsaw.schema_migrations (created here). Every later migration must revoke the same way
 --   for the objects it adds (tests/server/db/permissions.test.js checks every table).
+--   Every later migration revokes from public, anon and authenticated and grants service_role
+--   directly on each object it creates (do not rely on default privileges alone).
 
 create schema jigsaw;
 

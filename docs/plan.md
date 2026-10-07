@@ -72,7 +72,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
     - service_role 로는 된다.
     - `migrate.sh` 를 두 번 실행해도 두 번째는 아무것도 적용하지 않는다. 다른 앱 흉내 스키마가 있는 DB 에서도 그것을 건드리지 않는다.
 
-- [ ] T18: 저장 계층(write-behind·재시작 복구·정리 작업) — DoD: D14, D17
+- [x] T18: 저장 계층(write-behind·재시작 복구·정리 작업) — DoD: D14, D17
   - `@supabase/supabase-js` 추가. `server/src/db.js` 는 service_role 클라이언트를 `db: { schema: 'jigsaw' }` 로 고정한다. 다른 스키마 접근 코드는 두지 않는다.
   - 저장 시점은 아래와 같다.
     - 즉시 저장: 수업 만들기·입장(members 행)·편성·시작·완성·끝내기.
@@ -246,3 +246,5 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
 - **교사 메시지 검증·학생 수 상한(T19)**: 수업당 학생 수 상한(예: 60)을 검토한다. 편성·시작·한눈에 보기·끝내기 등 교사 메시지는 `session.teacherId` 와 교사 토큰 uid 를 대조하고, 거부 시험을 둔다(D12).
 - **24시간 자동 종료(T18)**: `registry.end` 로 메모리까지 닫는다. 시작 전 수업은 `createdAt` 기준으로 센다.
 - **저장 토큰 재접속 실패(T22)**: 저장된 토큰으로 다시 들어가다 `invalid_code` 를 받으면 그 수업 코드의 localStorage 키를 지운다.
+- **원격 권한 점검(T25)**: 원격 적용 전후에 `storage.objects` 에 bucket 조건 없이 anon·authenticated 에 열린 정책이 있는지, `pg_default_acl` 에 스키마 지정 없는 전역 기본 권한이 있는지 확인한다. D12 curl 점검에 Storage 요청(공개 키로 `jigsaw-images` 목록·읽기)을 포함한다.
+- **계정 삭제와 그림 파일(T24)**: `docs/ops.md` 의 탈퇴 절차는 gyosil `auth.users` 계정이 삭제될 때도 적용한다. DB 행은 cascade 로 지워지지만 Storage 파일은 남으므로 `jigsaw-images/<uid>/` 파일 삭제 절차를 함께 적는다.

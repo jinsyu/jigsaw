@@ -30,6 +30,43 @@ export const HOLD_LIMIT_MS = 60_000;
 // Offline this long: the tray goes to the others (spec rule 7).
 export const GONE_MS = 60_000;
 
+/**
+ * Checks a saved board before it is restored (T18): every piece of the grid is in exactly one
+ * place (a cluster, a tray of a member of the group, or unowned), and trays belong to members.
+ * Cluster ids, positions and cells are checked again by createBoard. Throws RangeError.
+ * @param {{ clusters: Array<{ pieces: number[][] }>, trays: Record<string, number[]>, unowned?: number[] }} board
+ * @param {{ cols: number, rows: number, memberIds: string[] }} grid
+ */
+export function checkBoardRecord(board, { cols, rows, memberIds }) {
+  const total = cols * rows;
+  const count = new Array(total).fill(0);
+  const mark = (piece) => {
+    if (!Number.isInteger(piece) || piece < 0 || piece >= total) throw new RangeError(`bad piece: ${piece}`);
+    count[piece] += 1;
+  };
+  if (!Array.isArray(board?.clusters) || typeof board.trays !== 'object' || board.trays === null) {
+    throw new RangeError('board record needs clusters and trays');
+  }
+  for (const c of board.clusters) {
+    for (const cell of c.pieces ?? []) {
+      const [col, row] = cell;
+      if (!Number.isInteger(col) || !Number.isInteger(row) || col < 0 || col >= cols || row < 0 || row >= rows) {
+        throw new RangeError(`bad cell: ${JSON.stringify(cell)}`);
+      }
+      mark(row * cols + col);
+    }
+  }
+  const allowed = new Set(memberIds);
+  for (const [id, tray] of Object.entries(board.trays)) {
+    if (!allowed.has(id)) throw new RangeError(`tray of a member not in the group: ${id}`);
+    if (!Array.isArray(tray)) throw new RangeError(`bad tray: ${id}`);
+    tray.forEach(mark);
+  }
+  (board.unowned ?? []).forEach(mark);
+  const wrong = count.findIndex((n) => n !== 1);
+  if (wrong >= 0) throw new RangeError(`piece ${wrong} is in ${count[wrong]} places`);
+}
+
 const refuse = (reason, extra = {}) => ({ result: { ok: false, reason, ...extra }, events: [] });
 
 /**
@@ -68,12 +105,16 @@ export function createBoard({
   let zTop = 0;
   const clusters = new Map();
   for (const c of initialClusters) {
+    checkCluster(c);
     if (c.heldBy && !Number.isFinite(c.heldAt)) throw new RangeError(`held cluster without heldAt: ${c.id}`);
+    // A saved board keeps its drawing order; otherwise the given order is the order.
+    const z = Number.isSafeInteger(c.z) && c.z > zTop ? c.z : zTop + 1;
+    zTop = z;
     clusters.set(c.id, {
       id: c.id,
       x: c.x,
       y: c.y,
-      z: ++zTop,
+      z,
       locked: c.locked === true,
       pieces: c.pieces.map(([col, row]) => [col, row]),
       heldBy: c.heldBy ?? null,
@@ -95,6 +136,19 @@ export function createBoard({
     for (const [id, list] of Object.entries(dealt)) members.get(id).tray = list;
   }
   checkPieces();
+
+  function checkCluster(c) {
+    if (!Number.isSafeInteger(c.id) || c.id < 1) throw new RangeError(`bad cluster id: ${c.id}`);
+    if (clusters.has(c.id)) throw new RangeError(`duplicate cluster id: ${c.id}`);
+    if (!Number.isFinite(c.x) || !Number.isFinite(c.y)) throw new RangeError(`bad cluster position: ${c.id}`);
+    if (!Array.isArray(c.pieces) || c.pieces.length === 0) throw new RangeError(`cluster without pieces: ${c.id}`);
+    for (const cell of c.pieces) {
+      const [col, row] = Array.isArray(cell) ? cell : [];
+      if (!Number.isInteger(col) || !Number.isInteger(row) || col < 0 || row < 0 || col >= cols || row >= rows) {
+        throw new RangeError(`bad cell in cluster ${c.id}: ${JSON.stringify(cell)}`);
+      }
+    }
+  }
 
   function addMemberRecord(id, online) {
     if (members.has(id)) throw new RangeError(`duplicate member: ${id}`);
@@ -370,6 +424,7 @@ export function createBoard({
         .sort((a, b) => a.z - b.z)
         .map((c) => ({ ...c, pieces: c.pieces.map(([col, row]) => [col, row]) })),
       trays: Object.fromEntries([...members.values()].map((m) => [m.id, [...m.tray]])),
+      unowned: unownedPieces(),
       members: [...members.values()].map((m) => ({ id: m.id, online: m.online })),
       progress: progress(),
       completedAt,

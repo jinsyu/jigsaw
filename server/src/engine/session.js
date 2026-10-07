@@ -10,7 +10,7 @@
 // Student names live only in member.name (memory). toRecord(), the form that is saved,
 // has no names (spec D14). Names go out only in roster() / overview() / 'join' events,
 // which the network layer sends to this class's screens.
-import { createBoard } from './board.js';
+import { checkBoardRecord, createBoard } from './board.js';
 
 const PUZZLE_ACTIONS = new Set(['takeFromTray', 'grab', 'drop', 'release']);
 
@@ -33,6 +33,9 @@ const toGroup = (group, events) => events.map((event) => ({ to: 'group', group, 
  * @param {number} options.groupCount
  * @param {() => number} options.now
  * @param {() => number} options.random
+ * @param {object} [options.restore]  a saved toRecord() (server restart): status, times,
+ *   members (no names: filled in when each device joins again) and boards. Holds are all
+ *   released and every student starts offline, so the one-minute rule runs as usual.
  */
 export function createClassSession({
   id,
@@ -49,14 +52,50 @@ export function createClassSession({
   groupCount,
   now,
   random,
+  restore = null,
 }) {
-  let status = 'waiting';
-  const createdAt = now();
-  let startedAt = null;
-  let endedAt = null;
+  let status = restore?.status ?? 'waiting';
+  const createdAt = restore?.createdAt ?? now();
+  let startedAt = restore?.startedAt ?? null;
+  let endedAt = restore?.endedAt ?? null;
   // Map keeps insertion order = joining order (colours at the start follow it).
   const members = new Map();
   const groups = new Map(Array.from({ length: groupCount }, (_, i) => [i + 1, { number: i + 1, board: null }]));
+
+  function restoreState(saved) {
+    if (!['waiting', 'playing'].includes(saved.status)) throw new RangeError(`not an open class: ${saved.status}`);
+    const byJoin = [...saved.members].sort((a, b) => a.joinedAt - b.joinedAt);
+    for (const m of byJoin) {
+      if (m.group !== null && !groups.has(m.group)) throw new RangeError(`member in an unknown group: ${m.group}`);
+      members.set(m.id, {
+        id: m.id,
+        name: '',
+        tokenHash: m.tokenHash,
+        group: m.group,
+        color: m.color,
+        joinedAt: m.joinedAt,
+        online: false,
+      });
+    }
+    for (const g of saved.groups) {
+      const group = groups.get(g.number);
+      if (!group) throw new RangeError(`unknown group: ${g.number}`);
+      if (!g.board) continue;
+      const list = groupMembers(g.number);
+      checkBoardRecord(g.board, { cols, rows, memberIds: list.map((m) => m.id) });
+      group.board = createBoard({
+        cols,
+        rows,
+        aspect,
+        members: list.map((m) => ({ id: m.id, online: false })),
+        trays: g.board.trays,
+        clusters: g.board.clusters,
+        completedAt: g.completedAt,
+        now,
+        random,
+      });
+    }
+  }
 
   const groupMembers = (number) => [...members.values()].filter((m) => m.group === number);
   const assignment = (m) => ({ id: m.id, group: m.group, color: m.color });
@@ -277,6 +316,7 @@ export function createClassSession({
               pieces,
             })),
             trays: state.trays,
+            unowned: state.unowned,
           },
         };
       }),
@@ -290,12 +330,19 @@ export function createClassSession({
     };
   }
 
+  // After every helper above exists (restoreState uses them).
+  if (restore) restoreState(restore);
+
   return {
     id,
     teacherId,
     code,
     get status() {
       return status;
+    },
+    createdAt,
+    get startedAt() {
+      return startedAt;
     },
     member: (memberId) => members.get(memberId) ?? null,
     addMember,

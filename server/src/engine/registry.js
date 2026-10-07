@@ -13,6 +13,9 @@ import { createClassSession } from './session.js';
 
 export const MAX_GROUPS = 12;
 export const MAX_OPEN_SESSIONS = 100;
+// An open class is closed automatically this long after it started (or, if it never
+// started, after it was created): spec clean-up job.
+export const OPEN_LIMIT_MS = 24 * 60 * 60 * 1000;
 const CODE_SPACE = 1_000_000;
 const CODE_ATTEMPTS = 20;
 const BUILTIN_KEY = /^[a-z0-9-]{1,64}$/;
@@ -134,6 +137,41 @@ export function createRegistry({
     return byTokenHash.get(hashToken(token)) ?? null;
   }
 
+  // A saved open class (toRecord() shape) back into memory after a restart. Throws RangeError
+  // for a record that does not fit (the caller logs it and leaves that class closed).
+  function restore(record) {
+    if (sessions.has(record.id)) throw new RangeError(`class already open: ${record.id}`);
+    if (byCode.has(record.code)) throw new RangeError(`code already in use: ${record.code}`);
+    const session = createClassSession({
+      id: record.id,
+      teacherId: record.teacherId,
+      code: record.code,
+      seed: record.seed,
+      pieceCount: record.pieceCount,
+      cols: record.cols,
+      rows: record.rows,
+      aspect: record.aspect,
+      builtinKey: record.builtinKey,
+      imageId: record.imageId,
+      hints: normalizeHints(record.hints),
+      groupCount: record.groups.length,
+      now,
+      random,
+      restore: record,
+    });
+    sessions.set(session.id, session);
+    byCode.set(session.code, session);
+    for (const m of record.members) byTokenHash.set(m.tokenHash, { session, memberId: m.id });
+    return session;
+  }
+
+  // Closes every open class past OPEN_LIMIT_MS. Returns [{ sessionId, session, result, events }].
+  function expireStale() {
+    const t = now();
+    const due = [...sessions.values()].filter((s) => t - (s.startedAt ?? s.createdAt) >= OPEN_LIMIT_MS);
+    return due.map((session) => ({ sessionId: session.id, session, ...end(session.id) }));
+  }
+
   function end(sessionId) {
     const session = sessions.get(sessionId);
     if (!session) return fail('not_found');
@@ -154,6 +192,8 @@ export function createRegistry({
     join,
     byToken,
     end,
+    restore,
+    expireStale,
     tick,
     session: (sessionId) => sessions.get(sessionId) ?? null,
     get openCount() {
