@@ -91,13 +91,13 @@ async function api(path, body, { origin = ORIGIN, raw } = {}) {
 }
 
 async function openClass({ groupCount = 2, teacherId = TEACHERS.one.id } = {}) {
-  const { status, body } = await api('/api/test/sessions', {
-    teacherId,
-    pieceCount: 12,
-    groupCount,
-    picture: { builtinKey: 'socket-probe', aspect: 4 / 3 },
+  const res = await fetch(`http://127.0.0.1:${port}/api/sessions`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', origin: ORIGIN, authorization: `Bearer ${signTeacherToken(teacherId, SECRET)}` },
+    body: JSON.stringify({ pieceCount: 12, groupCount, picture: { builtinKey: 'sea' } }),
   });
-  expect(status).toBe(200);
+  const body = await res.json();
+  expect(res.status, JSON.stringify(body)).toBe(200);
   sessionIds.add(body.sessionId);
   return body;
 }

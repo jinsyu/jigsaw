@@ -423,3 +423,16 @@ describe('T19 보강', () => {
     expect(Object.keys(session)).not.toContain('end');
   });
 });
+
+describe('교사당 열린 수업 상한 (T20)', () => {
+  it('한 교사의 열린 수업이 상한이면 too_many_sessions, 다른 교사는 열 수 있다', () => {
+    const { registry } = makeRegistry({ maxOpenPerTeacher: 2 });
+    const first = openClass(registry);
+    openClass(registry);
+    const third = registry.createSession('teacher-1', { pieceCount: 24, groupCount: 3, picture: BUILTIN });
+    expect(third.result).toEqual({ ok: false, error: 'too_many_sessions' });
+    expect(registry.createSession('teacher-2', { pieceCount: 24, groupCount: 3, picture: BUILTIN }).result.ok).toBe(true);
+    registry.end(first.id);
+    expect(registry.createSession('teacher-1', { pieceCount: 24, groupCount: 3, picture: BUILTIN }).result.ok).toBe(true);
+  });
+});

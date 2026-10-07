@@ -11,7 +11,8 @@ port = 56321
 # Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
 # endpoints. `public` and `graphql_public` schemas are included by default.
 # jigsaw: like the hosted Exposed schemas setting; anon/authenticated have no privileges there.
-schemas = ["public", "graphql_public", "jigsaw"]
+# core: the shared gyosil profiles (core.profiles), read and written only by the rt server.
+schemas = ["public", "graphql_public", "jigsaw", "core"]
 # Extra schemas to add to the search_path of every request.
 extra_search_path = ["public", "extensions"]
 # The maximum number of rows returns from a view, table, or stored procedure. Limits payload size

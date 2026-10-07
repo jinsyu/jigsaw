@@ -2,9 +2,11 @@
 // state it needs. Students get their own group only, with their own tray; names only of the
 // students of their group. Teachers get the roster and the overview of their own class.
 
-function setup(session) {
+// pictureUrl: a signed URL of the teacher's picture (null for built-in pictures).
+function setup(session, pictureUrl) {
   const r = session.toRecord();
   return {
+    pictureUrl,
     id: r.id,
     code: r.code,
     status: r.status,
@@ -27,12 +29,12 @@ export function groupMates(session, number) {
     .map(({ id, name, color, online }) => ({ id, name, color, online }));
 }
 
-export function studentState(session, memberId, now) {
+export function studentState(session, memberId, now, pictureUrl = null) {
   const member = session.member(memberId);
   const board = member.group === null ? null : session.boardState(member.group);
   return {
     now,
-    session: setup(session),
+    session: setup(session, pictureUrl),
     me: { memberId, name: member.name, group: member.group, color: member.color },
     group:
       member.group === null
@@ -59,6 +61,6 @@ export function studentState(session, memberId, now) {
   };
 }
 
-export function teacherState(session, now) {
-  return { now, session: setup(session), roster: session.roster(), overview: session.overview() };
+export function teacherState(session, now, pictureUrl = null) {
+  return { now, session: setup(session, pictureUrl), roster: session.roster(), overview: session.overview() };
 }

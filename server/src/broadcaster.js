@@ -20,7 +20,7 @@ export const rooms = {
   member: (mid) => `m:${mid}`,
 };
 
-export function createBroadcaster(io, { now, timers = { setTimeout, clearTimeout } }) {
+export function createBroadcaster(io, { now, pictureUrl = async () => null, log = console, timers = { setTimeout, clearTimeout } }) {
   const groupBuffers = new Map(); // room -> events
   const groupTimers = new Map(); // room -> timer
   const overviewDirty = new Map(); // sid -> { session, groups: Set }
@@ -87,7 +87,14 @@ export function createBroadcaster(io, { now, timers = { setTimeout, clearTimeout
 
   function sendState(session, memberId) {
     if (!session.member(memberId)) return;
-    io.to(rooms.member(memberId)).emit('state', studentState(session, memberId, now()));
+    pictureUrl(session)
+      .catch((error) => {
+        log.error(`[socket] 그림 주소를 만들지 못했습니다: ${error?.message ?? error}`);
+        return null;
+      })
+      .then((url) => {
+        if (session.member(memberId)) io.to(rooms.member(memberId)).emit('state', studentState(session, memberId, now(), url));
+      });
   }
 
   function dispatch(session, events) {

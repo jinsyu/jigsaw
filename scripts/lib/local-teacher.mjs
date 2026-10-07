@@ -26,3 +26,19 @@ export function sessionInitScript(session) {
     [TEACHER_AUTH_KEY, JSON.stringify(session)],
   ];
 }
+
+// New structure (T20): a teacher token for the seeded teacher from the local rt server's dev
+// route (pnpm rt:dev; the route exists only with test hooks on, never in production). The
+// teacher screens switch to it in T21; the Supabase sign-in above stays until then.
+export const LOCAL_TEACHER_ID = '11111111-1111-4111-8111-111111111111';
+
+export async function devTeacherToken({ rtUrl = 'http://127.0.0.1:3400', origin = 'http://localhost:4173', teacherId = LOCAL_TEACHER_ID } = {}) {
+  const res = await fetch(`${rtUrl}/api/dev/teacher-token`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', origin },
+    body: JSON.stringify({ teacherId }),
+  });
+  const body = await res.json().catch(() => null);
+  if (!res.ok || !body?.token) throw new Error(`dev teacher token failed: ${res.status} ${body?.error ?? ''}`);
+  return body.token;
+}

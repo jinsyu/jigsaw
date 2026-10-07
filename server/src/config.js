@@ -24,7 +24,7 @@ export function readConfig(env = process.env) {
     googleClientId: env.GOOGLE_CLIENT_ID ?? '',
     sessionSecret: env.SESSION_SECRET,
     allowedOrigins: env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean),
-    // Local only: clock hooks and session creation for tests. Never in production.
+    // Local only: the clock hook and the dev teacher token route. Never in production.
     testHooks: !production && env.RT_TEST_HOOKS === '1',
     // Behind Caddy the client address is in X-Forwarded-For.
     trustProxy: env.RT_TRUST_PROXY === '1',
@@ -42,6 +42,11 @@ export function readConfig(env = process.env) {
       wrongCodeBlockMs: int(env.RT_WRONG_CODE_BLOCK_MS, 30_000),
       maxOpenSessions: int(env.RT_MAX_OPEN_SESSIONS, 100),
       maxMembers: int(env.RT_MAX_MEMBERS, 60),
+      // Anyone with a Google account can become a teacher, so one account may not take all
+      // classes or fill the shared Storage.
+      maxOpenSessionsPerTeacher: int(env.RT_MAX_OPEN_PER_TEACHER, 10),
+      maxImagesPerTeacher: int(env.RT_MAX_IMAGES_PER_TEACHER, 100),
+      uploadsPerHour: int(env.RT_UPLOADS_PER_HOUR, 60),
       bodyBytes: 4096,
       socketBytes: 16 * 1024,
     },

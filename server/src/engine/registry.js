@@ -15,6 +15,8 @@ export const MAX_GROUPS = 12;
 export const MAX_OPEN_SESSIONS = 100;
 // Students per class (a class is about 30; room for a second device each).
 export const MAX_MEMBERS = 60;
+// Open classes of one teacher.
+export const MAX_OPEN_PER_TEACHER = 10;
 // An open class is closed automatically this long after it started (or, if it never
 // started, after it was created): spec clean-up job.
 export const OPEN_LIMIT_MS = 24 * 60 * 60 * 1000;
@@ -52,6 +54,7 @@ function pictureOf(picture) {
  * @param {() => string} [options.newToken]
  * @param {number} [options.maxOpenSessions]
  * @param {number} [options.maxMembers]  students per class
+ * @param {number} [options.maxOpenPerTeacher]  open classes of one teacher
  */
 export function createRegistry({
   now,
@@ -61,6 +64,7 @@ export function createRegistry({
   newToken = () => randomBytes(32).toString('base64url'),
   maxOpenSessions = MAX_OPEN_SESSIONS,
   maxMembers = MAX_MEMBERS,
+  maxOpenPerTeacher = MAX_OPEN_PER_TEACHER,
 }) {
   const sessions = new Map(); // id -> session (open only)
   const byCode = new Map(); // code -> session
@@ -80,6 +84,8 @@ export function createRegistry({
     const pic = pictureOf(picture);
     if (!pic) return fail('invalid_picture');
     if (sessions.size >= maxOpenSessions) return fail('too_many_sessions');
+    const mine = [...sessions.values()].filter((s) => s.teacherId === teacherId).length;
+    if (mine >= maxOpenPerTeacher) return fail('too_many_sessions');
     const code = freeCode();
     if (code === null) return fail('no_free_code');
     const { cols, rows } = gridFor(pieceCount, pic.aspect);
@@ -201,6 +207,8 @@ export function createRegistry({
     expireStale,
     tick,
     session: (sessionId) => sessions.get(sessionId) ?? null,
+    // Whether an open class uses this teacher picture (it may not be deleted then).
+    isImageInUse: (imageId) => [...sessions.values()].some((s) => s.imageId === imageId),
     get openCount() {
       return sessions.size;
     },

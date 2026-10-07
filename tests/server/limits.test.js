@@ -140,3 +140,13 @@ describe('config', () => {
     expect(readConfig(base).limits).toMatchObject({ wrongCodes: 60, wrongCodeBonusPerJoin: 3, wrongCodeBlockMs: 30_000 });
   });
 });
+
+describe('start ticket (T20)', () => {
+  it('시작하기 표는 교사 토큰으로 쓸 수 없고, 교사 토큰도 시작하기 표가 아니다', async () => {
+    const { signStartTicket, verifyStartTicket } = await import('../../server/src/teacher-token.js');
+    const ticket = signStartTicket('u1', SECRET);
+    expect(verifyStartTicket(ticket, SECRET)).toBe('u1');
+    expect(verifyTeacherToken(ticket, SECRET)).toBeNull();
+    expect(verifyStartTicket(signTeacherToken('u1', SECRET), SECRET)).toBeNull();
+  });
+});

@@ -42,7 +42,7 @@ export function clientAddress(req, trustProxy) {
   return req.socket?.remoteAddress ?? 'unknown';
 }
 
-export function attachSockets({ httpServer, config, registry, persistence, now, log = console }) {
+export function attachSockets({ httpServer, config, registry, persistence, now, pictureUrl = async () => null, log = console }) {
   const { limits } = config;
   const connections = createConnectionCounter({ maxTotal: limits.maxConnections, maxPerKey: limits.maxConnectionsPerIp });
   const studentSockets = new Map(); // member id -> open sockets
@@ -59,7 +59,12 @@ export function attachSockets({ httpServer, config, registry, persistence, now, 
       callback(allowed ? null : 'forbidden_origin', allowed);
     },
   });
-  const broadcaster = createBroadcaster(io, { now });
+  const broadcaster = createBroadcaster(io, { now, pictureUrl, log });
+  const urlOf = (session) =>
+    pictureUrl(session).catch((error) => {
+      log.error(`[socket] 그림 주소를 만들지 못했습니다: ${error?.message ?? error}`);
+      return null;
+    });
 
   function deliver(session, events) {
     if (events.length === 0) return;
@@ -126,7 +131,9 @@ export function attachSockets({ httpServer, config, registry, persistence, now, 
     const open = (studentSockets.get(memberId) ?? 0) + 1;
     studentSockets.set(memberId, open);
     if (open === 1) deliver(session, session.memberOnline(memberId));
-    socket.emit('state', studentState(session, memberId, now()));
+    urlOf(session).then((url) => {
+      if (socket.connected && session.member(memberId)) socket.emit('state', studentState(session, memberId, now(), url));
+    });
     socket.on('disconnect', () => {
       const left = (studentSockets.get(memberId) ?? 1) - 1;
       if (left > 0) return studentSockets.set(memberId, left);
@@ -140,7 +147,9 @@ export function attachSockets({ httpServer, config, registry, persistence, now, 
     const session = registry.session(socket.data.sessionId);
     if (!session) return socket.disconnect(true);
     socket.join(rooms.teacher(session.id));
-    socket.emit('state', teacherState(session, now()));
+    urlOf(session).then((url) => {
+      if (socket.connected) socket.emit('state', teacherState(session, now(), url));
+    });
   }
 
   function handle(socket, event, message, bucket) {

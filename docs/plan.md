@@ -113,7 +113,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
     - `/health` 가 응답한다.
     - 서버 프로세스를 죽였다 다시 띄우면 수업이 복구되고 소켓이 재접속한다(D17).
 
-- [ ] T20: 교사 인증·시작하기·수업·그림 API — DoD: D1, D2, D12
+- [x] T20: 교사 인증·시작하기·수업·그림 API — DoD: D1, D2, D12
   - `POST /api/teacher/login`:
     - 입력은 GIS ID 토큰과 nonce 다. 서버가 Supabase `signInWithIdToken`(공개 키 클라이언트, 세션 저장 안 함)으로 uid·이메일을 확인한다.
     - `jigsaw.teachers` 에 있으면 서버 서명 교사 토큰(12시간)을, 없으면 '시작하기 필요'를 돌려준다.
@@ -134,7 +134,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
 
 - [ ] T21: 화면 전환 ① 교사 화면 — DoD: D1, D2, D3, D4, D11
   - `public/js/rt-client.js`: rt 주소를 고른다(`config.js`: 로컬 주소면 `http://localhost:3400`). 운영 rt 주소는 T25 까지 비워 둔다. 비어 있으면 교사·학생 화면은 지금처럼 '준비 중'을 보인다(이 태스크부터 main 푸시가 곧 운영 배포이므로). 이를 E2E(`csp.spec`·`teacher.spec` 의 '준비 중' 시험)로 계속 확인한다. fetch 래퍼와 socket.io 클라이언트(고정 버전 ESM, `public/js/vendor/socket.io-<버전>.esm.min.js`)를 둔다.
-  - 로그인 화면은 GIS 버튼이다. nonce 는 원본·해시를 만들어 원본을 서버로 보낸다. 받은 교사 토큰은 localStorage 에 두고 만료되면 다시 로그인한다. 로컬·E2E 는 dev 교사 토큰을 주입한다. 처음 오는 교사는 '함께 퍼즐 시작하기' 화면(이름·약관 동의, 목업 문체)을 거친다.
+  - 로그인 화면은 GIS 버튼이다. nonce 는 원본·해시를 만들어 원본을 서버로 보낸다. 받은 교사 토큰은 localStorage 에 두고 만료되면 다시 로그인한다. 로컬·E2E 는 dev 교사 토큰을 주입한다. 처음 오는 교사는 '함께 퍼즐 시작하기' 화면(이름·약관 동의, 목업 문체)을 거친다. 시작하기 화면은 로그인 응답의 `profile.displayName`(다른 gyosil 앱에서 정한 이름)을 이름 칸에 미리 채운다.
   - 연결 교체: `teacher/data.js`·`pictures.js`·`upload.js`(WebP 변환은 그대로, 전송만 rt 로)·`lobby-view.js`(Presence 대신 서버 명단)·`overview-data.js`(3초 폴링 대신 서버 푸시)를 rt 연결로 바꾼다. 교사 화면은 supabase-js 를 import 하지 않는다.
   - 공통: 서버 연결이 끊기면 "다시 연결하는 중" 띠를 보이고 자동으로 재접속한다.
   - 검증: E2E `teacher-create`·`teacher`(대기실·편성·시작)·`upload`·`upload-webkit`·`overview` 를 새 구조(정적 서버 + 로컬 rt + 로컬 Supabase)로 고쳐 통과시킨다. 4개 너비 검사를 포함하고, 교사 화면이 연 네트워크 요청에 `*.supabase.co`·로컬 Supabase REST 주소가 없는지 확인한다(그림 서명 URL 제외).
@@ -251,3 +251,8 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
 - **T19 결정 기록**: 한 학생은 한 덩어리만 잡는다(다른 덩어리를 잡으면 먼저 잡은 것은 `regrab` 으로 놓임). 틀린 코드는 같은 1분 창에서 `틀린 코드 > 60 + 그 주소의 성공 입장 × 3` 이 되면 30초 동안 그 주소의 입장을 모두(맞는 코드 포함) 거부한다. 학교 NAT 에서 한 반이 함께 들어오며 내는 오타로는 막히지 않게 한 값이다(`RT_WRONG_CODE_LIMIT`·`RT_WRONG_CODE_BONUS`·`RT_WRONG_CODE_BLOCK_MS` 로 조정). 수업당 학생 상한 60, 교사 소켓은 연결할 때 교사 토큰 uid 와 `session.teacherId` 를 대조한다. 소켓 시험은 로컬 Supabase 가 필요해 `tests/server/db/socket.test.js` 에 둔다(`pnpm test:server`).
 - **입장 차단 안내(T22)**: `POST /api/join` 이 `429 too_many_attempts` 를 주면 학생 화면은 '잠시 뒤에 다시 입력해 주세요' 라고 안내한다.
 - **주소 판단과 프록시(T24·T25)**: `docs/ops.md` 의 Caddyfile 에 `trusted_proxies` 를 넣지 않는다(Caddy 가 클라이언트가 보낸 X-Forwarded-For 를 그대로 넘기지 않게). T25 에서 위조한 `X-Forwarded-For` 로 주소별 제한을 피할 수 없는지 확인한다. `/etc/jigsaw-rt.env` 틀과 systemd 유닛에 `NODE_ENV=production` 을 명시한다(시험 훅이 켜지지 않게).
+- **T20 결정 기록**: `signInWithIdToken` 으로 교사 계정을 확인한 직후 그 Supabase 세션은 `signOut({ scope: 'local' })` 로 바로 끝낸다(rt 서버는 자체 교사 토큰만 쓰고, 다른 gyosil 앱의 로그인은 건드리지 않음). gyosil 계정이 jigsaw 교사가 아니면 로그인은 15분짜리 시작하기 표(교사 토큰으로는 못 씀)를 주고, `POST /api/teacher/start` 가 `core.profiles`(이름·약관 동의 시각)와 `jigsaw.teachers` 를 만든다. 내장 그림 비율은 요청값이 아니라 서버의 `index.json` 에서 정한다. T19 시험 훅 `/api/test/sessions` 는 실제 `POST /api/sessions` 로 대체해 없앴다. `scripts/lib/local-teacher.mjs` 에는 `devTeacherToken()` 을 더했고, 기존 Supabase 로그인 함수는 교사 화면이 옮겨 가는 T21 에서 뺀다.
+- **core.profiles 접근(T25 확인)**: rt 서버는 service_role 로 `core.profiles` 를 읽고 쓴다(`server/src/teacher/teachers.js` 한 곳). 원격 Data API 'Exposed schemas' 에 `core` 가 들어 있어야 한다. T25 에서 확인하고, 없으면 사용자 작업으로 추가한다(로컬 `config.toml` 은 넣어 둠).
+- **교사당 상한(T20)**: 구글 계정만 있으면 교사가 되므로 한 계정이 수업·Storage 를 독점하지 못하게 교사당 열린 수업 10개(429 `too_many_sessions`), 그림 100장(409 `too_many_images`), 업로드 시간당 60회(429 `too_many_uploads`)로 막는다(`RT_MAX_OPEN_PER_TEACHER`·`RT_MAX_IMAGES_PER_TEACHER`·`RT_UPLOADS_PER_HOUR`).
+- **그림 삭제와 수업 만들기의 좁은 경쟁(기록만)**: 그림을 지우는 요청이 '열린 수업 없음'을 확인한 뒤 Storage 파일을 지우는 사이에 같은 교사가 그 그림으로 수업을 만들면, 수업은 열리고 그림 파일은 사라질 수 있다. 같은 교사가 두 화면에서 동시에 해야 생기는 일이라 지금은 고치지 않는다.
+- **state 와 묶음 이벤트 순서(T22)**: 연결 직후 서버는 그림 서명 URL 을 만든 뒤 `state` 를 보내므로, 그 사이 모둠 묶음 이벤트(`events`)가 먼저 도착할 수 있다. 학생 화면은 `state` 를 받기 전 이벤트를 버리거나 쌓아 두었다가 `state` 뒤에 적용해 순서가 바뀌어도 견디게 한다.

@@ -341,6 +341,7 @@ export function createClassSession({
     id,
     teacherId,
     code,
+    imageId,
     get status() {
       return status;
     },

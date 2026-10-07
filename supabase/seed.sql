@@ -36,14 +36,16 @@ select u.id from auth.users u
 where u.email in ('teacher1@jigsaw.test', 'teacher2@jigsaw.test');
 
 -- Local stand-in for the shared gyosil core.profiles table, which already exists on the hosted
--- project (platform.md). Seed only, never in a jigsaw migration. Minimal columns; the hosted
--- column set is confirmed with the user before T20.
+-- project (platform.md). Seed only, never in a jigsaw migration. Same columns as the hosted
+-- table (checked read-only on the hosted project before T20).
 create schema if not exists core;
 create table if not exists core.profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
+  id uuid primary key references auth.users (id),
   display_name text,
-  terms_agreed_at timestamptz
+  terms_agreed_at timestamptz default now(),
+  created_at timestamptz default now()
 );
+alter table core.profiles enable row level security;
 revoke all on schema core from public, anon, authenticated;
 revoke all on all tables in schema core from public, anon, authenticated;
 grant usage on schema core to service_role;
