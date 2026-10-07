@@ -41,10 +41,25 @@ function renderPlaceholder(main, title) {
   main.append(heading, note, back);
 }
 
+function showLoadError(main, error) {
+  document.documentElement.classList.remove('is-play');
+  renderPlaceholder(main, '화면을 열지 못했어요');
+  main.querySelector('.sub').textContent = '새로고침해 주세요. 계속 안 되면 선생님께 알려 주세요.';
+  console.error(error);
+}
+
 const main = document.getElementById('app');
 const route = matchRoute(location.pathname);
+const isDemo = route === 'play' && new URLSearchParams(location.search).get('demo') === '1';
 if (route === 'home') {
   setupHome();
+} else if (isDemo) {
+  markPrivate(TITLES.play);
+  main.className = 'play';
+  main.replaceChildren(); // do not flash the home screen while the puzzle loads
+  import('./play/demo.js')
+    .then(({ startDemo }) => startDemo(main))
+    .catch((error) => showLoadError(main, error));
 } else {
   markPrivate(TITLES[route]);
   renderPlaceholder(main, TITLES[route]);

@@ -32,3 +32,114 @@
 .doc { max-width: 720px; gap: 16px; }
 .doc h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-top: 12px; }
 .doc a.brand { text-decoration: none; min-height: 44px; }
+
+/* Student puzzle screen (mockups student-phone #4 and student-tablet).
+   Portrait: board on top, my tray below. Landscape (600px+ wide, phones on their side too): tray on the right. */
+html.is-play, html.is-play body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+.play {
+  --ok-ink: #187A43; /* --ok darkened to 4.5:1 on --bg for small text */
+  position: relative; height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.pz-top { flex: none; display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; row-gap: 8px; padding: 8px 16px 10px; }
+.pz-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
+.pz-progress { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pz-bar { width: 90px; flex: none; }
+.pz-bar i { width: 0; transition: width .3s ease-out; }
+.pz-count { font-size: 15px; font-weight: 700; color: var(--ok-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pz-chips {
+  order: 5; flex: 1 0 100%; display: flex; gap: 6px; margin: 0; padding: 0; list-style: none;
+  overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain;
+}
+.pz-chips::-webkit-scrollbar { display: none; }
+.pz-chips .chip { height: 28px; font-size: 13px; flex: none; }
+.pz-chips .chip .ic { width: 18px; height: 18px; }
+.pz-picture-btn { margin-left: auto; color: var(--ink); flex: none; }
+.pz-picture-btn .pz-btn-label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+.pz-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.pz-board {
+  position: relative; flex: 1; min-height: 0; overflow: hidden; background: #E9E2D5;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+.pz-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.pz-canvas:active { cursor: grabbing; }
+.pz-hint, .pz-toast, .pz-loading {
+  position: absolute; left: 50%; transform: translateX(-50%); max-width: calc(100% - 24px);
+  border-radius: 99px; font-size: 13px; font-weight: 600; padding: 7px 13px; text-align: center; pointer-events: none;
+}
+.pz-hint { bottom: 12px; background: rgba(30, 36, 51, .82); color: #fff; white-space: nowrap; transition: opacity .3s; }
+.pz-hint.is-hidden { opacity: 0; }
+.pz-toast { top: 12px; background: var(--ink); color: #fff; opacity: 0; transition: opacity .2s; }
+.pz-toast.is-shown { opacity: 1; }
+.pz-toast.ok { background: var(--ok-weak); color: #17693C; font-size: 16px; font-weight: 800; padding: 10px 18px; box-shadow: 0 6px 18px rgba(31, 157, 85, .2); }
+.pz-loading { top: 45%; color: var(--sub); font-size: 15px; }
+
+.pz-tray { flex: none; background: #fff; padding: 12px 14px max(14px, env(safe-area-inset-bottom)); min-width: 0; }
+.pz-tray-h { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; row-gap: 2px; margin-bottom: 6px; }
+.pz-tray-title { font-size: 16px; font-weight: 800; }
+.pz-tray-note { font-size: 13px; color: var(--muted); }
+.pz-tiles {
+  display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+  padding: 8px 2px 4px; scrollbar-width: thin; min-height: 74px; /* same height when empty: no board jump */
+}
+.pz-tile { flex: none; width: 62px; height: 62px; padding: 3px; border: 0; cursor: grab; touch-action: pan-x; transition: transform .15s, opacity .15s; }
+.pz-tile canvas { display: block; width: 100%; height: 100%; pointer-events: none; }
+.pz-tile.is-lifted { opacity: .35; transform: scale(.92); }
+
+.pz-ghost { position: fixed; left: 0; top: 0; z-index: 20; pointer-events: none; will-change: transform; }
+.pz-ghost canvas { display: block; transition: transform .14s ease-out; filter: drop-shadow(0 10px 12px rgba(60, 40, 20, .28)); }
+
+.pz-dialog {
+  width: min(92vw, 720px); max-height: 92dvh; border: 0; border-radius: 20px; padding: 18px;
+  background: #fff; color: var(--ink); box-shadow: 0 24px 60px rgba(20, 30, 60, .25);
+}
+.pz-dialog[open] { display: flex; flex-direction: column; gap: 14px; }
+.pz-dialog::backdrop { background: rgba(30, 36, 51, .55); }
+.pz-dialog h2 { font-size: 18px; font-weight: 800; }
+.pz-dialog img { width: 100%; height: auto; max-height: 70dvh; object-fit: contain; border-radius: 12px; background: var(--board); }
+.pz-dialog .btn { align-self: center; min-width: 120px; }
+
+@media (orientation: landscape) and (min-width: 600px) {
+  .pz-top { flex-wrap: nowrap; column-gap: 14px; padding: 8px 20px 10px; border-bottom: 1px solid var(--line); }
+  .pz-title { font-size: 22px; }
+  .pz-bar { width: 140px; }
+  .pz-chips { order: 0; flex: 0 1 auto; margin-left: 8px; }
+  .pz-chips .chip { height: 30px; font-size: 14px; }
+  .pz-chips .chip .ic { width: 20px; height: 20px; }
+  .pz-picture-btn { width: auto; padding: 0 14px; gap: 8px; display: inline-flex; align-items: center; font: inherit; font-size: 15px; font-weight: 600; }
+  .pz-picture-btn .pz-btn-label { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  .pz-body { flex-direction: row; }
+  .pz-board { border: 0; }
+  .pz-tray {
+    width: 236px; display: flex; flex-direction: column; border-left: 1px solid var(--line);
+    padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  }
+  .pz-tray-h { display: block; margin-bottom: 8px; }
+  .pz-tray-title { font-size: 17px; }
+  .pz-tray-note { margin-top: 4px; line-height: 1.5; }
+  .pz-tray-note span { display: block; }
+  .pz-tray-note .pz-sep { display: none; }
+  .pz-tiles {
+    flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; align-content: start; gap: 10px;
+    overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; padding: 6px 2px;
+  }
+  .pz-tile { width: auto; height: auto; aspect-ratio: 1; padding: 4px; touch-action: pan-y; }
+}
+/* Phones on their side: slimmer header and tray so the board keeps its height. */
+@media (orientation: landscape) and (min-width: 600px) and (max-height: 500px) {
+  .pz-top { padding: 4px 16px 6px; column-gap: 10px; }
+  .pz-title { font-size: 18px; }
+  .pz-bar { width: 90px; }
+  .pz-picture-btn { padding: 0 12px; }
+  .pz-tray { width: 196px; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); }
+  .pz-tray-title { font-size: 16px; }
+  .pz-tray-note { font-size: 12px; margin-top: 2px; line-height: 1.4; }
+  .pz-tiles { gap: 8px; }
+}
+@media (orientation: landscape) and (min-width: 1280px) {
+  .pz-tray { width: 268px; }
+}
