@@ -11,7 +11,8 @@ import {
   onOffLabel,
   piecesPerStudentNote,
 } from './format.js';
-import { faceWarning, pictureCard, uploadBox, uploadedDetail } from './picture-cards.js';
+import { faceWarning, pictureCard, uploadedDetail } from './picture-cards.js';
+import { uploadPanel } from './upload-panel.js';
 import { loadBuiltins, loadMyImages } from './pictures.js';
 import { previewOutline } from './preview.js';
 import { sessionPath } from './routes.js';
@@ -356,8 +357,8 @@ export function renderCreate(main, ctx) {
       .finally(() => panel.removeAttribute('aria-busy'));
   }
 
-  // The teacher's own pictures (T8 adds uploading and deleting)
-  function showMine() {
+  // The teacher's own pictures. `selectId`: an image just uploaded, chosen right away.
+  function showMine(selectId = null) {
     const panel = panels.mine;
     panel.replaceChildren(gridSkeleton(2));
     panel.setAttribute('aria-busy', 'true');
@@ -392,34 +393,34 @@ export function renderCreate(main, ctx) {
           h(
             'div',
             { class: 't-pics', role: 'radiogroup', 'aria-label': '내 그림' },
-            images.map((image) =>
-              pictureCard({
+            images.map((image) => {
+              const picture = { imageId: image.id, title: '내 그림', width: image.width, height: image.height, src: image.url };
+              if (image.id === selectId) choosePicture(picture);
+              return pictureCard({
                 src: image.url,
                 title: '내 그림',
                 detail: uploadedDetail(image),
-                radio: choiceRadio(`image:${image.id}`, {
-                  imageId: image.id,
-                  title: '내 그림',
-                  width: image.width,
-                  height: image.height,
-                  src: image.url,
-                }),
-              }),
-            ),
+                radio: choiceRadio(`image:${image.id}`, picture, image.id === selectId),
+              });
+            }),
             toUpload,
           ),
           faceWarning(),
         );
+        if (selectId) {
+          selectTab('mine');
+          panel.querySelector(`input[value="image:${selectId}"]`)?.focus();
+        }
       })
       .catch((err) => {
         console.error(err);
         if (!alive) return;
-        panel.replaceChildren(retryBox('내 그림을 불러오지 못했어요.', showMine));
+        panel.replaceChildren(retryBox('내 그림을 불러오지 못했어요.', () => showMine(selectId)));
       })
       .finally(() => panel.removeAttribute('aria-busy'));
   }
 
-  panels.upload.append(uploadBox(), faceWarning());
+  panels.upload.append(uploadPanel({ client: ctx.client, onUploaded: (image) => showMine(image.id) }));
 
   async function open() {
     if (state.busy) return;
