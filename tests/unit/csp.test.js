@@ -78,9 +78,11 @@ describe('no ads or outside analytics (public/)', () => {
     for (const file of publicFiles) {
       if (file.includes(`${join('js', 'vendor')}`)) continue; // licence comments only, checked above
       const text = readFileSync(file, 'utf8');
-      // src / href attributes, CSS url() / @import, and string literals in code.
+      // What a page loads: src attributes, <link href> (styles, preconnect), CSS url() /
+      // @import, and string literals in code. Plain <a href> links only navigate.
       const found = [
-        ...text.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g),
+        ...text.matchAll(/src="(https?:\/\/[^"]+)"/g),
+        ...text.matchAll(/<link\b[^>]*\bhref="(https?:\/\/[^"]+)"/g),
         ...text.matchAll(/url\(["']?(https?:\/\/[^)"']+)/g),
         ...text.matchAll(/['`](https?:\/\/[^'`$]+)['`]/g),
       ].map((m) => new URL(m[1]).hostname);

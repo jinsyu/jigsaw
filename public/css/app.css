@@ -187,6 +187,8 @@
 .doc-lead { font-size: 16px; }
 .doc-note { color: var(--sub); }
 .doc-list { padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
+.doc h3 { font-size: 16px; font-weight: 700; margin: 14px 0 6px; }
+.doc-credits li { font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
 .doc-table { overflow-x: auto; margin: 4px 0 10px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); background: #fff; }
 .doc-table table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.6; }
 .doc-table caption { text-align: left; padding: 10px 12px 0; font-size: 13px; color: var(--sub); }
@@ -275,6 +277,8 @@ html.is-play, html.is-play body { height: 100%; overflow: hidden; overscroll-beh
 .pz-dialog[open] { display: flex; flex-direction: column; gap: 14px; }
 .pz-dialog::backdrop { background: rgba(30, 36, 51, .55); }
 .pz-dialog h2 { font-size: 18px; font-weight: 800; }
+.pz-credit { margin: -6px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); text-align: center; overflow-wrap: anywhere; }
+.pz-credit:empty { display: none; }
 .pz-dialog img { width: 100%; height: auto; max-height: 70dvh; object-fit: contain; border-radius: 12px; background: var(--board); }
 .pz-dialog .btn { align-self: center; min-width: 120px; }
 

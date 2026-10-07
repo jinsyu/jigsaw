@@ -95,16 +95,17 @@ function buildLayout(main) {
   dialogTitle.id = 'pz-dialog-title';
   const dialogImg = el('img');
   dialogImg.alt = '완성 그림';
+  const dialogCredit = el('p', 'pz-credit'); // source line of an outside picture
   const close = el('button', 'btn', '닫기');
   close.type = 'button';
-  dialog.append(dialogTitle, dialogImg, close);
+  dialog.append(dialogTitle, dialogImg, dialogCredit, close);
 
   const status = el('p', 'pz-loading', '퍼즐을 준비하고 있어요');
   status.setAttribute('role', 'status');
   board.append(status);
 
   main.append(top, body, dialog);
-  return { main, title, bar, fill, count, chips, pictureBtn, board, hint, toast, tray, trayTitle, trayNote, tiles, dialog, dialogImg, close, status };
+  return { main, title, bar, fill, count, chips, pictureBtn, board, hint, toast, tray, trayTitle, trayNote, tiles, dialog, dialogImg, dialogCredit, close, status };
 }
 
 function renderMembers(ui, state) {
@@ -170,6 +171,7 @@ export async function mountPlayScreen(main, store, { onComplete } = {}) {
     ui.dialogImg.src = state.picture.src;
     ui.dialogImg.width = state.picture.width;
     ui.dialogImg.height = state.picture.height;
+    ui.dialogCredit.textContent = state.picture.credit ?? '';
     setupDialog(ui);
   } else {
     ui.pictureBtn.remove();

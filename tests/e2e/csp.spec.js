@@ -63,6 +63,14 @@ test('joining a class under the CSP: student join, waiting with a group, teacher
 
   await watchCsp(context);
   await signInPage(context);
+  // 새 수업 만들기 first (thumbnails, previews, the source line), then the lobby.
+  await page.goto('/teacher/new');
+  await expect(page.locator('.t-preview svg')).toBeVisible();
+  await page.getByRole('group', { name: '내장 그림 분류' }).getByRole('button', { name: /명화/ }).click();
+  await page.locator('#t-builtin-grid .t-pic:visible').first().click();
+  await expect(page.locator('#t-credit a').first()).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  expect(await violations(page), '/teacher/new').toEqual([]);
   await page.goto(`/teacher/sessions/${session.id}`);
   await expect(page.locator('.t-join-wait')).toBeVisible();
 
