@@ -30,6 +30,7 @@ export async function startDemo(main) {
   window.__puzzleDemo = {
     state: () => store.getState(),
     camera: () => screen.board.camera,
+    preview: () => screen.board.preview,
     boardToClient: (x, y) => screen.board.boardToClient(x, y),
   };
 }

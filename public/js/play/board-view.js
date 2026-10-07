@@ -2,14 +2,17 @@
 // input into piece drags (one finger or the mouse on a piece), pans and zooms
 // (two fingers; the mouse drags empty board and uses the wheel). One finger on
 // empty board does nothing, so the board never slides away under a child's hand.
-// It knows nothing about the store: the screen passes clusters in and gets
-// onGrab / onDrop calls out.
+// While a piece is dragged (on the board or from the tray) it shows where it would
+// snap. Pieces locked in the frame lie flat and cannot be picked up.
+// It knows nothing about the store: the screen passes clusters and snap
+// predictions in and gets onGrab / onDrop / onLockedPress calls out.
 import { pieceOfCell } from '../store/puzzle-store.js';
 import {
   clampCamera,
   clampScale,
   fitCamera,
   pinchCamera,
+  revealCamera,
   screenToBoard,
   boardToScreen,
   viewBoardRect,
@@ -17,13 +20,21 @@ import {
   zoomAt,
 } from './camera.js';
 import { createFrameLayer } from './frame.js';
+import { pullOffset, sideSegments } from './magnet.js';
 
 const MAX_DPR = 2;
 const SLIDE_MS = 220;
 const SNAP_MS = 130;
 const FLASH_MS = 420;
+const LOCK_FLASH_MS = 700;
+const SHAKE_MS = 360;
+const SHAKE_PX = 4;
+const REVEAL_MS = 320;
+const REVEAL_PAD_PX = 12;
 const SPRITE_STEP_MS = 6;
 const HIT_SLOP_PX = 10;
+// Moving a finger this far on a locked piece counts as trying to drag it.
+const LOCKED_DRAG_PX = 8;
 // A second finger turns a piece drag into a pinch unless the piece already travelled this far.
 const PINCH_TAKEOVER_PX = 30;
 const DOT_SPACING = 40;
@@ -33,32 +44,47 @@ const COLORS = {
   boardEdge: 'rgba(120, 100, 70, 0.22)',
   dot: 'rgba(120, 100, 70, 0.2)',
   flash: 'rgba(255, 255, 255, 0.95)',
+  lockGlow: '255, 196, 0',
+  ghostLine: 'rgba(31, 157, 85, 0.6)',
+  placeFill: 'rgba(31, 157, 85, 0.16)',
+  placeLine: 'rgba(31, 157, 85, 0.85)',
+  edge: '31, 157, 85',
 };
 
 const easeOut = (t) => 1 - (1 - t) ** 3;
 
-export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop, onZoom }) {
+export function createBoardView(
+  host,
+  { layout, puzzle, sprites, onGrab, onDrop, onZoom, predict, predictTray, onLockedPress },
+) {
   const canvas = document.createElement('canvas');
   canvas.className = 'pz-canvas';
   host.prepend(canvas);
   const ctx = canvas.getContext('2d');
-  const layer = document.createElement('canvas'); // everything but the dragged cluster
+  const layer = document.createElement('canvas'); // everything but the dragged cluster and the preview
   const layerCtx = layer.getContext('2d');
   const hitCtx = document.createElement('canvas').getContext('2d');
   const frameLayer = createFrameLayer(layout, puzzle);
+  const sidePaths = new Map(); // `${index}:${side}` -> Path2D
 
   const dpr = () => Math.min(MAX_DPR, window.devicePixelRatio || 1);
   let view = { viewW: 1, viewH: 1 };
   let cam = { scale: 1, x: 0, y: 0 };
   let userMoved = false;
+  let camTween = null; // { from, to, t0 }
 
   const display = new Map(); // piece index -> { x, y, fromX, fromY, toX, toY, t0, dur }
   const startAt = new Map(); // piece index -> where it should appear (from the tray)
-  let order = []; // [{ id, indices }] by z
+  let order = []; // [{ id, indices, locked }]: locked ones first, then by z
   let lastClusters = [];
-  let flashes = [];
-  let drag = null; // { id, pointerId, indices, offX, offY, x, y }
+  let locked = null; // Set of locked piece indexes (null until the first clusters arrive)
+  let flashes = []; // [{ indices, t0, kind: 'snap' | 'lock' }]
+  let shakes = []; // [{ id, t0 }] locked clusters wiggling
+  let drag = null; // { id, pointerId, indices, offX, offY, x, y, startX, startY, from }
+  let hover = null; // a tray piece over the board: { index, x, y }
+  let magnet = null; // { key, preview, pull } for the current drag or hover
   let gesture = null; // { kind: 'pan' | 'pinch', ... }
+  let lockedPress = null; // { cluster, pointerId, from, fired }
   const pointers = new Map();
   let frame = 0;
   let layerValid = false;
@@ -105,41 +131,115 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
     frameLayer.draw(c, cam, dpr());
   }
 
-  function drawCluster(c, indices, lifted) {
-    c.globalAlpha = lifted ? 0.3 : 0.2;
-    const ox = lifted ? 4 : 1.5;
-    const oy = lifted ? 9 : 2.5;
-    for (const i of indices) {
-      const p = display.get(i);
-      const box = sprites.boxes[i];
-      c.drawImage(sprites.get(i).shadow, p.x + box.x + ox, p.y + box.y + oy, box.w, box.h);
+  // mode: 'resting' | 'lifted' | 'locked' (flat in the frame: no shadow).
+  function drawCluster(c, indices, mode, dx = 0, dy = 0) {
+    if (mode !== 'locked') {
+      const lifted = mode === 'lifted';
+      c.globalAlpha = lifted ? 0.3 : 0.2;
+      const ox = (lifted ? 4 : 1.5) + dx;
+      const oy = (lifted ? 9 : 2.5) + dy;
+      for (const i of indices) {
+        const p = display.get(i);
+        const box = sprites.boxes[i];
+        c.drawImage(sprites.get(i).shadow, p.x + box.x + ox, p.y + box.y + oy, box.w, box.h);
+      }
+      c.globalAlpha = 1;
     }
-    c.globalAlpha = 1;
     for (const i of indices) {
       const p = display.get(i);
       const box = sprites.boxes[i];
-      c.drawImage(sprites.get(i).body, p.x + box.x, p.y + box.y, box.w, box.h);
+      c.drawImage(sprites.get(i).body, p.x + box.x + dx, p.y + box.y + dy, box.w, box.h);
+    }
+  }
+
+  function strokeAt(c, path, x, y) {
+    c.save();
+    c.translate(x, y);
+    c.stroke(path);
+    c.restore();
+  }
+
+  function sidePath(index, side) {
+    const key = `${index}:${side}`;
+    let path = sidePaths.get(key);
+    if (!path) {
+      path = new Path2D();
+      const segments = sideSegments(puzzle.pieces[index], side, layout.cols, layout.rows);
+      path.moveTo(segments[0][0][0], segments[0][0][1]);
+      for (const [, c1, c2, p] of segments) path.bezierCurveTo(c1[0], c1[1], c2[0], c2[1], p[0], p[1]);
+      sidePaths.set(key, path);
+    }
+    return path;
+  }
+
+  // Where the pieces will land: a tinted outline under the dragged piece.
+  function drawLanding(c, preview) {
+    c.lineJoin = 'round';
+    c.fillStyle = COLORS.placeFill;
+    c.strokeStyle = preview.frameLock ? COLORS.placeLine : COLORS.ghostLine;
+    c.lineWidth = (preview.frameLock ? 2.5 : 2) / cam.scale;
+    for (const cell of preview.moving) {
+      const i = pieceOfCell(cell, layout.cols);
+      c.save();
+      c.translate(preview.x, preview.y);
+      c.fill(sprites.paths[i]);
+      c.stroke(sprites.paths[i]);
+      c.restore();
+    }
+  }
+
+  // The edges that will touch, drawn over the dragged piece so they show through.
+  function drawTouchingEdges(c, preview) {
+    c.lineJoin = 'round';
+    c.lineCap = 'round';
+    for (const [width, alpha] of [
+      [7, 0.22],
+      [3, 0.95],
+    ]) {
+      c.strokeStyle = `rgba(${COLORS.edge}, ${alpha})`;
+      c.lineWidth = width / cam.scale;
+      for (const { cell, side } of preview.edges) {
+        strokeAt(c, sidePath(pieceOfCell(cell, layout.cols), side), preview.x, preview.y);
+      }
     }
   }
 
   function drawFlashes(c, now) {
-    flashes = flashes.filter((f) => now - f.t0 < FLASH_MS);
+    flashes = flashes.filter((f) => now - f.t0 < (f.kind === 'lock' ? LOCK_FLASH_MS : FLASH_MS));
     for (const f of flashes) {
       if (now < f.t0) continue; // starts once the snap slide is nearly done
-      const t = (now - f.t0) / FLASH_MS;
-      c.strokeStyle = COLORS.flash;
-      c.globalAlpha = 1 - t;
-      c.lineWidth = (2 + 4 * t) / cam.scale;
+      const lock = f.kind === 'lock';
+      const t = (now - f.t0) / (lock ? LOCK_FLASH_MS : FLASH_MS);
       for (const i of f.indices) {
         const p = display.get(i);
         if (!p) continue;
         c.save();
         c.translate(p.x, p.y);
+        if (lock) {
+          // A short warm glint over the piece, then a golden ring that fades.
+          c.globalAlpha = 0.55 * (1 - t) ** 2;
+          c.fillStyle = COLORS.flash;
+          c.fill(sprites.paths[i]);
+          c.globalAlpha = 1 - t;
+          c.strokeStyle = `rgb(${COLORS.lockGlow})`;
+          c.lineWidth = (3 + 7 * t) / cam.scale;
+        } else {
+          c.globalAlpha = 1 - t;
+          c.strokeStyle = COLORS.flash;
+          c.lineWidth = (2 + 4 * t) / cam.scale;
+        }
         c.stroke(sprites.paths[i]);
         c.restore();
       }
     }
     c.globalAlpha = 1;
+  }
+
+  function shakeOffset(id, now) {
+    const s = shakes.find((k) => k.id === id);
+    if (!s) return 0;
+    const t = (now - s.t0) / SHAKE_MS;
+    return (Math.sin(t * Math.PI * 6) * SHAKE_PX * (1 - t)) / cam.scale;
   }
 
   function stepTweens(now) {
@@ -156,35 +256,52 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
     return moving;
   }
 
-  function renderStatic(c, skipId) {
+  function stepCamera(now) {
+    if (!camTween) return false;
+    const t = Math.min(1, (now - camTween.t0) / REVEAL_MS);
+    const e = easeOut(t);
+    const { from, to } = camTween;
+    cam = { scale: to.scale, x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e };
+    if (t >= 1) camTween = null;
+    return true;
+  }
+
+  function renderStatic(c, skipId, now) {
     drawBoard(c);
     setWorldTransform(c);
     for (const cluster of order) {
-      if (cluster.id !== skipId) drawCluster(c, cluster.indices, false);
+      if (cluster.id === skipId) continue;
+      const dx = shakes.length ? shakeOffset(cluster.id, now) : 0;
+      drawCluster(c, cluster.indices, cluster.locked ? 'locked' : 'resting', dx, 0);
     }
   }
 
   function renderFrame(now) {
     frame = 0;
     const moving = stepTweens(now);
-    const dragging = drag !== null;
-    if (dragging && !moving && flashes.length === 0) {
+    const panning = stepCamera(now);
+    shakes = shakes.filter((s) => now - s.t0 < SHAKE_MS);
+    const overlay = drag !== null || hover !== null;
+    const skipId = drag ? drag.id : null;
+    if (overlay && !moving && !panning && flashes.length === 0 && shakes.length === 0) {
       if (!layerValid) {
         layer.width = canvas.width;
         layer.height = canvas.height;
-        renderStatic(layerCtx, drag.id);
+        renderStatic(layerCtx, skipId, now);
         layerValid = true;
       }
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.drawImage(layer, 0, 0);
     } else {
       layerValid = false;
-      renderStatic(ctx, dragging ? drag.id : null);
+      renderStatic(ctx, skipId, now);
     }
     setWorldTransform(ctx);
-    if (dragging) drawCluster(ctx, drag.indices, true);
+    if (magnet?.preview) drawLanding(ctx, magnet.preview);
+    if (drag) drawCluster(ctx, drag.indices, 'lifted', magnet?.pull.x ?? 0, magnet?.pull.y ?? 0);
+    if (magnet?.preview) drawTouchingEdges(ctx, magnet.preview);
     drawFlashes(ctx, now);
-    if (moving || flashes.length) requestRender();
+    if (moving || panning || flashes.length || shakes.length) requestRender();
     else if (spritesPending && !gesture && !drag) refreshSprites();
   }
 
@@ -200,6 +317,38 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
     requestRender();
   }
 
+  // ---------- magnet preview ----------
+
+  // Recomputed only when the dragged position changes (or the clusters do).
+  function updateMagnet(key, compute, from) {
+    if (magnet?.key === key) return magnet;
+    const preview = compute() ?? null;
+    magnet = { key, preview, pull: pullOffset(preview, from) };
+    return magnet;
+  }
+
+  function dragMagnet() {
+    if (!drag || !predict) return;
+    updateMagnet(`d:${drag.id}:${drag.x}:${drag.y}`, () => predict(drag.id, drag.x, drag.y), drag);
+  }
+
+  // A tray piece dragged over the board (picture origin at x, y), or null when it left.
+  // Returns the lean toward its snap place in CSS pixels, for the dragged ghost.
+  function hoverFromTray(index, x, y) {
+    if (index === null || !predictTray) {
+      if (hover) {
+        hover = null;
+        magnet = null;
+        requestRender();
+      }
+      return { x: 0, y: 0 };
+    }
+    hover = { index, x, y };
+    const m = updateMagnet(`t:${index}:${x}:${y}`, () => predictTray(index, x, y), hover);
+    requestRender();
+    return { x: m.pull.x * cam.scale, y: m.pull.y * cam.scale };
+  }
+
   // ---------- state from the store ----------
 
   function tween(p, x, y, dur) {
@@ -212,10 +361,23 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
     p.dur = dur;
   }
 
+  function trackLocks(clusters) {
+    const now = new Set();
+    for (const c of clusters) {
+      if (c.locked) for (const cell of c.pieces) now.add(pieceOfCell(cell, layout.cols));
+    }
+    if (locked) {
+      const fresh = [...now].filter((i) => !locked.has(i));
+      if (fresh.length) flashes.push({ indices: fresh, t0: performance.now() + SNAP_MS * 0.6, kind: 'lock' });
+    }
+    locked = now;
+  }
+
   function setClusters(clusters) {
     lastClusters = clusters;
+    trackLocks(clusters);
     const seen = new Set();
-    order = clusters.map((c) => {
+    const all = clusters.map((c) => {
       const indices = c.pieces.map((cell) => pieceOfCell(cell, layout.cols));
       for (const i of indices) {
         seen.add(i);
@@ -228,8 +390,9 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
         }
         if (!(drag && drag.indices.includes(i))) tween(p, c.x, c.y, SLIDE_MS);
       }
-      return { id: c.id, indices };
+      return { id: c.id, indices, locked: c.locked === true };
     });
+    order = [...all.filter((c) => c.locked), ...all.filter((c) => !c.locked)];
     for (const i of [...display.keys()]) if (!seen.has(i)) display.delete(i);
     if (drag) {
       const current = order.find((c) => c.indices.includes(drag.indices[0]));
@@ -238,47 +401,68 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
         drag.indices = current.indices;
       }
     }
+    magnet = null; // other pieces moved: predict again
+    dragMagnet();
+    if (hover) hoverFromTray(hover.index, hover.x, hover.y);
     invalidate();
   }
 
-  // A piece coming from the tray appears where it was released, then slides.
+  // A piece coming from the tray appears where it was released (leaning like its
+  // ghost did), then slides.
   function expectFromTray(index, x, y) {
-    startAt.set(index, { x, y });
+    const lean = hover?.index === index && magnet ? magnet.pull : { x: 0, y: 0 };
+    startAt.set(index, { x: x + lean.x, y: y + lean.y });
   }
 
   // Predicted resting place right after a drop (confirmed later by the store).
-  function settle(indices, x, y, { snapped }) {
+  // A lock gets its own flash when the store reports it (trackLocks).
+  function settle(indices, x, y, { snapped, locks = false }) {
     for (const i of indices) {
       const p = display.get(i);
       if (p) tween(p, x, y, snapped ? SNAP_MS : SLIDE_MS);
     }
-    if (snapped) flashes.push({ indices, t0: performance.now() + SNAP_MS * 0.6 });
+    if (snapped && !locks) flashes.push({ indices, t0: performance.now() + SNAP_MS * 0.6, kind: 'snap' });
+    invalidate();
+  }
+
+  // Pans (same zoom) so the board rectangle is on screen, e.g. a piece put beside it.
+  function reveal(rect) {
+    const target = revealCamera(cam, view, layout, rect, REVEAL_PAD_PX);
+    if (target.x === cam.x && target.y === cam.y) return;
+    camTween = { from: { ...cam }, to: target, t0: performance.now() };
+    userMoved = true;
     invalidate();
   }
 
   // ---------- hit testing ----------
 
+  // Topmost loose cluster under the point (exact outline first, then near its cell);
+  // locked clusters only when no loose one is there.
   function hitTest(bx, by) {
     const slop = HIT_SLOP_PX / cam.scale;
-    let loose = null;
-    for (let k = order.length - 1; k >= 0; k--) {
-      for (const i of order[k].indices) {
-        const p = display.get(i);
-        const piece = puzzle.pieces[i];
-        const lx = bx - p.x;
-        const ly = by - p.y;
-        const box = sprites.boxes[i];
-        if (lx < box.x || ly < box.y || lx > box.x + box.w || ly > box.y + box.h) continue;
-        if (hitCtx.isPointInPath(sprites.paths[i], lx, ly)) return order[k];
-        const nearCell =
-          lx >= piece.x0 - slop &&
-          lx <= piece.x0 + layout.pw + slop &&
-          ly >= piece.y0 - slop &&
-          ly <= piece.y0 + layout.ph + slop;
-        if (!loose && nearCell) loose = order[k];
+    for (const wantLocked of [false, true]) {
+      let loose = null;
+      for (let k = order.length - 1; k >= 0; k--) {
+        if (order[k].locked !== wantLocked) continue;
+        for (const i of order[k].indices) {
+          const p = display.get(i);
+          const piece = puzzle.pieces[i];
+          const lx = bx - p.x;
+          const ly = by - p.y;
+          const box = sprites.boxes[i];
+          if (lx < box.x || ly < box.y || lx > box.x + box.w || ly > box.y + box.h) continue;
+          if (hitCtx.isPointInPath(sprites.paths[i], lx, ly)) return order[k];
+          const nearCell =
+            lx >= piece.x0 - slop &&
+            lx <= piece.x0 + layout.pw + slop &&
+            ly >= piece.y0 - slop &&
+            ly <= piece.y0 + layout.ph + slop;
+          if (!loose && nearCell) loose = order[k];
+        }
       }
+      if (loose) return loose;
     }
-    return loose;
+    return null;
   }
 
   // ---------- pointer input ----------
@@ -289,6 +473,7 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
   };
 
   function setCamera(next) {
+    camTween = null;
     cam = clampCamera(next, view, layout);
     userMoved = true;
     invalidate();
@@ -329,6 +514,7 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
       startY: p.toY,
       from: pt,
     };
+    magnet = null;
     const grabbedId = cluster.id;
     layerValid = false;
     requestRender();
@@ -349,12 +535,26 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
       p.y = p.toY = drag.y;
       p.t0 = undefined;
     }
+    dragMagnet();
     requestRender();
+  }
+
+  // The pieces start their slide from where they were drawn (leaning toward the snap).
+  function bakePull() {
+    const pull = magnet?.pull;
+    if (!pull || (pull.x === 0 && pull.y === 0)) return;
+    for (const i of drag.indices) {
+      const p = display.get(i);
+      p.x += pull.x;
+      p.y += pull.y;
+    }
   }
 
   function endDrag() {
     const { id, x, y } = drag;
+    bakePull();
     drag = null;
+    magnet = null;
     invalidate();
     onDrop(id, x, y);
   }
@@ -362,27 +562,47 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
   // Grab refused: the pieces slide back to where the store has them.
   function cancelDrag() {
     drag = null;
+    magnet = null;
     setClusters(lastClusters);
+  }
+
+  // Trying to pick up a locked piece: it wiggles in place and the screen says why.
+  function refuseLocked() {
+    if (!lockedPress || lockedPress.fired) return;
+    lockedPress.fired = true;
+    const { id } = lockedPress.cluster;
+    shakes = shakes.filter((s) => s.id !== id);
+    shakes.push({ id, t0: performance.now() });
+    invalidate();
+    onLockedPress?.();
   }
 
   function onPointerDown(e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     canvas.setPointerCapture?.(e.pointerId);
+    camTween = null;
     const pt = local(e);
     pointers.set(e.pointerId, pt);
     if (pointers.size === 1) {
       const b = screenToBoard(cam, pt.x, pt.y);
       const hit = hitTest(b.x, b.y);
-      if (hit) beginDrag(hit, e, pt);
-      else if (e.pointerType === 'mouse') startPan(e.pointerId);
-    } else if (pointers.size === 2 && drag && pointers.has(drag.pointerId)) {
-      const moved = pointers.get(drag.pointerId);
-      if (Math.hypot(moved.x - drag.from.x, moved.y - drag.from.y) < PINCH_TAKEOVER_PX) {
-        putBackDrag();
+      const mouse = e.pointerType === 'mouse';
+      if (hit && !hit.locked) beginDrag(hit, e, pt);
+      else {
+        if (hit) lockedPress = { cluster: hit, pointerId: e.pointerId, from: pt, mouse, fired: false };
+        if (mouse) startPan(e.pointerId);
+      }
+    } else {
+      lockedPress = null; // two fingers on a locked piece: just zoom
+      if (pointers.size === 2 && drag && pointers.has(drag.pointerId)) {
+        const moved = pointers.get(drag.pointerId);
+        if (Math.hypot(moved.x - drag.from.x, moved.y - drag.from.y) < PINCH_TAKEOVER_PX) {
+          putBackDrag();
+          startPinch();
+        }
+      } else if (pointers.size === 2 && !drag) {
         startPinch();
       }
-    } else if (pointers.size === 2 && !drag) {
-      startPinch();
     }
   }
 
@@ -390,6 +610,7 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
   function putBackDrag() {
     const { id, startX, startY } = drag;
     drag = null;
+    magnet = null;
     invalidate();
     onDrop(id, startX, startY);
   }
@@ -398,6 +619,9 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
     if (!pointers.has(e.pointerId)) return;
     const pt = local(e);
     pointers.set(e.pointerId, pt);
+    if (lockedPress?.pointerId === e.pointerId && !lockedPress.mouse && pointers.size === 1) {
+      if (Math.hypot(pt.x - lockedPress.from.x, pt.y - lockedPress.from.y) >= LOCKED_DRAG_PX) refuseLocked();
+    }
     if (drag && drag.pointerId === e.pointerId) {
       moveDrag(pt);
     } else if (gesture?.kind === 'pan' && gesture.pointerId === e.pointerId) {
@@ -413,7 +637,13 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
 
   function onPointerEnd(e) {
     if (!pointers.has(e.pointerId)) return;
+    const pt = pointers.get(e.pointerId);
     pointers.delete(e.pointerId);
+    if (lockedPress?.pointerId === e.pointerId) {
+      // A tap (or a click without panning) on a locked piece.
+      if (Math.hypot(pt.x - lockedPress.from.x, pt.y - lockedPress.from.y) < LOCKED_DRAG_PX) refuseLocked();
+      lockedPress = null;
+    }
     if (drag && drag.pointerId === e.pointerId) {
       endDrag();
       return;
@@ -451,6 +681,7 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
     view = { viewW: w, viewH: h };
     canvas.width = Math.round(w * dpr());
     canvas.height = Math.round(h * dpr());
+    camTween = null;
     if (!userMoved) {
       cam = fitCamera(view, layout);
     } else {
@@ -472,8 +703,14 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
     setClusters,
     expectFromTray,
     settle,
+    reveal,
+    hoverFromTray,
     get camera() {
-      return { ...cam };
+      return { ...(camTween ? camTween.to : cam) };
+    },
+    // What the drag preview shows right now (for tests and the screen): null or a snapPreview().
+    get preview() {
+      return magnet?.preview ?? null;
     },
     clientToBoard(cx, cy) {
       const rect = canvas.getBoundingClientRect();
@@ -481,7 +718,7 @@ export function createBoardView(host, { layout, puzzle, sprites, onGrab, onDrop,
     },
     boardToClient(bx, by) {
       const rect = canvas.getBoundingClientRect();
-      const p = boardToScreen(cam, bx, by);
+      const p = boardToScreen(camTween ? camTween.to : cam, bx, by);
       return { x: p.x + rect.left, y: p.y + rect.top };
     },
     containsClient(cx, cy) {

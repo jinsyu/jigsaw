@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { layoutFor } from '../../public/js/puzzle/geometry.js';
 import { frameRect } from '../../public/js/play/frame.js';
 import { freeSpot } from '../../public/js/play/placement.js';
+import { SNAP_TOLERANCE } from '../../public/js/puzzle/snap.js';
 
 const layout = layoutFor(6, 4, 1.5); // pw = ph = 100, board ~849 x 566
 const frame = frameRect(layout); // ~(124, 83) - (724, 483)
@@ -74,49 +75,63 @@ describe('freeSpot', () => {
     }
   });
 
-  it('when only the inside of the frame is visible, stays in view and off its own place', () => {
-    const zoomedIn = { x0: frame.x0 + 100, y0: frame.y0 + 50, x1: frame.x0 + 450, y1: frame.y0 + 330 };
-    for (const cell of [
-      [1, 0],
-      [2, 1],
-      [3, 2],
-      [4, 3],
-    ]) {
-      const rect = cellRect(freeSpot(layout, zoomedIn, [], cell, frame), cell);
-      expect(rect.left).toBeGreaterThanOrEqual(zoomedIn.x0);
-      expect(rect.right).toBeLessThanOrEqual(zoomedIn.x1);
-      expect(rect.top).toBeGreaterThanOrEqual(zoomedIn.y0);
-      expect(rect.bottom).toBeLessThanOrEqual(zoomedIn.y1);
-      const home = [frame.x0 + (cell[0] + 0.5) * layout.pw, frame.y0 + (cell[1] + 0.5) * layout.ph];
-      const [cx, cy] = centre(rect);
-      expect(Math.hypot(cx - home[0], cy - home[1])).toBeGreaterThanOrEqual(layout.pw);
-    }
-  });
-
-  it('keeps the piece cell inside a small visible area', () => {
+  it('when the view shows only the frame, puts the piece beside the frame (off screen) rather than on it', () => {
     const small = { x0: 300, y0: 200, x1: 520, y1: 330 };
     const rect = cellRect(freeSpot(layout, small, [], [5, 3], frame), [5, 3]);
-    expect(rect.left).toBeGreaterThanOrEqual(300);
-    expect(rect.right).toBeLessThanOrEqual(520);
-    expect(rect.top).toBeGreaterThanOrEqual(200);
-    expect(rect.bottom).toBeLessThanOrEqual(330);
+    expect(frameOverlap(rect)).toBeLessThanOrEqual(0.2);
+    // Nearest such spot: just above or below the frame, in line with the view.
+    expect(rect.left).toBeGreaterThanOrEqual(small.x0 - layout.pw);
+    expect(rect.right).toBeLessThanOrEqual(small.x1 + layout.pw);
   });
 
-  it('leaves room for the tabs at the screen edge, but may use the board edge', () => {
-    const view = { x0: 200, y0: 150, x1: 700, y1: 450 }; // all inside the board
-    const clusters = [{ x: 400, y: 250, pieces: [[0, 0]] }];
-    const rect = cellRect(freeSpot(layout, view, clusters, [0, 0]), [0, 0]);
-    expect(rect.left).toBeGreaterThanOrEqual(235);
-    expect(rect.top).toBeGreaterThanOrEqual(185);
-    expect(rect.right).toBeLessThanOrEqual(665);
-    expect(rect.bottom).toBeLessThanOrEqual(415);
+  it('leaves room for the tabs at the screen edge, and keeps the cell on the board', () => {
+    const view = { x0: 0, y0: 0, x1: 500, y1: 300 }; // top-left of the board
+    const clusters = [{ x: 0, y: 0, pieces: [[0, 0]] }];
+    const rect = cellRect(freeSpot(layout, view, clusters, [3, 0]), [3, 0]);
+    expect(rect.left).toBeGreaterThanOrEqual(0);
+    expect(rect.top).toBeGreaterThanOrEqual(0);
+    expect(rect.right).toBeLessThanOrEqual(465);
+    expect(rect.bottom).toBeLessThanOrEqual(265);
 
-    // Board wider than the screen part: the cell stays on the board.
     const [first] = placeMany(wholeBoard, [[0, 0]]);
     expect(first.left).toBeGreaterThanOrEqual(0);
     expect(first.top).toBeGreaterThanOrEqual(0);
     expect(first.right).toBeLessThanOrEqual(layout.boardWidth);
     expect(first.bottom).toBeLessThanOrEqual(layout.boardHeight);
+  });
+
+  it('never covers the frame, even with every piece out (phone view)', () => {
+    const cells = [];
+    for (let row = 0; row < layout.rows; row++) for (let col = 0; col < layout.cols; col++) cells.push([col, row]);
+    const rects = placeMany(phoneView, cells);
+    for (const rect of rects) {
+      expect(frameOverlap(rect)).toBeLessThanOrEqual(0.2);
+      expect(rect.left).toBeGreaterThanOrEqual(0);
+      expect(rect.right).toBeLessThanOrEqual(layout.boardWidth);
+      expect(rect.top).toBeGreaterThanOrEqual(0);
+      expect(rect.bottom).toBeLessThanOrEqual(layout.boardHeight);
+    }
+    // Spots in view come first; the board sides (off a phone screen) are used before stacking.
+    const inView = (r) => r.left >= phoneView.x0 && r.right <= phoneView.x1;
+    const firstOff = rects.findIndex((r) => !inView(r));
+    expect(firstOff).toBeGreaterThanOrEqual(6);
+  });
+
+  it('never drops a piece where it would snap by accident', () => {
+    const cells = [];
+    for (let row = 0; row < layout.rows; row++) for (let col = 0; col < layout.cols; col++) cells.push([col, row]);
+    const clusters = [];
+    for (const cell of cells) {
+      const o = freeSpot(layout, phoneView, clusters, cell, frame);
+      expect(Math.hypot(o.x - frame.x0, o.y - frame.y0)).toBeGreaterThan(SNAP_TOLERANCE);
+      for (const c of clusters) {
+        const [col, row] = c.pieces[0];
+        if (Math.abs(col - cell[0]) + Math.abs(row - cell[1]) === 1) {
+          expect(Math.hypot(o.x - c.x, o.y - c.y)).toBeGreaterThan(SNAP_TOLERANCE);
+        }
+      }
+      clusters.push({ x: o.x, y: o.y, pieces: [cell] });
+    }
   });
 
   it('moves away from pieces already on the board', () => {

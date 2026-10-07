@@ -2,10 +2,10 @@
 // changes puzzle data only through a PuzzleStore, so the in-memory demo store
 // and the Supabase store (T11) plug in the same way.
 import { makePuzzle } from '../puzzle/geometry.js';
-import { resolveDrop } from '../puzzle/snap.js';
 import { cellOfPiece, isPuzzleStore, pieceOfCell } from '../store/puzzle-store.js';
 import { createBoardView } from './board-view.js';
 import { frameRect } from './frame.js';
+import { predictDrop, snapPreview } from './magnet.js';
 import { freeSpot } from './placement.js';
 import { loadPicture } from './picture.js';
 import { drawPiece, pieceBox, createSpriteCache } from './sprites.js';
@@ -14,6 +14,10 @@ import { createTrayView } from './tray-view.js';
 export const MEMBER_COLORS = ['#F0544F', '#22A559', '#3B82F6', '#9B51E0', '#F2A20C', '#E64C9A'];
 const MAX_DPR = 2;
 const SNAP_VIBRATE_MS = 30;
+const LOCK_VIBRATE = [25, 60, 40];
+const LOCKED_TEXT = '이미 맞춘 조각이에요';
+// A tapped piece put beside the screen is brought into view with its tabs.
+const REVEAL_TAB = 0.3;
 const TOAST_MS = 2600;
 
 // Same piece outline as the mockup icon (iconPiece): centre piece of a 3 x 3 puzzle, seed 5.
@@ -163,8 +167,29 @@ export async function mountPlayScreen(main, store) {
     if (!sticky) toastTimer = setTimeout(() => ui.toast.classList.remove('is-shown'), TOAST_MS);
   }
 
-  function snapFeedback() {
-    if (typeof navigator.vibrate === 'function') navigator.vibrate(SNAP_VIBRATE_MS);
+  function vibrate(pattern) {
+    if (typeof navigator.vibrate === 'function') navigator.vibrate(pattern);
+  }
+
+  // Holds as the server sees them: another member's grab counts while they are online.
+  function holds(current) {
+    const online = new Set(current.members.filter((m) => m.online).map((m) => m.uid));
+    return { me: current.me, now: Date.now(), isOnline: (uid) => online.has(uid) };
+  }
+
+  // Drag preview for a cluster on the board, or for a tray piece (a new one-piece
+  // cluster, numbered after every other like the store does).
+  function previewDrop(clusterId, x, y) {
+    const current = store.getState();
+    if (!current.clusters.some((c) => c.id === clusterId)) return null;
+    return snapPreview(layout, current.clusters, { id: clusterId, x, y }, holds(current));
+  }
+
+  function previewTray(index, x, y) {
+    const current = store.getState();
+    const id = current.clusters.reduce((max, c) => Math.max(max, c.id), 0) + 1;
+    const piece = { id, x, y, locked: false, heldBy: current.me, pieces: [cellOfPiece(index, layout.cols)] };
+    return snapPreview(layout, [...current.clusters, piece], { id, x, y }, holds(current));
   }
 
   // A remote store may answer grab() after the finger is already lifted, so a
@@ -175,12 +200,13 @@ export async function mountPlayScreen(main, store) {
   async function dropCluster(clusterId, x, y, grab = Promise.resolve({ ok: true })) {
     const current = store.getState();
     if (current.clusters.some((c) => c.id === clusterId)) {
-      const plain = current.clusters.map(({ id, x: cx, y: cy, pieces }) => ({ id, x: cx, y: cy, pieces }));
-      const predicted = resolveDrop(layout, plain, { id: clusterId, x, y });
+      const predicted = predictDrop(layout, current.clusters, { id: clusterId, x, y }, holds(current));
       const merged = predicted.clusters.find((c) => c.id === predicted.id);
-      const snapped = predicted.absorbed.length > 0;
-      board.settle(merged.pieces.map((cell) => pieceOfCell(cell, layout.cols)), predicted.x, predicted.y, { snapped });
-      if (snapped) snapFeedback();
+      const snapped = predicted.absorbed.length > 0 || predicted.locked;
+      const indices = merged.pieces.map((cell) => pieceOfCell(cell, layout.cols));
+      board.settle(indices, predicted.x, predicted.y, { snapped, locks: predicted.locked });
+      if (predicted.locked) vibrate(LOCK_VIBRATE);
+      else if (snapped) vibrate(SNAP_VIBRATE_MS);
     }
     const grabbed = await grab;
     if (!grabbed.ok) {
@@ -219,8 +245,12 @@ export async function mountPlayScreen(main, store) {
       pendingGrab = store.grab(clusterId);
       const result = await pendingGrab;
       if (!result.ok && result.reason === 'held') showToast('친구가 잡고 있는 조각이에요.');
+      if (!result.ok && result.reason === 'locked') showToast(LOCKED_TEXT);
       return result.ok;
     },
+    predict: previewDrop,
+    predictTray: previewTray,
+    onLockedPress: () => showToast(LOCKED_TEXT),
     onDrop: (clusterId, x, y) => settleAction(dropCluster(clusterId, x, y, pendingGrab)),
     onZoom() {
       ui.hint.classList.add('is-hidden');
@@ -262,19 +292,36 @@ export async function mountPlayScreen(main, store) {
     drawPiece(ctx, { piece, path: sprites.paths[index], picture, layout, scale });
   }
 
+  // Picture origin for a tray piece held by its cell centre at client point (cx, cy).
+  function trayOrigin(index, cx, cy) {
+    const b = board.clientToBoard(cx, cy);
+    const piece = puzzle.pieces[index];
+    return { x: b.x - (piece.x0 + layout.pw / 2), y: b.y - (piece.y0 + layout.ph / 2) };
+  }
+
   const tray = createTrayView(ui.tiles, {
     renderTile,
     makeGhost,
     ghostHost: main,
     canDropAt: (cx, cy) => board.containsClient(cx, cy),
     onDropAt(index, cx, cy) {
-      const b = board.clientToBoard(cx, cy);
-      const piece = puzzle.pieces[index];
-      settleAction(placeFromTray(index, b.x - (piece.x0 + layout.pw / 2), b.y - (piece.y0 + layout.ph / 2)));
+      const at = trayOrigin(index, cx, cy);
+      settleAction(placeFromTray(index, at.x, at.y));
     },
+    onDragMove(index, cx, cy) {
+      if (!board.containsClient(cx, cy)) return board.hoverFromTray(null);
+      const at = trayOrigin(index, cx, cy);
+      return board.hoverFromTray(index, at.x, at.y);
+    },
+    onDragEnd: () => board.hoverFromTray(null),
     onTap(index) {
       const cell = cellOfPiece(index, layout.cols);
       const spot = freeSpot(layout, board.viewRect(), store.getState().clusters, cell, frameRect(layout));
+      const left = spot.x + cell[0] * layout.pw;
+      const top = spot.y + cell[1] * layout.ph;
+      const tabX = REVEAL_TAB * layout.ph;
+      const tabY = REVEAL_TAB * layout.pw;
+      board.reveal({ x0: left - tabX, y0: top - tabY, x1: left + layout.pw + tabX, y1: top + layout.ph + tabY });
       settleAction(placeFromTray(index, spot.x, spot.y));
     },
   });

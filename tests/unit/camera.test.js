@@ -11,6 +11,7 @@ import {
   fitCamera,
   fitScale,
   pinchCamera,
+  revealCamera,
   scaleLimits,
   screenToBoard,
   viewBoardRect,
@@ -200,3 +201,23 @@ describe('camera transforms', () => {
     expect(viewBoardRect(cam, { viewW: 300, viewH: 200 })).toEqual({ x0: -50, y0: 20, x1: 100, y1: 120 });
   });
 });
+
+describe('revealCamera', () => {
+  const cam = fitCamera(phone, layout);
+
+  it('does not move when the rectangle is already in view', () => {
+    const c = screenToBoard(cam, phone.viewW / 2, phone.viewH / 2);
+    expect(revealCamera(cam, phone, layout, { x0: c.x - 10, y0: c.y - 10, x1: c.x + 10, y1: c.y + 10 })).toEqual(cam);
+  });
+
+  it('pans just enough to bring an off-screen rectangle in, keeping the zoom', () => {
+    const rect = { x0: 0, y0: 200, x1: 100, y1: 300 }; // board left edge, off a phone screen
+    expect(screenToBoard(cam, 0, 0).x).toBeGreaterThan(0);
+    const next = revealCamera(cam, phone, layout, rect, 8);
+    expect(next.scale).toBe(cam.scale);
+    const a = boardToScreen(next, rect.x0, rect.y0);
+    expect(a.x).toBeCloseTo(8, 6);
+    expect(next.y).toBeCloseTo(cam.y, 9);
+  });
+});
+

@@ -25,8 +25,9 @@ function makeInput(page, hasTouch) {
       touchPoints: points.map(([x, y], id) => ({ x, y, id })),
     });
 
-  // Moves through `path` ([[x, y], ...]) with the finger or mouse button down.
-  async function drag(path, steps = 6) {
+  // Moves through `path` ([[x, y], ...]) with the finger or mouse button down and
+  // keeps holding; resolves with a function that lets go.
+  async function hold(path, steps = 6) {
     const [start, ...rest] = path;
     if (hasTouch) await touch('touchStart', [start]);
     else {
@@ -42,8 +43,15 @@ function makeInput(page, hasTouch) {
       }
       prev = point;
     }
-    if (hasTouch) await touch('touchEnd', []);
-    else await page.mouse.up();
+    return async () => {
+      if (hasTouch) await touch('touchEnd', []);
+      else await page.mouse.up();
+    };
+  }
+
+  async function drag(path, steps = 6) {
+    const release = await hold(path, steps);
+    await release();
   }
 
   // Two fingers around `centre`, from distance d0 to d1.
@@ -72,7 +80,7 @@ function makeInput(page, hasTouch) {
     await touch('touchEnd', []);
   }
 
-  return { drag, pinch, twoFingerPan };
+  return { drag, hold, pinch, twoFingerPan };
 }
 
 // Frame drawn on the board canvas: luminance samples (device pixels) around board points.
@@ -139,6 +147,12 @@ async function zoom(page, input, hasTouch, factor) {
 
 // Drags tray piece `index` so that its picture origin lands on (ox, oy).
 async function dragFromTray(page, input, index, ox, oy) {
+  const release = await holdFromTray(page, input, index, ox, oy);
+  await release();
+}
+
+// The same, still holding: resolves with a function that lets go.
+async function holdFromTray(page, input, index, ox, oy) {
   const { layout } = await state(page);
   const tile = page.locator(`.pz-tile[data-piece="${index}"]`);
   await tile.scrollIntoViewIfNeeded();
@@ -150,7 +164,36 @@ async function dragFromTray(page, input, index, ox, oy) {
   const board = await boardBox(page);
   // First move toward the board (across the tray's scroll direction), like a finger would.
   const out = board.y + board.height < box.y ? [start[0], start[1] - 40] : [start[0] - 40, start[1]];
-  await input.drag([start, out, [target.x, target.y]]);
+  return input.hold([start, out, [target.x, target.y]]);
+}
+
+const framePlace = async (page) => {
+  const { layout } = await state(page);
+  return { layout, ox: (layout.boardWidth - layout.width) / 2, oy: (layout.boardHeight - layout.height) / 2 };
+};
+
+const preview = (page) => demo(page, () => window.__puzzleDemo.preview());
+
+// Board canvas colour (device pixels) at a board point.
+const canvasRgb = (page, bx, by) =>
+  demo(
+    page,
+    ([x, y]) => {
+      const canvas = document.querySelector('.pz-canvas');
+      const rect = canvas.getBoundingClientRect();
+      const k = canvas.width / rect.width;
+      const c = window.__puzzleDemo.boardToClient(x, y);
+      const d = canvas.getContext('2d').getImageData(Math.round((c.x - rect.left) * k), Math.round((c.y - rect.top) * k), 1, 1).data;
+      return [d[0], d[1], d[2]];
+    },
+    [bx, by],
+  );
+
+// Centre of a cluster's first piece, in client pixels.
+async function pieceCentre(page, cluster) {
+  const { layout } = await state(page);
+  const [col, row] = cluster.pieces[0];
+  return toClient(page, cluster.x + (col + 0.5) * layout.pw, cluster.y + (row + 0.5) * layout.ph);
 }
 
 async function expectNoHorizontalOverflow(page) {
@@ -495,6 +538,125 @@ test('a piece dropped near its drawn place in the frame snaps onto it and locks'
   expect(errors).toEqual([]);
 });
 
+test('dragging shows where a piece will snap, and it snaps right there', async ({ page }, testInfo) => {
+  const errors = await openDemo(page);
+  const hasTouch = testInfo.project.use.hasTouch === true;
+  const input = makeInput(page, hasTouch);
+  const { layout, ox, oy } = await framePlace(page);
+  const { tray } = await state(page);
+  const first = tray[0];
+  const [c0, r0] = [first % layout.cols, Math.floor(first / layout.cols)];
+
+  // 1. From the tray toward its place in the frame: the place lights up before letting go.
+  const release = await holdFromTray(page, input, first, ox + 22, oy - 18);
+  await expect.poll(() => preview(page)).not.toBeNull(); // pointer moves arrive with animation frames
+  const p1 = await preview(page);
+  expect(p1).toMatchObject({ x: ox, y: oy, frameLock: true });
+  const [r, g, b] = await canvasRgb(page, ox + (c0 + 0.5) * layout.pw, oy + (r0 + 0.5) * layout.ph);
+  expect(g - r).toBeGreaterThan(8); // green tint on the frame cell
+  expect(g).toBeGreaterThan(b);
+  await page.screenshot({ path: testInfo.outputPath('play-preview-frame.png') });
+  await release();
+  await expect(page.locator('.pz-count')).toHaveText('1 / 24');
+  let s = await state(page);
+  expect(s.clusters[0]).toMatchObject({ x: ox, y: oy, locked: true });
+  expect(await preview(page)).toBeNull();
+
+  // 2. A neighbour from a free spot toward the locked piece: the touching edge lights up.
+  const neighbour = tray.find((i) => {
+    const [c, rr] = [i % layout.cols, Math.floor(i / layout.cols)];
+    return Math.abs(c - c0) + Math.abs(rr - r0) === 1;
+  });
+  await page.locator(`.pz-tile[data-piece="${neighbour}"]`).click();
+  await expect(page.locator('.pz-tile')).toHaveCount(22);
+  await page.waitForTimeout(400); // the view may pan to show it
+  s = await state(page);
+  const loose = s.clusters.find((c) => !c.locked);
+  const [nc, nr] = loose.pieces[0];
+  const from = await pieceCentre(page, loose);
+  const to = await toClient(page, ox + 25 + (nc + 0.5) * layout.pw, oy - 20 + (nr + 0.5) * layout.ph);
+  const near = await toClient(page, ox + 60 + (nc + 0.5) * layout.pw, oy - 50 + (nr + 0.5) * layout.ph);
+  const letGo = await input.hold([[from.x, from.y], [near.x, near.y]], 8);
+  await page.waitForTimeout(100);
+  expect(await preview(page)).toBeNull(); // still too far
+  await letGo();
+  await page.waitForTimeout(300);
+  const again = await toClient(page, ox + 60 + (nc + 0.5) * layout.pw, oy - 50 + (nr + 0.5) * layout.ph);
+  const letGo2 = await input.hold([[again.x, again.y], [to.x, to.y]], 8);
+  await expect.poll(() => preview(page)).not.toBeNull();
+  const p2 = await preview(page);
+  expect(p2).toMatchObject({ x: ox, y: oy, frameLock: false });
+  expect(p2.edges.length).toBeGreaterThanOrEqual(1);
+  expect(p2.moving).toEqual([[nc, nr]]);
+  await page.screenshot({ path: testInfo.outputPath('play-preview-edge.png') });
+  await letGo2();
+  await expect(page.locator('.pz-count')).toHaveText('2 / 24');
+  s = await state(page);
+  expect(s.clusters).toHaveLength(1);
+  expect(s.clusters[0]).toMatchObject({ x: ox, y: oy, locked: true });
+  expect(errors).toEqual([]);
+});
+
+test('a piece locked in the frame stays put, wiggles and says so', async ({ page }, testInfo) => {
+  const errors = await openDemo(page);
+  const hasTouch = testInfo.project.use.hasTouch === true;
+  const input = makeInput(page, hasTouch);
+  const { ox, oy } = await framePlace(page);
+  await dragFromTray(page, input, (await state(page)).tray[0], ox + 5, oy + 5);
+  await expect(page.locator('.pz-count')).toHaveText('1 / 24');
+  await page.waitForTimeout(800); // lock flash
+  const [lockedCluster] = (await state(page)).clusters;
+  const at = await pieceCentre(page, lockedCluster);
+  const before = await camera(page);
+
+  // Touch: a finger trying to drag it. Mouse: a click (dragging with the mouse pans the board).
+  if (hasTouch) await input.drag([[at.x, at.y], [at.x + 70, at.y + 50]]);
+  else await page.mouse.click(at.x, at.y);
+  const notice = page.getByRole('status').filter({ hasText: '이미 맞춘 조각이에요' });
+  await expect(notice).toBeVisible();
+  const [after] = (await state(page)).clusters;
+  expect(after).toMatchObject({ x: ox, y: oy, locked: true, heldBy: null });
+  if (!hasTouch) {
+    // Dragging over it with the mouse moves the view, never the piece.
+    await input.drag([[at.x, at.y], [at.x + 70, at.y + 50]]);
+    expect((await state(page)).clusters[0]).toMatchObject({ x: ox, y: oy, locked: true });
+  } else {
+    expect(await camera(page)).toEqual(before); // one finger on a locked piece does not pan either
+    // Two fingers starting on the locked piece zoom as usual.
+    await input.pinch([at.x, at.y], 40, 160);
+    await page.waitForTimeout(200);
+    expect((await camera(page)).scale).toBeGreaterThan(before.scale * 1.5);
+    expect((await state(page)).clusters[0]).toMatchObject({ x: ox, y: oy, locked: true });
+  }
+  await page.screenshot({ path: testInfo.outputPath('play-locked.png') });
+  expect(errors).toEqual([]);
+});
+
+test('tapping out all 24 pieces never covers the frame', async ({ page }, testInfo) => {
+  test.setTimeout(60_000);
+  const errors = await openDemo(page);
+  const { layout, ox, oy } = await framePlace(page);
+  for (let left = 24; left > 0; left--) {
+    await page.locator('.pz-tile').first().click();
+    await expect(page.locator('.pz-tile')).toHaveCount(left - 1);
+  }
+  await page.waitForTimeout(500);
+  const { clusters, progress } = await state(page);
+  expect(clusters).toHaveLength(24); // nothing snapped by accident
+  expect(progress.placed).toBe(0);
+  for (const c of clusters) {
+    const [col, row] = c.pieces[0];
+    const left = c.x + col * layout.pw;
+    const top = c.y + row * layout.ph;
+    const w = Math.max(0, Math.min(left + layout.pw, ox + layout.width) - Math.max(left, ox));
+    const h = Math.max(0, Math.min(top + layout.ph, oy + layout.height) - Math.max(top, oy));
+    expect((w * h) / (layout.pw * layout.ph)).toBeLessThanOrEqual(0.2 + 1e-9);
+  }
+  await expectNoHorizontalOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath('play-all-out.png') });
+  expect(errors).toEqual([]);
+});
+
 test('tapping a tray piece puts it on a visible free spot next to the frame', async ({ page }, testInfo) => {
   await openDemo(page);
   const [index] = (await state(page)).tray;
@@ -551,12 +713,23 @@ test('gestures stay smooth on a 4x slower CPU (no long tasks)', async ({ page },
     }).observe({ type: 'longtask' });
   });
 
+  // Drags that show the magnet preview on every move: from the tray into the frame,
+  // then a board piece onto its place.
+  const { ox, oy } = await framePlace(page);
+  await dragFromTray(page, input, (await state(page)).tray[0], ox + 20, oy + 15);
+  const loose = (await state(page)).clusters.find((c) => !c.locked);
+  const from = await pieceCentre(page, loose);
+  const { layout: lay } = await state(page);
+  const [lc, lr] = loose.pieces[0];
+  const home = await toClient(page, ox + 15 + (lc + 0.5) * lay.pw, oy - 10 + (lr + 0.5) * lay.ph);
+  await input.drag([[from.x, from.y], [home.x, home.y]], 30);
+
   const box = await boardBox(page);
   const centre = [box.x + box.width / 2, box.y + box.height / 2];
   await input.pinch(centre, 80, 220, 20);
   await input.twoFingerPan(centre, -60, 40, 120, 20);
   const { clusters, layout } = await state(page);
-  const top = clusters.at(-1);
+  const top = clusters.filter((c) => !c.locked).at(-1);
   const [col, row] = top.pieces[0];
   const at = await toClient(page, top.x + (col + 0.5) * layout.pw, top.y + (row + 0.5) * layout.ph);
   await input.drag([[at.x, at.y], [at.x + 50, at.y - 70]], 20);

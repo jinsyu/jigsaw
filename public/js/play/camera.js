@@ -81,6 +81,24 @@ export function clampCamera(cam, view, layout) {
   };
 }
 
+// Smallest pan (same zoom) that brings the board rectangle `rect` on screen with
+// `pad` pixels to spare; centres it if it does not fit. Clamped like any camera.
+export function revealCamera(cam, view, layout, rect, pad = 0) {
+  // Screen-pixel shift that brings [a, b] inside [pad, size - pad].
+  const shift = (a, b, size) => {
+    if (b - a > size - 2 * pad) return (size - a - b) / 2;
+    if (a < pad) return pad - a;
+    if (b > size - pad) return size - pad - b;
+    return 0;
+  };
+  const a = boardToScreen(cam, rect.x0, rect.y0);
+  const b = boardToScreen(cam, rect.x1, rect.y1);
+  const dx = shift(a.x, b.x, view.viewW);
+  const dy = shift(a.y, b.y, view.viewH);
+  if (dx === 0 && dy === 0) return cam;
+  return clampCamera({ scale: cam.scale, x: cam.x + dx, y: cam.y + dy }, view, layout);
+}
+
 // Scale to `scale` keeping the board point under (sx, sy) fixed.
 export function zoomAt(cam, scale, sx, sy) {
   const p = screenToBoard(cam, sx, sy);

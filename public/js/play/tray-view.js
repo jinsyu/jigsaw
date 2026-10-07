@@ -5,7 +5,9 @@
 const DRAG_THRESHOLD_PX = 6;
 const TILE_CSS_PX = 112;
 
-export function createTrayView(list, { renderTile, makeGhost, canDropAt, onDropAt, onTap, ghostHost }) {
+// onDragMove(index, clientX, clientY) may return { x, y }: a CSS pixel lean for the ghost
+// (toward where the piece would snap). onDragEnd() runs after the drop is handled.
+export function createTrayView(list, { renderTile, makeGhost, canDropAt, onDropAt, onTap, ghostHost, onDragMove, onDragEnd }) {
   const tiles = new Map(); // piece index -> button
   let press = null; // { index, tile, pointerId, x, y, dragging, ghost }
   let suppressClick = false;
@@ -46,8 +48,8 @@ export function createTrayView(list, { renderTile, makeGhost, canDropAt, onDropA
     });
   }
 
-  function placeGhost(ghost, x, y) {
-    ghost.el.style.transform = `translate3d(${x - ghost.anchorX}px, ${y - ghost.anchorY}px, 0)`;
+  function placeGhost(ghost, x, y, lean = { x: 0, y: 0 }) {
+    ghost.el.style.transform = `translate3d(${x + lean.x - ghost.anchorX}px, ${y + lean.y - ghost.anchorY}px, 0)`;
   }
 
   function startDrag(e) {
@@ -80,6 +82,7 @@ export function createTrayView(list, { renderTile, makeGhost, canDropAt, onDropA
       suppressClick = false;
     }, 0);
     if (dropped && canDropAt(e.clientX, e.clientY)) onDropAt(current.index, e.clientX, e.clientY);
+    onDragEnd?.();
   }
 
   function onPointerDown(e) {
@@ -95,7 +98,7 @@ export function createTrayView(list, { renderTile, makeGhost, canDropAt, onDropA
       if (Math.hypot(e.clientX - press.x, e.clientY - press.y) < DRAG_THRESHOLD_PX) return;
       startDrag(e);
     }
-    placeGhost(press.ghost, e.clientX, e.clientY);
+    placeGhost(press.ghost, e.clientX, e.clientY, onDragMove?.(press.index, e.clientX, e.clientY) ?? undefined);
   }
 
   function onPointerUp(e) {
