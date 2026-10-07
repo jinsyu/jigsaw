@@ -231,7 +231,7 @@ test('D3·D4·D14: students join by code or QR, the teacher sees names live, gro
   await expectNoHorizontalOverflow(a.page);
   await a.page.screenshot({ path: testInfo.outputPath('student-3-waiting-group.png') });
 
-  // 시작하기 → every student sees their own group started, on /play (not the demo).
+  // 시작하기 → every student gets their own group's puzzle (T11), on /play (not the demo).
   await page.getByRole('button', { name: '시작하기' }).click();
   await expect(page.locator('.t-playing')).toBeVisible();
   await expect(page.getByRole('button', { name: '무작위로 나누기' })).toBeHidden();
@@ -240,18 +240,22 @@ test('D3·D4·D14: students join by code or QR, the teacher sees names live, gro
     [b, target],
     [c, 1],
   ]) {
-    await expect(student.page.getByRole('heading', { level: 1 })).toHaveText(`${number}모둠 퍼즐이 시작됐어요!`);
+    await expect(student.page.locator('main[data-ready="true"]')).toBeVisible({ timeout: 15000 });
+    await expect(student.page.getByRole('heading', { level: 1 })).toHaveText(`${number}모둠`);
     await expect(student.page).toHaveURL(/\/play$/);
-    await expect(student.page.locator('canvas')).toHaveCount(0);
+    expect(await student.page.evaluate(() => window.__puzzleDemo)).toBeUndefined();
   }
   await expectNoHorizontalOverflow(a.page);
   await a.page.screenshot({ path: testInfo.outputPath('student-4-started.png') });
   expect((await sql('select status from public.sessions where id = $1', [session.id])).rows[0].status).toBe('playing');
 
-  // Same device again: back to the same name and group without asking.
+  // Same device again: back to the same name, group and tray without asking.
+  const tray = await a.page.evaluate(() => [...window.__puzzle.state().tray].sort((x, y) => x - y));
   await a.page.reload();
-  await expect(a.page.getByRole('heading', { level: 1 })).toHaveText('1모둠 퍼즐이 시작됐어요!');
-  await expect(a.page.locator('.st-mate.is-me')).toContainText('다솜이');
+  await expect(a.page.locator('main[data-ready="true"]')).toBeVisible({ timeout: 15000 });
+  await expect(a.page.getByRole('heading', { level: 1 })).toHaveText('1모둠');
+  await expect(a.page.locator('.pz-chips .chip', { hasText: '다솜이' }).locator('em')).toHaveText('나');
+  expect(await a.page.evaluate(() => [...window.__puzzle.state().tray].sort((x, y) => x - y))).toEqual(tray);
 
   // D14: no student name anywhere in the database.
   const dumps = await sql(`

@@ -49,7 +49,7 @@ test('pages load under the Content-Security-Policy and talk only to allowed host
   expect([...hosts].filter((h) => !allowed.has(h))).toEqual([]);
 });
 
-test('joining a class under the CSP: student join, waiting with a group, teacher lobby', async ({ browser, page, context }, testInfo) => {
+test('joining a class under the CSP: student join, waiting with a group, teacher lobby, puzzle', async ({ browser, page, context }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-1440', 'one browser size is enough');
   const { client } = await teacherSession();
   const { data: session, error } = await client.rpc('create_session', {
@@ -98,5 +98,13 @@ test('joining a class under the CSP: student join, waiting with a group, teacher
 
   expect(await violations(s), 'student waiting with a group').toEqual([]);
   expect(await violations(page), 'teacher lobby').toEqual([]);
+
+  // Started: the group puzzle (canvas, tray tiles, member chips, holds) under the CSP too.
+  const { error: startError } = await client.rpc('start_session', { p_session: session.id });
+  if (startError) throw startError;
+  await expect(s.locator('main[data-ready="true"]')).toBeVisible({ timeout: 15000 });
+  await s.locator('.pz-tile').first().click();
+  await expect.poll(() => s.evaluate(() => window.__puzzle.state().clusters.length)).toBe(1);
+  expect(await violations(s), 'student puzzle').toEqual([]);
   await student.close();
 });

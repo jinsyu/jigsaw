@@ -1,11 +1,12 @@
-// Student entry (/join, /play): code -> name -> anonymous sign-in -> join_session -> waiting.
-// Loaded on demand by js/app.js. The puzzle itself is connected in T11; until then /play
-// shows the waiting screen in its "started" state and never opens the solo demo.
+// Student entry (/join, /play): code -> name -> anonymous sign-in -> join_session -> waiting
+// -> the group puzzle once the class has started and the student is in a group (student/puzzle.js).
+// Loaded on demand by js/app.js. /play never opens the solo demo.
 import { isConfigured, pickConfig } from '../config.js';
 import { normalizeCode } from '../routes.js';
 import { getStudentClient } from '../supabase-client.js';
 import { connectClass } from './live.js';
 import { normalizeName } from './names.js';
+import { openPuzzle } from './puzzle.js';
 import { clearSaved, readSaved, writeSaved } from './saved.js';
 import { renderCodeStep, renderLoading, renderMessage, renderNameStep, renderWaiting } from './views.js';
 
@@ -102,6 +103,8 @@ class StudentFlow {
     this.pendingName = '';
     this.live = null;
     this.waiting = null;
+    this.puzzle = null; // { groupId, handle } while a puzzle is open or opening
+    this.classState = null;
     this.name = '';
     // Start downloading supabase-js while the student types.
     this.clientPromise = getStudentClient(config);
@@ -186,28 +189,94 @@ class StudentFlow {
 
   openClass(client, { code, name, userId, sessionId, memberId, status }) {
     this.live?.stop();
+    this.closePuzzle();
     this.showStatus(status, code);
     this.waiting = renderWaiting(this.main, { onRename: () => this.rename(code) });
     this.name = name;
+    this.room = { client, code, userId, sessionId };
     this.live = connectClass({
       client,
       sessionId,
       memberId,
       userId,
       name,
+      onBeat: (iso, sentAt, receivedAt) => this.puzzle?.handle?.noteServerTime(iso, sentAt, receivedAt),
       onChange: (state) => {
+        this.classState = state;
         this.showStatus(state.status, code);
-        this.waiting?.(state);
+        this.follow(state);
       },
-      onEnded: () => {
-        clearSaved(localStorage);
-        this.live = null;
-        this.ended('수업이 끝났어요');
-      },
+      onEnded: () => this.finish(),
     });
   }
 
-  // /join?code= while waiting, /play once the puzzles have started (T11 puts the puzzle there).
+  finish() {
+    this.live?.stop();
+    this.live = null;
+    this.closePuzzle();
+    clearSaved(localStorage);
+    this.ended('수업이 끝났어요');
+  }
+
+  // Playing in a group: that group's puzzle. Otherwise (waiting, or no group yet): waiting.
+  follow(state) {
+    const groupId = state.status === 'playing' && state.group ? state.group.id : null;
+    if (groupId !== null) {
+      if (this.puzzle?.groupId === groupId) this.puzzle.handle?.setMates(state.mates);
+      else this.startPuzzle(state);
+      return;
+    }
+    if (this.puzzle) {
+      this.closePuzzle();
+      this.waiting = renderWaiting(this.main, { onRename: () => this.rename(this.room.code) });
+    }
+    this.waiting?.(state);
+  }
+
+  // A move to another group closes the old puzzle (and its group channel) first.
+  startPuzzle(state) {
+    this.closePuzzle();
+    const token = { groupId: state.group.id, handle: null };
+    this.puzzle = token;
+    this.waiting = null;
+    renderLoading(this.main, '퍼즐을 여는 중이에요…');
+    const { client, sessionId, userId } = this.room;
+    openPuzzle({
+      client,
+      main: this.main,
+      sessionId,
+      group: state.group,
+      userId,
+      mates: state.mates,
+      live: this.live,
+      onEnded: () => this.finish(),
+      isCurrent: () => this.puzzle === token,
+    })
+      .then((handle) => {
+        if (!handle) return;
+        if (this.puzzle !== token) return handle.dispose();
+        token.handle = handle;
+        if (this.classState) handle.setMates(this.classState.mates);
+      })
+      .catch((error) => {
+        if (this.puzzle !== token) return;
+        console.error(error);
+        this.puzzle = null;
+        renderMessage(this.main, {
+          title: '퍼즐을 열지 못했어요',
+          text: '인터넷 연결을 확인하고 다시 눌러 주세요.',
+          action: { label: '다시 시도' },
+          onAction: () => this.classState && this.follow(this.classState),
+        });
+      });
+  }
+
+  closePuzzle() {
+    this.puzzle?.handle?.dispose();
+    this.puzzle = null;
+  }
+
+  // /join?code= while waiting, /play once the puzzles have started.
   showStatus(status, code) {
     this.setAddress(status === 'playing' ? '/play' : `/join?code=${code}`);
   }

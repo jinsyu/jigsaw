@@ -4,6 +4,9 @@
 // empty board does nothing, so the board never slides away under a child's hand.
 // While a piece is dragged (on the board or from the tray) it shows where it would
 // snap. Pieces locked in the frame lie flat and cannot be picked up.
+// Clusters a friend holds get the friend's colour as an outline and a name tag
+// (setHolders). A piece held still for `holdMs` is let go by itself, and a piece
+// that keeps moving asks for its hold to be renewed (onHoldRenew) every `renewMs`.
 // It knows nothing about the store: the screen passes clusters and snap
 // predictions in and gets onGrab / onDrop / onLockedPress calls out.
 import { pieceOfCell } from '../store/puzzle-store.js';
@@ -64,7 +67,21 @@ function calm() {
 
 export function createBoardView(
   host,
-  { layout, puzzle, sprites, onGrab, onDrop, onZoom, predict, predictTray, onLockedPress, frameLook = {} },
+  {
+    layout,
+    puzzle,
+    sprites,
+    onGrab,
+    onDrop,
+    onZoom,
+    predict,
+    predictTray,
+    onLockedPress,
+    frameLook = {},
+    holdMs = 0,
+    renewMs = 0,
+    onHoldRenew,
+  },
 ) {
   const canvas = document.createElement('canvas');
   canvas.className = 'pz-canvas';
@@ -95,6 +112,8 @@ export function createBoardView(
   let magnet = null; // { key, preview, pull } for the current drag or hover
   let gesture = null; // { kind: 'pan' | 'pinch', ... }
   let lockedPress = null; // { cluster, pointerId, from, fired }
+  let holders = new Map(); // cluster id -> { color, name }: held by a friend
+  let holdTimer = 0;
   const pointers = new Map();
   let frame = 0;
   let layerValid = false;
@@ -285,12 +304,52 @@ export function createBoardView(
       const dx = shakes.length ? shakeOffset(cluster.id, now) : 0;
       drawCluster(c, cluster.indices, cluster.locked ? 'locked' : 'resting', dx, 0);
       if (shakes.some((s) => s.calm && s.id === cluster.id)) outlineCluster(c, cluster.indices);
+      const holder = holders.get(cluster.id);
+      if (holder) outlineCluster(c, cluster.indices, holder.color, 3);
+    }
+    // Name tags last, so no piece covers them.
+    for (const cluster of order) {
+      const holder = holders.get(cluster.id);
+      if (holder && cluster.id !== skipId) drawNameTag(c, cluster.indices, holder);
     }
   }
 
-  function outlineCluster(c, indices) {
-    c.strokeStyle = COLORS.refused;
-    c.lineWidth = 2.5 / cam.scale;
+  // A small pill in the friend's colour above the middle of the cluster's top row.
+  function drawNameTag(c, indices, { color, name }) {
+    let left = Infinity;
+    let right = -Infinity;
+    let top = Infinity;
+    for (const i of indices) {
+      const p = display.get(i);
+      const piece = puzzle.pieces[i];
+      left = Math.min(left, p.x + piece.x0);
+      right = Math.max(right, p.x + piece.x0 + layout.pw);
+      top = Math.min(top, p.y + sprites.boxes[i].y); // includes the tabs
+    }
+    const k = 1 / cam.scale;
+    c.save();
+    c.font = `700 ${12 * k}px Pretendard, system-ui, sans-serif`;
+    const textW = c.measureText(name).width;
+    const padX = 8 * k;
+    const h = 20 * k;
+    const w = textW + padX * 2;
+    const cx = (left + right) / 2;
+    const y = top - h - 4 * k;
+    c.fillStyle = color;
+    c.beginPath();
+    c.roundRect(cx - w / 2, y, w, h, h / 2);
+    c.fill();
+    c.fillStyle = '#fff';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(name, cx, y + h / 2 + 0.5 * k);
+    c.restore();
+  }
+
+  function outlineCluster(c, indices, color = COLORS.refused, width = 2.5) {
+    c.lineJoin = 'round';
+    c.strokeStyle = color;
+    c.lineWidth = width / cam.scale;
     for (const i of indices) {
       const p = display.get(i);
       strokeAt(c, sprites.paths[i], p.x, p.y);
@@ -553,7 +612,10 @@ export function createBoardView(
       startX: p.toX, // where the store has it
       startY: p.toY,
       from: pt,
+      movedAt: performance.now(),
+      renewedAt: performance.now(),
     };
+    startHoldTimer();
     magnet = null;
     const grabbedId = cluster.id;
     layerValid = false;
@@ -567,8 +629,11 @@ export function createBoardView(
 
   function moveDrag(pt) {
     const b = screenToBoard(cam, pt.x, pt.y);
-    drag.x = b.x - drag.offX;
-    drag.y = b.y - drag.offY;
+    const x = b.x - drag.offX;
+    const y = b.y - drag.offY;
+    if (x !== drag.x || y !== drag.y) drag.movedAt = performance.now();
+    drag.x = x;
+    drag.y = y;
     for (const i of drag.indices) {
       const p = display.get(i);
       p.x = p.toX = drag.x;
@@ -590,8 +655,28 @@ export function createBoardView(
     }
   }
 
+  // Held still too long: let go where it is. Still moving: keep the hold on the server.
+  function startHoldTimer() {
+    if (!holdMs || holdTimer) return;
+    holdTimer = setInterval(() => {
+      if (!drag) return stopHoldTimer();
+      const now = performance.now();
+      if (now - drag.movedAt >= holdMs) endDrag();
+      else if (renewMs && drag.movedAt > drag.renewedAt && now - drag.renewedAt >= renewMs) {
+        drag.renewedAt = now;
+        onHoldRenew?.(drag.id);
+      }
+    }, 250);
+  }
+
+  function stopHoldTimer() {
+    clearInterval(holdTimer);
+    holdTimer = 0;
+  }
+
   function endDrag() {
     const { id, x, y } = drag;
+    stopHoldTimer();
     bakePull();
     drag = null;
     magnet = null;
@@ -601,6 +686,7 @@ export function createBoardView(
 
   // Grab refused: the pieces slide back to where the store has them.
   function cancelDrag() {
+    stopHoldTimer();
     drag = null;
     magnet = null;
     setClusters(lastClusters);
@@ -649,6 +735,7 @@ export function createBoardView(
   // Two fingers mean zoom: the piece goes back and is released where it was.
   function putBackDrag() {
     const { id, startX, startY } = drag;
+    stopHoldTimer();
     drag = null;
     magnet = null;
     invalidate();
@@ -738,9 +825,33 @@ export function createBoardView(
   observer.observe(host);
   resize();
 
+  // Clusters friends hold: Map of cluster id -> { color, name }.
+  function setHolders(next) {
+    const same = next.size === holders.size && [...next].every(([id, h]) => holders.get(id)?.color === h.color && holders.get(id)?.name === h.name);
+    holders = next;
+    if (!same) invalidate();
+  }
+
+  // The page is hidden or the connection dropped: let go of the dragged piece where it is.
+  function releaseDrag() {
+    if (drag) endDrag();
+    pointers.clear();
+    gesture = null;
+    lockedPress = null;
+  }
+
   return {
     canvas,
     setClusters,
+    setHolders,
+    releaseDrag,
+    get dragging() {
+      return drag ? drag.id : null;
+    },
+    // Friends' holds drawn now (for tests): [{ id, color, name }].
+    get holders() {
+      return [...holders].map(([id, holder]) => ({ id, ...holder }));
+    },
     expectFromTray,
     settle,
     reveal,
@@ -775,6 +886,7 @@ export function createBoardView(
     },
     destroy() {
       observer.disconnect();
+      stopHoldTimer();
       cancelAnimationFrame(frame);
       clearTimeout(wheelTimer);
       canvas.remove();

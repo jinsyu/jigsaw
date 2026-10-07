@@ -143,8 +143,8 @@ export function renderNameStep(main, { code, name = '', mode = 'join', onBack, o
 }
 
 /**
- * Waiting screen (mockup #3), also used after the start until the puzzle screen is
- * connected (T11). Returns update(state) to redraw it in place.
+ * Waiting screen (mockup #3), also shown after the start to a student without a group.
+ * Returns update(state) to redraw it in place.
  *
  * state: { name, code, status: 'waiting'|'playing', group: { number }|null, myColor,
  *          mates: [{ id, name, color, online, me }], connected: boolean }
@@ -193,7 +193,7 @@ export function renderWaiting(main, { onRename }) {
       subline = `${state.name}, 잘 들어왔어요! 조금만 기다려 주세요.`;
     } else if (playing) {
       headline = `${state.group.number}모둠 퍼즐이 시작됐어요!`;
-      subline = '퍼즐 화면은 아직 준비 중이에요. 선생님 안내를 기다려 주세요.';
+      subline = '퍼즐을 여는 중이에요';
     } else {
       headline = `${state.name}, ${state.group.number}모둠이에요!`;
       subline = '선생님이 시작하면 퍼즐이 열려요';
