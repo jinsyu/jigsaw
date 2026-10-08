@@ -132,6 +132,29 @@
 
 /* waiting */
 .st-wait { align-items: center; text-align: center; }
+/* Waiting screen: a piece clicks into place, over and over (student/views.js howToPicture). */
+.st-how { display: flex; justify-content: center; margin: 4px 0 10px; }
+.st-how svg { width: 100%; max-width: 260px; height: auto; overflow: visible; }
+.st-how-board { fill: var(--board); }
+.st-how-a { fill: var(--m3); stroke: #fff; stroke-width: 2; }
+.st-how-b { fill: var(--m5); stroke: #fff; stroke-width: 2; }
+.st-how-hand { fill: rgba(30, 36, 51, .18); stroke: rgba(30, 36, 51, .45); stroke-width: 2; }
+.st-how-spark path { fill: none; stroke: var(--ok); stroke-width: 3; stroke-linecap: round; }
+.st-how-move { animation: st-how-move 3.6s ease-in-out infinite; }
+.st-how-hand { animation: st-how-hand 3.6s ease-in-out infinite; }
+.st-how-spark { opacity: 0; animation: st-how-spark 3.6s ease-out infinite; }
+@keyframes st-how-move {
+  0%, 12% { transform: translate(72px, 22px); }
+  50% { transform: translate(6px, 3px); }
+  56%, 88% { transform: translate(0, 0); }
+  100% { transform: translate(72px, 22px); }
+}
+@keyframes st-how-hand { 0%, 54% { opacity: 1; } 60%, 92% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes st-how-spark { 0%, 55% { opacity: 0; } 60% { opacity: 1; } 78%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .st-how-move, .st-how-hand, .st-how-spark { animation: none; }
+  .st-how-hand { opacity: 0; }
+}
 .st-banner {
   width: 100%; margin-bottom: 10px; padding: 10px 14px; border-radius: 12px;
   background: var(--warn-weak); color: #8A4E06; font-size: 14px; font-weight: 600;

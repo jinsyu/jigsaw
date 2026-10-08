@@ -142,6 +142,25 @@ export function renderNameStep(main, { code, name = '', mode = 'join', onBack, o
   input.focus({ preventScroll: true });
 }
 
+// A piece slides next to its neighbour and clicks into place (decoration; CSS animates it,
+// and shows it already joined when reduced motion is asked for).
+function howToPicture() {
+  const tab = 'M0 0H40V12a8 8 0 1 1 0 16V40H0Z';
+  const hole = 'M0 0H40V40H0V28a8 8 0 1 0 0-16Z';
+  return h('div', {
+    class: 'st-how',
+    'aria-hidden': 'true',
+    html:
+      '<svg viewBox="0 0 220 96" width="220" height="96">' +
+      '<rect class="st-how-board" x="1" y="1" width="218" height="94" rx="14"/>' +
+      `<g transform="translate(56 28)"><path class="st-how-a" d="${tab}"/></g>` +
+      `<g class="st-how-move"><g transform="translate(96 28)"><path class="st-how-b" d="${hole}"/></g>` +
+      '<circle class="st-how-hand" cx="120" cy="52" r="9"/></g>' +
+      '<g class="st-how-spark" transform="translate(96 48)"><path d="M0-22v-8M0 22v8M-18-14l-6-6M18-14l6-6M-18 14l-6 6M18 14l6 6"/></g>' +
+      '</svg>',
+  });
+}
+
 /**
  * Waiting screen (mockup #3), also shown after the start to a student without a group.
  * Returns update(state) to redraw it in place.
@@ -161,6 +180,7 @@ export function renderWaiting(main, { onRename }) {
     'section',
     { class: 'st-tips', 'aria-labelledby': 'st-tips-title' },
     h('h2', { id: 'st-tips-title' }, '이렇게 맞춰요'),
+    howToPicture(),
     h(
       'ol',
       {},
