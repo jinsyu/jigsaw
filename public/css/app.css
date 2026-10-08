@@ -295,6 +295,7 @@ html.is-play, html.is-play body { height: 100%; overflow: hidden; overscroll-beh
   overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain;
 }
 .pz-chips::-webkit-scrollbar { display: none; }
+.pz-chips[hidden] { display: none; }
 .pz-chips .chip { height: 28px; font-size: 13px; flex: none; }
 .pz-chips .chip .ic { width: 18px; height: 18px; }
 .pz-picture-btn { margin-left: auto; color: var(--ink); flex: none; }

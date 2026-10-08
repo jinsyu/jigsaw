@@ -111,6 +111,8 @@ export async function startDemo(main) {
   back.setAttribute('aria-label', '처음 화면으로');
   back.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>';
   main.querySelector('.pz-title')?.before(back);
+  // Alone: no group members to show.
+  main.querySelector('.pz-chips')?.setAttribute('hidden', '');
   // Test hook (local stack only, test-hooks.js): read-only view of the state and the camera.
   exposeTestHook('__puzzleDemo', {
     state: () => store.getState(),
