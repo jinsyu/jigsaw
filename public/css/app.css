@@ -74,6 +74,13 @@
   font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer;
 }
 .practice-pieces button[aria-pressed="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(30, 36, 51, 0.12); }
+.practice-themes { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: -4px 0 14px; padding: 2px; }
+.practice-themes::-webkit-scrollbar { display: none; }
+.practice-themes button {
+  flex: none; border: 0; border-radius: 999px; min-height: 40px; padding: 0 16px; font: inherit; font-size: 15px; font-weight: 700;
+  background: var(--board); color: var(--sub); cursor: pointer;
+}
+.practice-themes button[aria-pressed="true"] { background: var(--ink); color: #fff; }
 .practice-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (min-width: 640px) { .practice-list { grid-template-columns: repeat(4, minmax(0, 1fr)); } .practice { padding: 26px 26px 22px; } }
 .practice-card {
