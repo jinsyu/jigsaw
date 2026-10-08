@@ -1,8 +1,9 @@
 // T18: an open class saved with toRecord() comes back the same after a restart, saved
-// boards are checked before they are used, and open classes close after 24 hours.
+// boards are checked before they are used, and open classes close after 24 hours
+// or after 3 hours with no activity.
 import { describe, expect, it } from 'vitest';
 import { rng } from '../../public/js/puzzle/geometry.js';
-import { OPEN_LIMIT_MS, createRegistry } from '../../server/src/engine/registry.js';
+import { IDLE_LIMIT_MS, OPEN_LIMIT_MS, createRegistry } from '../../server/src/engine/registry.js';
 
 const T0 = Date.parse('2026-10-09T09:00:00.000Z');
 const HOUR = 60 * 60 * 1000;
@@ -135,20 +136,55 @@ describe('24시간 자동 종료', () => {
     const make = () => registry.session(registry.createSession('t', { pieceCount: 12, groupCount: 1, picture: { builtinKey: 'a', aspect: 1 } }).result.sessionId);
     const waiting = make();
     const started = make();
+    // Both stay active, so only the 24-hour limit can close them.
+    const advance = (ms) => {
+      for (let left = ms; left > 0; left -= Math.min(left, HOUR)) {
+        now.advance(Math.min(left, HOUR));
+        for (const s of [waiting, started]) registry.session(s.id)?.touch();
+      }
+    };
     const student = registry.join(started.code, { name: '가' }).result;
     started.assign(student.memberId, 1);
-    now.advance(2 * HOUR);
+    advance(2 * HOUR);
     started.start();
-    now.advance(OPEN_LIMIT_MS - 2 * HOUR - 1);
+    advance(OPEN_LIMIT_MS - 2 * HOUR - 1);
     expect(registry.expireStale()).toEqual([]);
-    now.advance(1);
+    advance(1);
     const closed = registry.expireStale();
     expect(closed.map((c) => c.sessionId)).toEqual([waiting.id]);
     expect(closed[0]).toMatchObject({ result: { ok: true }, events: [{ to: 'session', type: 'end' }] });
     expect(registry.session(waiting.id)).toBeNull();
-    now.advance(2 * HOUR);
+    advance(2 * HOUR);
     expect(registry.expireStale().map((c) => c.sessionId)).toEqual([started.id]);
     expect(registry.byToken(student.token)).toBeNull();
     expect(registry.openCount).toBe(0);
+  });
+});
+
+describe('3시간 활동 없으면 자동 종료', () => {
+  it('선생님·학생 활동이 3시간 없으면 닫고, 활동이 있으면 다시 3시간을 센다', () => {
+    const { registry, now } = makeRegistry();
+    const idle = registry.session(registry.createSession('t', { pieceCount: 12, groupCount: 1, picture: { builtinKey: 'a', aspect: 1 } }).result.sessionId);
+    const busy = registry.session(registry.createSession('t', { pieceCount: 12, groupCount: 1, picture: { builtinKey: 'a', aspect: 1 } }).result.sessionId);
+    now.advance(2 * HOUR);
+    const student = registry.join(busy.code, { name: '가' }).result;
+    now.advance(IDLE_LIMIT_MS - 2 * HOUR - 1);
+    expect(registry.expireStale()).toEqual([]);
+    now.advance(1);
+    expect(registry.expireStale().map((c) => c.sessionId)).toEqual([idle.id]);
+
+    busy.assign(student.memberId, 1);
+    busy.start();
+    busy.memberOnline(student.memberId);
+    now.advance(IDLE_LIMIT_MS - 1);
+    const tray = busy.boardState(1).trays[student.memberId];
+    expect(busy.puzzle(student.memberId, 'takeFromTray', tray[0], 0, 0).result.ok).toBe(true);
+    now.advance(IDLE_LIMIT_MS - 1);
+    expect(registry.expireStale()).toEqual([]);
+    // A refused action is not activity.
+    expect(busy.puzzle(student.memberId, 'grab', 'no-such-cluster').result.ok).toBe(false);
+    now.advance(1);
+    expect(registry.expireStale().map((c) => c.sessionId)).toEqual([busy.id]);
+    expect(registry.byToken(student.token)).toBeNull();
   });
 });

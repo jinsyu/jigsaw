@@ -1,6 +1,7 @@
 // The clean-up job (every CLEANUP_INTERVAL_MS inside the rt server; replaces pg_cron):
-// 1. open classes 24 hours after they started (never started: after they were created) are
-//    closed in memory with registry.end and saved as ended (members deleted, tokens dead);
+// 1. open classes 24 hours after they started (never started: after they were created), or
+//    with no activity for 3 hours, are closed in memory with registry.end and saved as ended
+//    (members deleted, tokens dead);
 //    open rows that are not in memory (should not happen) are ended in the database too;
 // 2. members of ended classes are deleted;
 // 3. classes ended more than 30 days ago are deleted (groups and members go with them).

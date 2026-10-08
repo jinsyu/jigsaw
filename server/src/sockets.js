@@ -122,6 +122,7 @@ export function attachSockets({ httpServer, config, registry, persistence, now, 
     const { sessionId, memberId, name } = socket.data;
     const session = registry.session(sessionId);
     if (!session) return socket.disconnect(true);
+    session.touch();
     socket.join(rooms.member(memberId));
     // After a restart the name is gone from memory; the device sends it again.
     if (name && session.member(memberId).name !== name) {
@@ -156,6 +157,7 @@ export function attachSockets({ httpServer, config, registry, persistence, now, 
   function onTeacher(socket) {
     const session = registry.session(socket.data.sessionId);
     if (!session) return socket.disconnect(true);
+    session.touch();
     socket.join(rooms.teacher(session.id));
     urlOf(session).then((url) => {
       if (socket.connected) socket.emit('state', teacherState(session, now(), url));

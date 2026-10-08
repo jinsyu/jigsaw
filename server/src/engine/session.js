@@ -64,6 +64,12 @@ export function createClassSession({
   const createdAt = restore?.createdAt ?? now();
   let startedAt = restore?.startedAt ?? null;
   let endedAt = restore?.endedAt ?? null;
+  // Last teacher or student action (registry.js closes classes idle too long). Not saved:
+  // a restart counts as activity.
+  let lastActiveAt = now();
+  const touch = () => {
+    lastActiveAt = now();
+  };
   // Map keeps insertion order = joining order (colours at the start follow it).
   const members = new Map();
   const groups = new Map(Array.from({ length: groupCount }, (_, i) => [i + 1, { number: i + 1, board: null }]));
@@ -128,6 +134,7 @@ export function createClassSession({
   function addMember({ id: memberId, name, tokenHash }) {
     const member = { id: memberId, name, tokenHash, group: null, color: null, joinedAt: now(), online: false };
     members.set(memberId, member);
+    touch();
     return member;
   }
 
@@ -145,6 +152,7 @@ export function createClassSession({
     const member = members.get(memberId);
     if (!member) return refuse('member_not_found');
     if (number !== null && !groups.has(number)) return refuse('invalid_group');
+    touch();
     if (member.group === number) return { result: { ok: true, group: number, color: member.color }, events: [] };
 
     const events = [];
@@ -168,6 +176,7 @@ export function createClassSession({
   // Every student into the groups, sizes differing by at most one (waiting room only).
   function randomize() {
     if (status !== 'waiting') return refuse('session_not_waiting');
+    touch();
     const shuffled = [...members.values()]
       .map((m) => ({ m, key: random() }))
       .sort((a, b) => a.key - b.key)
@@ -202,6 +211,7 @@ export function createClassSession({
     }
     status = 'playing';
     startedAt = now();
+    touch();
     const list = [...members.values()].map(assignment);
     return {
       result: { ok: true, startedAt },
@@ -226,6 +236,7 @@ export function createClassSession({
     const member = members.get(memberId);
     if (!member || member.online === online || status === 'ended') return [];
     member.online = online;
+    if (online) touch();
     const events = [{ to: 'teacher', type: 'presence', memberId, online }];
     const board = member.group === null ? null : groups.get(member.group).board;
     if (board) {
@@ -245,6 +256,7 @@ export function createClassSession({
     const board = member.group === null ? null : groups.get(member.group).board;
     if (!board) return reason('no-group');
     const { result, events } = board[action](memberId, ...args);
+    if (result.ok) touch();
     return { result, events: toGroup(member.group, events) };
   }
 
@@ -357,6 +369,10 @@ export function createClassSession({
     get startedAt() {
       return startedAt;
     },
+    get lastActiveAt() {
+      return lastActiveAt;
+    },
+    touch,
     member: (memberId) => members.get(memberId) ?? null,
     get memberCount() {
       return members.size;

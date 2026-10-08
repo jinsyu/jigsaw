@@ -20,6 +20,8 @@ export const MAX_OPEN_PER_TEACHER = 10;
 // An open class is closed automatically this long after it started (or, if it never
 // started, after it was created): spec clean-up job.
 export const OPEN_LIMIT_MS = 24 * 60 * 60 * 1000;
+// An open class with no teacher or student action for this long is closed too.
+export const IDLE_LIMIT_MS = 3 * 60 * 60 * 1000;
 const CODE_SPACE = 1_000_000;
 const CODE_ATTEMPTS = 20;
 const BUILTIN_KEY = /^[a-z0-9-]{1,64}$/;
@@ -176,10 +178,13 @@ export function createRegistry({
     return session;
   }
 
-  // Closes every open class past OPEN_LIMIT_MS. Returns [{ sessionId, session, result, events }].
+  // Closes every open class past OPEN_LIMIT_MS or idle for IDLE_LIMIT_MS.
+  // Returns [{ sessionId, session, result, events }].
   function expireStale() {
     const t = now();
-    const due = [...sessions.values()].filter((s) => t - (s.startedAt ?? s.createdAt) >= OPEN_LIMIT_MS);
+    const due = [...sessions.values()].filter(
+      (s) => t - (s.startedAt ?? s.createdAt) >= OPEN_LIMIT_MS || t - s.lastActiveAt >= IDLE_LIMIT_MS,
+    );
     return due.map((session) => ({ sessionId: session.id, session, ...end(session.id) }));
   }
 
