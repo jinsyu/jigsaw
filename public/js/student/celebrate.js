@@ -72,6 +72,9 @@ export function renderCelebration(main, { groupNumber, names, picture, durationM
       h('div', {}, h('dt', {}, '조각'), h('dd', {}, `${pieceCount}개`)),
     ),
     h('p', { class: 'hint' }, '선생님 화면에도 완성이 표시됐어요'),
+    // Early finishers: another picture alone while the other groups go on (home page practice;
+    // 이어서 하기 on the home page brings them back to this class).
+    h('a', { class: 'btn st-done-more', href: '/#practice' }, '기다리는 동안 혼자 맞춰 보기'),
   );
   window.scrollTo(0, 0);
   heading.focus({ preventScroll: true });

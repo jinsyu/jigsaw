@@ -62,4 +62,6 @@ export async function setupPractice(section, fetchImpl = globalThis.fetch) {
   render();
   setPieces(pieces);
   section.hidden = false;
+  // Sent here from a finished puzzle (/#practice): the section shows only now, so go to it now.
+  if (location.hash === '#practice') section.scrollIntoView({ block: 'start' });
 }

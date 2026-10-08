@@ -216,6 +216,7 @@
 
 /* Completed puzzle (mockup student-phone #5). Wider screens get a bigger picture. */
 .st-done { position: relative; align-items: center; text-align: center; max-width: 560px; overflow: hidden; }
+.st-done-more { margin-top: 16px; width: 100%; max-width: 360px; }
 .st-confetti { position: absolute; inset: 0; pointer-events: none; }
 .st-confetti i {
   position: absolute; width: 9px; height: 15px; border-radius: 2px; transform: rotate(var(--turn, 0deg));
