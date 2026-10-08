@@ -8,6 +8,15 @@
 /* Home: student code entry first, teacher link small */
 .home { align-items: center; text-align: center; }
 .home .hero { width: 170px; height: 170px; margin: 26px 0 18px; }
+/* The picture hero (js/home-practice.js pictureHero): its four pieces come together once. */
+.hero-picture { overflow: visible; filter: drop-shadow(0 10px 18px rgba(30, 36, 51, .16)); }
+.hero-piece { animation: hero-join .9s cubic-bezier(.2, .8, .2, 1) both; }
+.hero-piece-0 { --from: translate(-18px, -14px) rotate(-6deg); }
+.hero-piece-1 { --from: translate(18px, -16px) rotate(5deg); animation-delay: .08s; }
+.hero-piece-2 { --from: translate(-16px, 18px) rotate(4deg); animation-delay: .16s; }
+.hero-piece-3 { --from: translate(16px, 16px) rotate(-5deg); animation-delay: .24s; }
+@keyframes hero-join { from { transform: var(--from); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .hero-piece { animation: none; } }
 .home h1 { font-size: 26px; font-weight: 800; line-height: 1.35; letter-spacing: -0.02em; margin-bottom: 22px; }
 .code-form { width: 100%; display: flex; flex-direction: column; gap: 14px; }
 /* Class code: one real input over six cells (js/code-field.js). Before the script runs the
