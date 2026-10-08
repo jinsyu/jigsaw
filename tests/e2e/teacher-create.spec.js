@@ -232,3 +232,21 @@ for (const size of [
     await page.screenshot({ path: testInfo.outputPath(`create-${size.width}-clear.png`) });
   });
 }
+
+// 다시 열기 on 내 수업 opens 새 수업 with the earlier class's choices in the address.
+test('새 수업 starts from the choices in its address (다시 열기)', async ({ page, context }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-1440' && testInfo.project.name !== 'phone-390', 'two sizes are enough');
+  const errors = trackErrors(page);
+  await signInPage(context);
+  await page.goto('/teacher/new?picture=great-wave&pieces=48&groups=5&preview=1&outline=0&button=1&underlay=1');
+  await expect(page.locator('.t-preview-title')).toHaveText('가나가와 해변의 큰 파도');
+  await expect(page.getByRole('radio', { name: /가나가와 해변의 큰 파도/ })).toBeChecked();
+  await expect(page.getByRole('radio', { name: '48', exact: true })).toBeChecked();
+  await expect(page.getByRole('spinbutton', { name: '모둠 수', exact: true })).toHaveValue('5');
+  await expect(page.getByRole('switch', { name: '들어갈 칸 미리 보기' })).toBeChecked();
+  await expect(page.getByRole('switch', { name: '틀 안 조각 윤곽선' })).not.toBeChecked();
+  await expect(page.getByRole('switch', { name: '틀 안 흐린 밑그림' })).toBeChecked();
+  // The chip of the picture's kind is the one shown.
+  await expect(page.getByRole('group', { name: '내장 그림 분류' }).getByRole('button', { pressed: true })).toHaveText(/^명화/);
+  expect(errors).toEqual([]);
+});

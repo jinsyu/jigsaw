@@ -101,3 +101,37 @@ export function demoUrl({ builtinKey, pieceCount, hints = {} }) {
   }
   return `/play?${params}`;
 }
+
+// '다시 열기' on 내 수업: 새 수업 with the same picture, piece count, group count and help
+// settings (read back by presetFromSearch on the create screen).
+export function againPath({ builtinKey, imageId, pieceCount, groupCount, hints = {} }) {
+  const params = new URLSearchParams();
+  if (builtinKey) params.set('picture', builtinKey);
+  else if (imageId) params.set('image', imageId);
+  params.set('pieces', String(pieceCount));
+  params.set('groups', String(groupCount));
+  for (const [key, param] of Object.entries(DEMO_HINT_PARAMS)) {
+    if (typeof hints[key] === 'boolean') params.set(param, hints[key] ? '1' : '0');
+  }
+  return `/teacher/new?${params}`;
+}
+
+// The choices in a 새 수업 address (anything malformed is left out): { builtinKey?, imageId?,
+// pieceCount?, groupCount?, hints }.
+export function presetFromSearch(search, pieceCounts) {
+  const params = new URLSearchParams(search);
+  const preset = { hints: {} };
+  const picture = params.get('picture');
+  const image = params.get('image');
+  if (picture && /^[a-z0-9-]{1,64}$/.test(picture)) preset.builtinKey = picture;
+  else if (image && /^[0-9a-f-]{36}$/i.test(image)) preset.imageId = image.toLowerCase();
+  const pieces = Number(params.get('pieces'));
+  if (pieceCounts.includes(pieces)) preset.pieceCount = pieces;
+  const groups = Number(params.get('groups'));
+  if (Number.isInteger(groups) && groups >= GROUP_COUNT.min && groups <= GROUP_COUNT.max) preset.groupCount = groups;
+  for (const [key, param] of Object.entries(DEMO_HINT_PARAMS)) {
+    const value = params.get(param);
+    if (value === '1' || value === '0') preset.hints[key] = value === '1';
+  }
+  return preset;
+}

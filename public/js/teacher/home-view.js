@@ -1,7 +1,7 @@
 // 내 수업: open sessions (tap to see the code and QR again) and recently ended ones.
 import { listSessions } from './data.js';
 import { h, icon, setTitle } from './dom.js';
-import { formatCode, formatDateTime, hintsSummary, statusLabel } from './format.js';
+import { againPath, formatCode, formatDateTime, hintsSummary, statusLabel } from './format.js';
 import { loadBuiltins, loadMyImages, sessionPicture } from './pictures.js';
 import { sessionPath } from './routes.js';
 
@@ -136,6 +136,7 @@ function pastRow(session, builtins, myImages) {
     h('span', { class: 't-past-title' }, picture.title),
     h('span', { class: 't-past-meta' }, `${session.pieceCount}조각 · ${session.groupCount}모둠`),
     h('span', { class: 't-past-date' }, `${formatDateTime(session.endedAt ?? session.createdAt)}에 끝남`),
+    h('a', { class: 't-past-again', href: againPath(session), 'aria-label': `${picture.title} ${session.pieceCount}조각 수업 다시 열기` }, '다시 열기'),
   );
 }
 

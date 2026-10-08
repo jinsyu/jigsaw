@@ -11,6 +11,7 @@ import {
   createErrorMessage,
   demoUrl,
   onOffLabel,
+  presetFromSearch,
   piecesPerStudentNote,
 } from './format.js';
 import { faceWarning, pictureCard, uploadedDetail } from './picture-cards.js';
@@ -27,7 +28,14 @@ export function renderCreate(main, ctx) {
   ctx.setBar('nav', { active: 'new' });
   setTitle('새 수업 만들기');
 
-  const state = { picture: null, pieceCount: PIECE_COUNT_INITIAL, hints: { ...DEFAULT_HINTS }, busy: false };
+  // '다시 열기' on 내 수업 comes here with the earlier class's choices in the address.
+  const preset = presetFromSearch(location.search, PIECE_COUNTS);
+  const state = {
+    picture: null,
+    pieceCount: preset.pieceCount ?? PIECE_COUNT_INITIAL,
+    hints: { ...DEFAULT_HINTS, ...preset.hints },
+    busy: false,
+  };
   let alive = true;
 
   // ----- 1. picture tabs -----
@@ -151,7 +159,7 @@ export function renderCreate(main, ctx) {
   minus.addEventListener('click', () => setGroups(Number(groupInput.value) - 1));
   plus.addEventListener('click', () => setGroups(Number(groupInput.value) + 1));
   groupInput.addEventListener('change', () => setGroups(groupInput.value));
-  setGroups(GROUP_COUNT.initial);
+  setGroups(preset.groupCount ?? GROUP_COUNT.initial);
 
   // 4. help settings (spec rule 10) with a small picture of the frame students will see.
   const frameMini = h('div', { class: 't-frame-mini' });
@@ -353,9 +361,10 @@ export function renderCreate(main, ctx) {
             licenseUrl: b.license?.url ?? null,
           },
         }));
-        // The first picture of the first chip is chosen at the start.
-        const firstKind = orderedCategories(pictures)[0];
-        const first = pictures.find((p) => p.category === firstKind);
+        // At the start: the picture of the earlier class (다시 열기), or the first of the first chip.
+        const again = preset.builtinKey ? pictures.find((p) => p.picture.builtinKey === preset.builtinKey) : null;
+        const firstKind = again?.category ?? orderedCategories(pictures)[0];
+        const first = again ?? pictures.find((p) => p.category === firstKind);
         const cards = pictures.map((p, i) => ({
           category: p.category,
           search: pictureSearchText(builtins[i]),
@@ -368,7 +377,8 @@ export function renderCreate(main, ctx) {
           }),
         }));
         const grid = h('div', { class: 't-pics', role: 'radiogroup', 'aria-label': '내장 그림', id: 't-builtin-grid' }, cards.map((c) => c.node));
-        panel.replaceChildren(...pictureFilter(cards, grid));
+        panel.replaceChildren(...pictureFilter(cards, grid, firstKind));
+        if (again) panel.querySelector(`input[value="${again.value}"]`)?.closest('.t-pic')?.scrollIntoView?.({ block: 'nearest' });
         if (!state.picture && first) choosePicture(first.picture);
       })
       .catch((err) => {
@@ -477,7 +487,7 @@ export function renderCreate(main, ctx) {
   selectTab('builtin');
   updatePieces();
   showBuiltins();
-  showMine();
+  showMine(preset.imageId ?? null);
   return () => {
     alive = false;
     sideObserver?.disconnect();
@@ -528,9 +538,9 @@ export function normalizeSearch(text) {
 // Above the built-in pictures: a search field and category chips (a group of toggle buttons,
 // one pressed; arrow keys move between them; the row scrolls sideways on narrow screens).
 // While the field has words, the chips let go and every picture that matches shows.
-function pictureFilter(cards, grid) {
+function pictureFilter(cards, grid, startCategory) {
   const categories = orderedCategories(cards);
-  let current = categories[0];
+  let current = categories.includes(startCategory) ? startCategory : categories[0];
   const buttons = categories.map((category) =>
     h(
       'button',

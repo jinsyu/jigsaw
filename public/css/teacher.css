@@ -193,6 +193,12 @@ a.t-session:hover { box-shadow: 0 6px 18px rgba(20, 30, 60, .08), inset 0 0 0 1.
 .t-past li + li { border-top: 1px solid var(--line); }
 .t-past-title { font-weight: 700; color: var(--ink); }
 .t-past-date { margin-left: auto; font-size: 14px; color: var(--muted); }
+.t-past li { align-items: center; }
+.t-past-again {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 12px; font-size: 14px; font-weight: 700;
+  color: var(--pri); background: var(--pri-weak); text-decoration: none;
+}
+.t-past-again:hover { background: #DCE2FF; }
 
 /* ---------- 새 수업 만들기 ---------- */
 .t-create { display: grid; gap: 18px 24px; grid-template-columns: minmax(0, 1fr); align-items: start; }

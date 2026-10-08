@@ -5,7 +5,9 @@ import {
   GROUP_COUNT,
   clampGroupCount,
   createErrorMessage,
+  againPath,
   demoUrl,
+  presetFromSearch,
   formatCode,
   formatDateTime,
   piecesPerStudentNote,
@@ -86,5 +88,30 @@ describe('demoUrl', () => {
 
   it('has no demo for a teacher\'s own picture', () => {
     expect(demoUrl({ builtinKey: null, pieceCount: 24 })).toBeNull();
+  });
+});
+
+describe('againPath and presetFromSearch (다시 열기)', () => {
+  const PIECES = [12, 24, 48, 70];
+  it('round-trips a built-in picture class', () => {
+    const session = { builtinKey: 'great-wave', imageId: null, pieceCount: 48, groupCount: 5, hints: { preview: true, outline: false, pictureButton: true, underlay: false } };
+    const path = againPath(session);
+    expect(path).toBe('/teacher/new?picture=great-wave&pieces=48&groups=5&preview=1&outline=0&button=1&underlay=0');
+    expect(presetFromSearch(path.slice(path.indexOf('?')), PIECES)).toEqual({
+      builtinKey: 'great-wave',
+      pieceCount: 48,
+      groupCount: 5,
+      hints: session.hints,
+    });
+  });
+
+  it('round-trips a teacher picture class', () => {
+    const id = '0f8fad5b-d9cb-469f-a165-70867728950e';
+    const path = againPath({ builtinKey: null, imageId: id, pieceCount: 12, groupCount: 2 });
+    expect(presetFromSearch(path.slice(path.indexOf('?')), PIECES)).toEqual({ imageId: id, pieceCount: 12, groupCount: 2, hints: {} });
+  });
+
+  it('leaves out anything malformed', () => {
+    expect(presetFromSearch('?picture=../x&image=nope&pieces=13&groups=40&preview=yes', PIECES)).toEqual({ hints: {} });
   });
 });
