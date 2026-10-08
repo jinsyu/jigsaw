@@ -631,6 +631,52 @@
     "credit": "빨간 트랙터, 미국 농무부(USDA), 2019 — 미국 농무부(USDA) / 이미지: Wikimedia Commons (미국 농무부), 퍼블릭 도메인"
   },
   {
+    "key": "sand-toy-truck",
+    "title": "모래 위 장난감 트럭",
+    "category": "사진",
+    "topic": "계절",
+    "level": "쉬움",
+    "author": "W.carter (커먼즈 사용자)",
+    "year": "2017",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "W.carter",
+      "url": "https://commons.wikimedia.org/wiki/File:Plastic_toy_truck_and_pail_in_sand.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Plastic_toy_truck_and_pail_in_sand.jpg/3840px-Plastic_toy_truck_and_pail_in_sand.jpg"
+    ],
+    "credit": "모래 위 장난감 트럭, W.carter (커먼즈 사용자), 2017 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "watermelon-slices",
+    "title": "빨간 바구니의 수박 조각",
+    "category": "사진",
+    "topic": "계절",
+    "level": "쉬움",
+    "author": "Judgefloro (커먼즈 사용자)",
+    "year": "2017",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Judgefloro",
+      "url": "https://commons.wikimedia.org/wiki/File:03189jfWatermelons_pizza_barbecuefvf_03.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/03189jfWatermelons_pizza_barbecuefvf_03.jpg/3840px-03189jfWatermelons_pizza_barbecuefvf_03.jpg"
+    ],
+    "credit": "빨간 바구니의 수박 조각, Judgefloro (커먼즈 사용자), 2017 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
     "key": "carousel-truro",
     "title": "알록달록 회전목마",
     "category": "사진",
@@ -774,6 +820,75 @@
       "https://upload.wikimedia.org/wikipedia/commons/9/90/Lollipop-Rainbox-Swirl.jpg"
     ],
     "credit": "무지개 막대사탕, Evan-Amos, 2011 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "spring-riders",
+    "title": "공원의 흔들 말 놀이기구",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "쉬움",
+    "author": "미로 곰시",
+    "year": "연도 미상",
+    "holder": "개인 촬영 (Unsplash)",
+    "source": {
+      "name": "Wikimedia Commons (Unsplash)",
+      "author": "Miró Gomsi",
+      "url": "https://commons.wikimedia.org/wiki/File:Grosuplje-192709.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Grosuplje-192709.jpg/3840px-Grosuplje-192709.jpg"
+    ],
+    "credit": "공원의 흔들 말 놀이기구, 미로 곰시, 연도 미상 — 개인 촬영 (Unsplash) / 이미지: Wikimedia Commons (Unsplash), CC0 1.0"
+  },
+  {
+    "key": "bongsan-masks",
+    "title": "봉산탈춤의 탈",
+    "category": "사진",
+    "topic": "전통",
+    "level": "쉬움",
+    "author": "서헌강",
+    "year": "2008",
+    "holder": "국립민속박물관",
+    "source": {
+      "name": "Wikimedia Commons (국립민속박물관, 공공누리 제1유형)",
+      "author": "서헌강",
+      "url": "https://commons.wikimedia.org/wiki/File:Tals_of_Bongsan_Talchum_2.jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Tals_of_Bongsan_Talchum_2.jpg/3840px-Tals_of_Bongsan_Talchum_2.jpg"
+    ],
+    "credit": "봉산탈춤의 탈, 서헌강, 2008 — 국립민속박물관 / 이미지: Wikimedia Commons (국립민속박물관, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "songpyeon",
+    "title": "추석 송편",
+    "category": "사진",
+    "topic": "전통",
+    "level": "쉬움",
+    "author": "wizdata",
+    "year": "2018",
+    "holder": "위키미디어 공용(freeqration)",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "wizdata",
+      "url": "https://commons.wikimedia.org/wiki/File:Songpyeon.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Songpyeon.jpg/3840px-Songpyeon.jpg"
+    ],
+    "credit": "추석 송편, wizdata, 2018 — 위키미디어 공용(freeqration) / 이미지: Wikimedia Commons, CC0 1.0"
   },
   {
     "key": "giant-panda",
@@ -1271,6 +1386,75 @@
     ]
   },
   {
+    "key": "dragonfly-landing",
+    "title": "내려앉는 잠자리",
+    "category": "사진",
+    "topic": "동물",
+    "level": "보통",
+    "author": "보리스 스모크로비치",
+    "year": "2016",
+    "holder": "개인 촬영 (Unsplash)",
+    "source": {
+      "name": "Wikimedia Commons (Unsplash)",
+      "author": "Boris  Smokrovic borisworkshop",
+      "url": "https://commons.wikimedia.org/wiki/File:Dragonfly_landing_%28Unsplash%29.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Dragonfly_landing_%28Unsplash%29.jpg/3840px-Dragonfly_landing_%28Unsplash%29.jpg"
+    ],
+    "credit": "내려앉는 잠자리, 보리스 스모크로비치, 2016 — 개인 촬영 (Unsplash) / 이미지: Wikimedia Commons (Unsplash), CC0 1.0"
+  },
+  {
+    "key": "snail-leaf",
+    "title": "잎을 먹는 달팽이",
+    "category": "사진",
+    "topic": "동물",
+    "level": "보통",
+    "author": "ContinentalDrip (커먼즈 사용자)",
+    "year": "2022",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "ContinentalDrip",
+      "url": "https://commons.wikimedia.org/wiki/File:Snailly.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/6/6b/Snailly.jpg"
+    ],
+    "credit": "잎을 먹는 달팽이, ContinentalDrip (커먼즈 사용자), 2022 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "stag-beetle",
+    "title": "잎 위의 사슴벌레",
+    "category": "사진",
+    "topic": "동물",
+    "level": "보통",
+    "author": "Janezdrilc (커먼즈 사용자)",
+    "year": "2021",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Janezdrilc",
+      "url": "https://commons.wikimedia.org/wiki/File:Pir%C5%A1enbreg_Lucanus_cervus_02.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/3/32/Pir%C5%A1enbreg_Lucanus_cervus_02.jpg"
+    ],
+    "credit": "잎 위의 사슴벌레, Janezdrilc (커먼즈 사용자), 2021 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
     "key": "sea-otter",
     "title": "물 위에서 쉬는 해달",
     "category": "사진",
@@ -1361,6 +1545,75 @@
       "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Boulders_Beach_-_BouldersBeach4291.jpg/3840px-Boulders_Beach_-_BouldersBeach4291.jpg"
     ],
     "credit": "바닷가 펭귄들, lumoplank, 2025 — 볼더스 비치(남아프리카공화국) / 이미지: Wikimedia Commons (Flickr), CC0 1.0"
+  },
+  {
+    "key": "haeundae-beach",
+    "title": "부산 해운대 해수욕장",
+    "category": "사진",
+    "topic": "바다",
+    "level": "보통",
+    "author": "부산광역시",
+    "year": "2024",
+    "holder": "부산광역시",
+    "source": {
+      "name": "Wikimedia Commons (부산광역시, 공공누리 제1유형)",
+      "author": "부산광역시",
+      "url": "https://commons.wikimedia.org/wiki/File:Busan_City_Haeundae_Beach_KOGL_(01).jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Busan_City_Haeundae_Beach_KOGL_%2801%29.jpg/3840px-Busan_City_Haeundae_Beach_KOGL_%2801%29.jpg"
+    ],
+    "credit": "부산 해운대 해수욕장, 부산광역시, 2024 — 부산광역시 / 이미지: Wikimedia Commons (부산광역시, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "oryukdo-lighthouse",
+    "title": "부산 오륙도 등대",
+    "category": "사진",
+    "topic": "바다",
+    "level": "보통",
+    "author": "부산광역시",
+    "year": "2019",
+    "holder": "부산광역시",
+    "source": {
+      "name": "Wikimedia Commons (부산광역시, 공공누리 제1유형)",
+      "author": "부산광역시",
+      "url": "https://commons.wikimedia.org/wiki/File:Oryukdo,_Busan,_South_Korea_03.jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Oryukdo%2C_Busan%2C_South_Korea_03.jpg/3840px-Oryukdo%2C_Busan%2C_South_Korea_03.jpg"
+    ],
+    "credit": "부산 오륙도 등대, 부산광역시, 2019 — 부산광역시 / 이미지: Wikimedia Commons (부산광역시, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "udo-island",
+    "title": "제주 우도와 성산일출봉",
+    "category": "사진",
+    "topic": "바다",
+    "level": "보통",
+    "author": "제주영상·문화산업진흥원",
+    "year": "2023",
+    "holder": "제주영상·문화산업진흥원",
+    "source": {
+      "name": "Wikimedia Commons (제주영상·문화산업진흥원, 공공누리 제1유형)",
+      "author": "제주영상·문화산업진흥원",
+      "url": "https://commons.wikimedia.org/wiki/File:Udo,_Jeju_Province,_South_Korea_05.jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Udo%2C_Jeju_Province%2C_South_Korea_05.jpg/3840px-Udo%2C_Jeju_Province%2C_South_Korea_05.jpg"
+    ],
+    "credit": "제주 우도와 성산일출봉, 제주영상·문화산업진흥원, 2023 — 제주영상·문화산업진흥원 / 이미지: Wikimedia Commons (제주영상·문화산업진흥원, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
   },
   {
     "key": "tulip-field",
@@ -1478,6 +1731,98 @@
     "credit": "튤립 꽃다발, 앨리스 아흐터호프, 2016 — 위키미디어 공용(Unsplash) / 이미지: Wikimedia Commons (Unsplash), CC0 1.0"
   },
   {
+    "key": "canola-flowers",
+    "title": "노란 유채꽃 들판",
+    "category": "사진",
+    "topic": "꽃·식물",
+    "level": "보통",
+    "author": "경상남도 고성군",
+    "year": "2024",
+    "holder": "경상남도 고성군",
+    "source": {
+      "name": "Wikimedia Commons (경상남도 고성군, 공공누리 제1유형)",
+      "author": "경상남도 고성군",
+      "url": "https://commons.wikimedia.org/wiki/File:Goseong_Museum_and_Rape_Flower_(Goseong,_Gyeongnam,_South_Korea).jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Goseong_Museum_and_Rape_Flower_%28Goseong%2C_Gyeongnam%2C_South_Korea%29.jpg/3840px-Goseong_Museum_and_Rape_Flower_%28Goseong%2C_Gyeongnam%2C_South_Korea%29.jpg"
+    ],
+    "credit": "노란 유채꽃 들판, 경상남도 고성군, 2024 — 경상남도 고성군 / 이미지: Wikimedia Commons (경상남도 고성군, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "plum-blossom",
+    "title": "하얀 매화",
+    "category": "사진",
+    "topic": "꽃·식물",
+    "level": "보통",
+    "author": "국립생태원",
+    "year": "2017",
+    "holder": "국립생태원",
+    "source": {
+      "name": "Wikimedia Commons (국립생태원, 공공누리 제1유형)",
+      "author": "국립생태원",
+      "url": "https://commons.wikimedia.org/wiki/File:Prunus_mume_6.jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/9/9b/Prunus_mume_6.jpg"
+    ],
+    "credit": "하얀 매화, 국립생태원, 2017 — 국립생태원 / 이미지: Wikimedia Commons (국립생태원, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "dandelion-meadow",
+    "title": "민들레 솜털 들판",
+    "category": "사진",
+    "topic": "꽃·식물",
+    "level": "보통",
+    "author": "마르틴 에렌스베르거",
+    "year": "2018",
+    "holder": "개인 촬영 (500px)",
+    "source": {
+      "name": "Wikimedia Commons (500px)",
+      "author": "Martin Ehrensberger",
+      "url": "https://commons.wikimedia.org/wiki/File:Dandelions_%28259502879%29.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/8/89/Dandelions_%28259502879%29.jpg"
+    ],
+    "credit": "민들레 솜털 들판, 마르틴 에렌스베르거, 2018 — 개인 촬영 (500px) / 이미지: Wikimedia Commons (500px), CC0 1.0"
+  },
+  {
+    "key": "vegetable-market",
+    "title": "채소 가게",
+    "category": "사진",
+    "topic": "꽃·식물",
+    "level": "보통",
+    "author": "ulleo (Pixabay)",
+    "year": "2018",
+    "holder": "Pixabay",
+    "source": {
+      "name": "Wikimedia Commons (Pixabay)",
+      "author": "ulleo",
+      "url": "https://commons.wikimedia.org/wiki/File:Market-3860952_1920.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/2/2c/Market-3860952_1920.jpg"
+    ],
+    "credit": "채소 가게, ulleo (Pixabay), 2018 — Pixabay / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
+  },
+  {
     "key": "steam-locomotive-119",
     "title": "빨간 증기기관차 119호와 주피터호",
     "category": "사진",
@@ -1568,6 +1913,29 @@
       "https://upload.wikimedia.org/wikipedia/commons/e/e2/CV-990_%28NASA-712%29_Galileo_II_aircraft_in_flight_over_the_San_Francisco%27s_Golden_Gate_Bridge_%28ARC-1969-AC76-0060-43%29.jpg"
     ],
     "credit": "금문교 위를 나는 연구용 비행기, 미국 항공우주국(NASA) 에임스 연구센터, 1975 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인"
+  },
+  {
+    "key": "tin-toy-train",
+    "title": "옛날 양철 장난감 기차",
+    "category": "사진",
+    "topic": "탈것",
+    "level": "보통",
+    "author": "AlfvanBeem (커먼즈 사용자)",
+    "year": "2012",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "AlfvanBeem",
+      "url": "https://commons.wikimedia.org/wiki/File:Made_in_Germany_Tin_clockwork_toy_train_from_around_1900_pic-018.JPG"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Made_in_Germany_Tin_clockwork_toy_train_from_around_1900_pic-018.JPG/3840px-Made_in_Germany_Tin_clockwork_toy_train_from_around_1900_pic-018.JPG"
+    ],
+    "credit": "옛날 양철 장난감 기차, AlfvanBeem (커먼즈 사용자), 2012 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
   },
   {
     "key": "prismatic-spring",
@@ -1738,6 +2106,52 @@
     "credit": "레이니어산 들꽃 길, 미국 국립공원관리청(NPS), 2023 — 미국 레이니어산 국립공원 / 이미지: Wikimedia Commons (Mount Rainier NPS Flickr), 퍼블릭 도메인"
   },
   {
+    "key": "baengnokdam-winter",
+    "title": "눈 덮인 한라산 백록담",
+    "category": "사진",
+    "topic": "자연",
+    "level": "보통",
+    "author": "제주콘텐츠진흥원",
+    "year": "2023",
+    "holder": "제주콘텐츠진흥원",
+    "source": {
+      "name": "Wikimedia Commons (제주콘텐츠진흥원, 공공누리 제1유형)",
+      "author": "제주콘텐츠진흥원",
+      "url": "https://commons.wikimedia.org/wiki/File:Winter_Baengnokdam.jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Winter_Baengnokdam.jpg/3840px-Winter_Baengnokdam.jpg"
+    ],
+    "credit": "눈 덮인 한라산 백록담, 제주콘텐츠진흥원, 2023 — 제주콘텐츠진흥원 / 이미지: Wikimedia Commons (제주콘텐츠진흥원, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "gacheon-daraengi",
+    "title": "남해 가천 다랭이마을",
+    "category": "사진",
+    "topic": "자연",
+    "level": "보통",
+    "author": "Choi2451",
+    "year": "2019",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Choi2451",
+      "url": "https://commons.wikimedia.org/wiki/File:Gacheon_Daraengi_Village,_Namhae_on_September_1st,_2019.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Gacheon_Daraengi_Village%2C_Namhae_on_September_1st%2C_2019.jpg/3840px-Gacheon_Daraengi_Village%2C_Namhae_on_September_1st%2C_2019.jpg"
+    ],
+    "credit": "남해 가천 다랭이마을, Choi2451, 2019 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
     "key": "acadia-autumn",
     "title": "아카디아 호숫가 가을",
     "category": "사진",
@@ -1759,6 +2173,243 @@
       "https://upload.wikimedia.org/wikipedia/commons/4/41/Fall_Colors_at_Acadia_National_Park_%285915f412-1dd8-b71b-0ba1-c782a1788931%29.JPG"
     ],
     "credit": "아카디아 호숫가 가을, 미국 국립공원관리청(NPS), 2007 — 미국 아카디아 국립공원 / 이미지: Wikimedia Commons (NPS), 퍼블릭 도메인"
+  },
+  {
+    "key": "daedunsan-bridge",
+    "title": "대둔산 구름다리와 가을 단풍",
+    "category": "사진",
+    "topic": "계절",
+    "level": "보통",
+    "author": "한국관광공사",
+    "year": "2020",
+    "holder": "한국관광공사",
+    "source": {
+      "name": "Wikimedia Commons (한국관광공사, 공공누리 제1유형)",
+      "author": "한국관광공사",
+      "url": "https://commons.wikimedia.org/wiki/File:Daedunsan_Cable_Car,_in_Wanju,_North_Gyeongsang_Province,_South_Korea_01.jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Daedunsan_Cable_Car%2C_in_Wanju%2C_North_Gyeongsang_Province%2C_South_Korea_01.jpg/3840px-Daedunsan_Cable_Car%2C_in_Wanju%2C_North_Gyeongsang_Province%2C_South_Korea_01.jpg"
+    ],
+    "credit": "대둔산 구름다리와 가을 단풍, 한국관광공사, 2020 — 한국관광공사 / 이미지: Wikimedia Commons (한국관광공사, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "buyongjeong-snow",
+    "title": "눈 내린 창덕궁 부용정",
+    "category": "사진",
+    "topic": "계절",
+    "level": "보통",
+    "author": "문화재청(국가유산청)",
+    "year": "2012",
+    "holder": "문화재청(국가유산청)",
+    "source": {
+      "name": "Wikimedia Commons (문화재청(국가유산청), 공공누리 제1유형)",
+      "author": "문화재청(국가유산청)",
+      "url": "https://commons.wikimedia.org/wiki/File:%EC%B0%BD%EB%8D%95%EA%B6%81_%EB%B6%80%EC%9A%A9%EC%A0%95_%EC%84%A4%EA%B2%BD_(2012).jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/%EC%B0%BD%EB%8D%95%EA%B6%81_%EB%B6%80%EC%9A%A9%EC%A0%95_%EC%84%A4%EA%B2%BD_%282012%29.jpg/3840px-%EC%B0%BD%EB%8D%95%EA%B6%81_%EB%B6%80%EC%9A%A9%EC%A0%95_%EC%84%A4%EA%B2%BD_%282012%29.jpg"
+    ],
+    "credit": "눈 내린 창덕궁 부용정, 문화재청(국가유산청), 2012 — 문화재청(국가유산청) / 이미지: Wikimedia Commons (문화재청(국가유산청), 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "greenhouse-autumn",
+    "title": "가을의 창경궁 대온실",
+    "category": "사진",
+    "topic": "계절",
+    "level": "보통",
+    "author": "문화재청(국가유산청)",
+    "year": "2012",
+    "holder": "문화재청(국가유산청)",
+    "source": {
+      "name": "Wikimedia Commons (문화재청(국가유산청), 공공누리 제1유형)",
+      "author": "문화재청(국가유산청)",
+      "url": "https://commons.wikimedia.org/wiki/File:%EC%B0%BD%EA%B2%BD%EA%B6%81_%EB%8C%80%EC%98%A8%EC%8B%A4_%EA%B0%80%EC%9D%84_%EC%A0%84%EA%B2%BD_(2012).jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/%EC%B0%BD%EA%B2%BD%EA%B6%81_%EB%8C%80%EC%98%A8%EC%8B%A4_%EA%B0%80%EC%9D%84_%EC%A0%84%EA%B2%BD_%282012%29.jpg/3840px-%EC%B0%BD%EA%B2%BD%EA%B6%81_%EB%8C%80%EC%98%A8%EC%8B%A4_%EA%B0%80%EC%9D%84_%EC%A0%84%EA%B2%BD_%282012%29.jpg"
+    ],
+    "credit": "가을의 창경궁 대온실, 문화재청(국가유산청), 2012 — 문화재청(국가유산청) / 이미지: Wikimedia Commons (문화재청(국가유산청), 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "gyeonghoeru-cherry",
+    "title": "벚꽃 핀 경복궁 경회루",
+    "category": "사진",
+    "topic": "계절",
+    "level": "보통",
+    "author": "Kim Dae Jeung(Pixabay)",
+    "year": "2014",
+    "holder": "위키미디어 공용(Pixabay)",
+    "source": {
+      "name": "Wikimedia Commons (Pixabay)",
+      "author": "Kim Dae Jeung(Pixabay)",
+      "url": "https://commons.wikimedia.org/wiki/File:Gyeonghoeru_1.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Gyeonghoeru_1.jpg/3840px-Gyeonghoeru_1.jpg"
+    ],
+    "credit": "벚꽃 핀 경복궁 경회루, Kim Dae Jeung(Pixabay), 2014 — 위키미디어 공용(Pixabay) / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
+  },
+  {
+    "key": "pink-cherry-blossom",
+    "title": "분홍 벚꽃 가지",
+    "category": "사진",
+    "topic": "계절",
+    "level": "보통",
+    "author": "Syced (커먼즈 사용자)",
+    "year": "2024",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Syced",
+      "url": "https://commons.wikimedia.org/wiki/File:Cherry_blossom_in_Yoyogi_2.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/b/b9/Cherry_blossom_in_Yoyogi_2.jpg"
+    ],
+    "credit": "분홍 벚꽃 가지, Syced (커먼즈 사용자), 2024 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "sandcastle-bermuda",
+    "title": "바닷가 모래성",
+    "category": "사진",
+    "topic": "계절",
+    "level": "보통",
+    "author": "Tomwsulcer (커먼즈 사용자)",
+    "year": "2016",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Tomwsulcer",
+      "url": "https://commons.wikimedia.org/wiki/File:Bermuda_%28UK%29_image_number_106_sandcastle_Horseshoe_Bay_beach_spires_ocean_clouds.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/7/7e/Bermuda_%28UK%29_image_number_106_sandcastle_Horseshoe_Bay_beach_spires_ocean_clouds.jpg"
+    ],
+    "credit": "바닷가 모래성, Tomwsulcer (커먼즈 사용자), 2016 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "beach-toy-buckets",
+    "title": "알록달록 모래놀이 양동이",
+    "category": "사진",
+    "topic": "계절",
+    "level": "보통",
+    "author": "Shwim WIAIOP 226 (커먼즈 사용자)",
+    "year": "2025",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Shwim WIAIOP 226",
+      "url": "https://commons.wikimedia.org/wiki/File:SZ_%E6%B7%B1%E5%9C%B3_Shenzhen_%E9%B9%BD%E7%94%B0%E5%8D%80_Yantian_%E5%A4%A7%E6%A2%85%E6%B2%99_Dameisha_morning_1146am_February_2025_R12S_217_beach_toys_tools.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/SZ_%E6%B7%B1%E5%9C%B3_Shenzhen_%E9%B9%BD%E7%94%B0%E5%8D%80_Yantian_%E5%A4%A7%E6%A2%85%E6%B2%99_Dameisha_morning_1146am_February_2025_R12S_217_beach_toys_tools.jpg/3840px-SZ_%E6%B7%B1%E5%9C%B3_Shenzhen_%E9%B9%BD%E7%94%B0%E5%8D%80_Yantian_%E5%A4%A7%E6%A2%85%E6%B2%99_Dameisha_morning_1146am_February_2025_R12S_217_beach_toys_tools.jpg"
+    ],
+    "crop": [
+      0,
+      0,
+      1,
+      0.92
+    ],
+    "note": "아래쪽 촬영 날짜 글자를 잘라 냄",
+    "credit": "알록달록 모래놀이 양동이, Shwim WIAIOP 226 (커먼즈 사용자), 2025 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "pumpkin-field",
+    "title": "들판의 주황 호박들",
+    "category": "사진",
+    "topic": "계절",
+    "level": "보통",
+    "author": "보니 키틀",
+    "year": "2017",
+    "holder": "개인 촬영 (Unsplash)",
+    "source": {
+      "name": "Wikimedia Commons (Unsplash)",
+      "author": "Bonnie Kittle bonniekdesign",
+      "url": "https://commons.wikimedia.org/wiki/File:Pumpkin_Picking_%28Unsplash%29.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Pumpkin_Picking_%28Unsplash%29.jpg/3840px-Pumpkin_Picking_%28Unsplash%29.jpg"
+    ],
+    "credit": "들판의 주황 호박들, 보니 키틀, 2017 — 개인 촬영 (Unsplash) / 이미지: Wikimedia Commons (Unsplash), CC0 1.0"
+  },
+  {
+    "key": "red-house-snow",
+    "title": "눈 덮인 빨간 집",
+    "category": "사진",
+    "topic": "계절",
+    "level": "보통",
+    "author": "Wilfredor (커먼즈 사용자)",
+    "year": "2021",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Wilfredor",
+      "url": "https://commons.wikimedia.org/wiki/File:Red_house_in_snow_near_Quebec_City.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Red_house_in_snow_near_Quebec_City.jpg/3840px-Red_house_in_snow_near_Quebec_City.jpg"
+    ],
+    "credit": "눈 덮인 빨간 집, Wilfredor (커먼즈 사용자), 2021 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "snowman-figure",
+    "title": "눈밭의 꼬마 눈사람",
+    "category": "사진",
+    "topic": "계절",
+    "level": "보통",
+    "author": "작가 미상 (Pixabay)",
+    "year": "2016",
+    "holder": "Pixabay",
+    "source": {
+      "name": "Wikimedia Commons (Pixabay)",
+      "author": "Public Domain (Pixabay)",
+      "url": "https://commons.wikimedia.org/wiki/File:Snow-man-1882635_1920.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Snow-man-1882635_1920.jpg/3840px-Snow-man-1882635_1920.jpg"
+    ],
+    "credit": "눈밭의 꼬마 눈사람, 작가 미상 (Pixabay), 2016 — Pixabay / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
   },
   {
     "key": "kite-day",
@@ -1851,6 +2502,197 @@
       "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Macarons-3848810.jpg/3840px-Macarons-3848810.jpg"
     ],
     "credit": "그릇에 담긴 마카롱, emigrerengrancanaria(Pixabay), 2018 — 위키미디어 공용(Pixabay) / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
+  },
+  {
+    "key": "colorful-playground",
+    "title": "알록달록 놀이터",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "소니아 세비야",
+    "year": "2013",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Sonia Sevilla",
+      "url": "https://commons.wikimedia.org/wiki/File:Cental_Public_Park_of_Nishapur%28National_Park%29_-_Playground01.JPG"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/9/97/Cental_Public_Park_of_Nishapur%28National_Park%29_-_Playground01.JPG"
+    ],
+    "credit": "알록달록 놀이터, 소니아 세비야, 2013 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "dinosaur-slide",
+    "title": "공룡 미끄럼틀",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "Andykatib (커먼즈 사용자)",
+    "year": "2026",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Andykatib",
+      "url": "https://commons.wikimedia.org/wiki/File:Marlow_Park_dinosaur_slide_staircase%2C_22_Jun_2026.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Marlow_Park_dinosaur_slide_staircase%2C_22_Jun_2026.jpg/3840px-Marlow_Park_dinosaur_slide_staircase%2C_22_Jun_2026.jpg"
+    ],
+    "crop": [
+      0.05,
+      0.2,
+      0.95,
+      1
+    ],
+    "note": "위쪽 빈 하늘을 잘라 냄",
+    "credit": "공룡 미끄럼틀, Andykatib (커먼즈 사용자), 2026 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "kiddie-roller-coaster",
+    "title": "어린이 롤러코스터",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "애나 프로디시악",
+    "year": "2012",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Anna Frodesiak",
+      "url": "https://commons.wikimedia.org/wiki/File:Baishamen_Park_-_amusement_park_-_roller_coaster%2C_kiddie_-_01.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Baishamen_Park_-_amusement_park_-_roller_coaster%2C_kiddie_-_01.jpg/3840px-Baishamen_Park_-_amusement_park_-_roller_coaster%2C_kiddie_-_01.jpg"
+    ],
+    "credit": "어린이 롤러코스터, 애나 프로디시악, 2012 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "pizza-close",
+    "title": "치즈 듬뿍 피자",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "셀 리스보아",
+    "year": "2016",
+    "holder": "개인 촬영 (Unsplash)",
+    "source": {
+      "name": "Wikimedia Commons (Unsplash)",
+      "author": "Cel Lisboa cellisboa",
+      "url": "https://commons.wikimedia.org/wiki/File:Cel_Lisboa_2016_%28Unsplash%29.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/f/f6/Cel_Lisboa_2016_%28Unsplash%29.jpg"
+    ],
+    "credit": "치즈 듬뿍 피자, 셀 리스보아, 2016 — 개인 촬영 (Unsplash) / 이미지: Wikimedia Commons (Unsplash), CC0 1.0"
+  },
+  {
+    "key": "candy-cookies",
+    "title": "젤리 올린 과자",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "Pixel.la",
+    "year": "2014",
+    "holder": "Pixel.la 무료 사진",
+    "source": {
+      "name": "Wikimedia Commons (Pixel.la)",
+      "author": "www.Pixel.la Free Stock Photos",
+      "url": "https://commons.wikimedia.org/wiki/File:Candy-biscuits-cookies-baking_%2823958714339%29.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/6/6a/Candy-biscuits-cookies-baking_%2823958714339%29.jpg"
+    ],
+    "credit": "젤리 올린 과자, Pixel.la, 2014 — Pixel.la 무료 사진 / 이미지: Wikimedia Commons (Pixel.la), CC0 1.0"
+  },
+  {
+    "key": "train-bento",
+    "title": "기차 도시락",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "Shellparakeet (커먼즈 사용자)",
+    "year": "1999",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Shellparakeet",
+      "url": "https://commons.wikimedia.org/wiki/File:0_series_commemorative_lunch_box_%282%29.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/9/96/0_series_commemorative_lunch_box_%282%29.jpg"
+    ],
+    "credit": "기차 도시락, Shellparakeet (커먼즈 사용자), 1999 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "hove-library",
+    "title": "둥근 창의 도서관 책장",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "앤디 리",
+    "year": "2025",
+    "holder": "개인 촬영 (영국 호브 도서관)",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Andy Li",
+      "url": "https://commons.wikimedia.org/wiki/File:Bookshelves_in_Hove_Library_2025-08-20.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Bookshelves_in_Hove_Library_2025-08-20.jpg/3840px-Bookshelves_in_Hove_Library_2025-08-20.jpg"
+    ],
+    "credit": "둥근 창의 도서관 책장, 앤디 리, 2025 — 개인 촬영 (영국 호브 도서관) / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "broken-crayons",
+    "title": "부러진 크레파스 조각",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "엘리사 카펠 본",
+    "year": "2015",
+    "holder": "개인 촬영 (500px)",
+    "source": {
+      "name": "Wikimedia Commons (500px)",
+      "author": "Elissa Capelle Vaughn",
+      "url": "https://commons.wikimedia.org/wiki/File:Broken_Crayons_%28221013349%29.jpeg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/a/a9/Broken_Crayons_%28221013349%29.jpeg"
+    ],
+    "credit": "부러진 크레파스 조각, 엘리사 카펠 본, 2015 — 개인 촬영 (500px) / 이미지: Wikimedia Commons (500px), CC0 1.0"
   },
   {
     "key": "blue-marble",
@@ -2339,6 +3181,144 @@
     "credit": "산토리니 이아 마을, 머스탱 조, 2016 — 그리스 산토리니 / 이미지: Wikimedia Commons (Mustang Joe 기증), CC0 1.0"
   },
   {
+    "key": "gwanghwamun-woldae",
+    "title": "광화문과 북악산",
+    "category": "사진",
+    "topic": "명소·건축",
+    "level": "보통",
+    "author": "서울관광재단(서울관광아카이브)",
+    "year": "2023",
+    "holder": "서울관광재단",
+    "source": {
+      "name": "Wikimedia Commons (서울관광재단, 공공누리 제1유형)",
+      "author": "서울관광재단(서울관광아카이브)",
+      "url": "https://commons.wikimedia.org/wiki/File:%EA%B4%91%ED%99%94%EB%AC%B8_%EC%9B%94%EB%8C%80.jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/%EA%B4%91%ED%99%94%EB%AC%B8_%EC%9B%94%EB%8C%80.jpg/3840px-%EA%B4%91%ED%99%94%EB%AC%B8_%EC%9B%94%EB%8C%80.jpg"
+    ],
+    "credit": "광화문과 북악산, 서울관광재단(서울관광아카이브), 2023 — 서울관광재단 / 이미지: Wikimedia Commons (서울관광재단, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "anapji-sunset",
+    "title": "노을 지는 경주 동궁과 월지",
+    "category": "사진",
+    "topic": "명소·건축",
+    "level": "보통",
+    "author": "hyungname(Pixabay)",
+    "year": "2018",
+    "holder": "위키미디어 공용(Pixabay)",
+    "source": {
+      "name": "Wikimedia Commons (Pixabay)",
+      "author": "hyungname(Pixabay)",
+      "url": "https://commons.wikimedia.org/wiki/File:Anapji_pond,_Korea.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Anapji_pond%2C_Korea.jpg/3840px-Anapji_pond%2C_Korea.jpg"
+    ],
+    "credit": "노을 지는 경주 동궁과 월지, hyungname(Pixabay), 2018 — 위키미디어 공용(Pixabay) / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
+  },
+  {
+    "key": "hahoe-village",
+    "title": "안동 하회마을",
+    "category": "사진",
+    "topic": "전통",
+    "level": "보통",
+    "author": "베르나르 가뇽",
+    "year": "2022",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "베르나르 가뇽",
+      "url": "https://commons.wikimedia.org/wiki/File:Hahoe_Folk_Village_04.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Hahoe_Folk_Village_04.jpg/3840px-Hahoe_Folk_Village_04.jpg"
+    ],
+    "credit": "안동 하회마을, 베르나르 가뇽, 2022 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "tongdosa-lanterns",
+    "title": "통도사의 알록달록 연등 길",
+    "category": "사진",
+    "topic": "전통",
+    "level": "보통",
+    "author": "베르나르 가뇽",
+    "year": "2022",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "베르나르 가뇽",
+      "url": "https://commons.wikimedia.org/wiki/File:Paper_lanterns_at_Tongdosa_Temple_01.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Paper_lanterns_at_Tongdosa_Temple_01.jpg/3840px-Paper_lanterns_at_Tongdosa_Temple_01.jpg"
+    ],
+    "credit": "통도사의 알록달록 연등 길, 베르나르 가뇽, 2022 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "dol-hareubang",
+    "title": "줄지어 선 제주 돌하르방",
+    "category": "사진",
+    "topic": "전통",
+    "level": "보통",
+    "author": "베르나르 가뇽",
+    "year": "2022",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "베르나르 가뇽",
+      "url": "https://commons.wikimedia.org/wiki/File:Dol_Hareubangs_in_Jeju_Stone_Park_01.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Dol_Hareubangs_in_Jeju_Stone_Park_01.jpg/3840px-Dol_Hareubangs_in_Jeju_Stone_Park_01.jpg"
+    ],
+    "credit": "줄지어 선 제주 돌하르방, 베르나르 가뇽, 2022 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "jangdokdae",
+    "title": "낙안읍성 장독대",
+    "category": "사진",
+    "topic": "전통",
+    "level": "보통",
+    "author": "베르나르 가뇽",
+    "year": "2022",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "베르나르 가뇽",
+      "url": "https://commons.wikimedia.org/wiki/File:Jangdokdae_in_Naganeupseong_02.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Jangdokdae_in_Naganeupseong_02.jpg/3840px-Jangdokdae_in_Naganeupseong_02.jpg"
+    ],
+    "credit": "낙안읍성 장독대, 베르나르 가뇽, 2022 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
     "key": "elephant-herd",
     "title": "강가의 코끼리 가족",
     "category": "사진",
@@ -2408,6 +3388,75 @@
     "credit": "바위 위의 우는토끼, 미국 국립공원관리청 알래스카 지역, 2015 — 미국 국립공원관리청(NPS) 알래스카 지역 / 이미지: Wikimedia Commons (NPS Flickr), 퍼블릭 도메인"
   },
   {
+    "key": "leopard-cat",
+    "title": "물가의 삵",
+    "category": "사진",
+    "topic": "동물",
+    "level": "어려움",
+    "author": "김현태",
+    "year": "연도 미상",
+    "holder": "국립생물자원관",
+    "source": {
+      "name": "Wikimedia Commons (국립생물자원관, 공공누리 제1유형)",
+      "author": "김현태",
+      "url": "https://commons.wikimedia.org/wiki/File:Leopard_cat_in_South_Korea_(winter_furcoat).jpeg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/e/e3/Leopard_cat_in_South_Korea_%28winter_furcoat%29.jpeg"
+    ],
+    "credit": "물가의 삵, 김현태, 연도 미상 — 국립생물자원관 / 이미지: Wikimedia Commons (국립생물자원관, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "swallowtail-rhododendron",
+    "title": "철쭉 꽃의 호랑나비",
+    "category": "사진",
+    "topic": "동물",
+    "level": "어려움",
+    "author": "피터 쿠퍼 주니어",
+    "year": "2025",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Peter Cooper Jr.",
+      "url": "https://commons.wikimedia.org/wiki/File:Eastern_tiger_swallowtail_butterfly_on_rhododendron_flowers%2C_May_2025.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Eastern_tiger_swallowtail_butterfly_on_rhododendron_flowers%2C_May_2025.jpg/3840px-Eastern_tiger_swallowtail_butterfly_on_rhododendron_flowers%2C_May_2025.jpg"
+    ],
+    "credit": "철쭉 꽃의 호랑나비, 피터 쿠퍼 주니어, 2025 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "weaver-ants",
+    "title": "줄지어 가는 베짜기개미",
+    "category": "사진",
+    "topic": "동물",
+    "level": "어려움",
+    "author": "DKDEVS (커먼즈 사용자)",
+    "year": "2022",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "DKDEVS",
+      "url": "https://commons.wikimedia.org/wiki/File:Ants_carrying_food.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/3/3e/Ants_carrying_food.jpg"
+    ],
+    "credit": "줄지어 가는 베짜기개미, DKDEVS (커먼즈 사용자), 2022 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
     "key": "coral-reef",
     "title": "산호초와 물고기",
     "category": "사진",
@@ -2454,6 +3503,29 @@
     "credit": "산호초 물고기 떼, 미국 해양대기청 국립해양보호구역, 2015 — 미국 해양대기청(NOAA) 국립해양보호구역 아메리칸사모아 / 이미지: Wikimedia Commons (NOAA 국립해양보호구역 Flickr), 퍼블릭 도메인"
   },
   {
+    "key": "mukho-port",
+    "title": "동해 묵호항",
+    "category": "사진",
+    "topic": "바다",
+    "level": "어려움",
+    "author": "한국관광공사(조윤권)",
+    "year": "2025",
+    "holder": "한국관광공사",
+    "source": {
+      "name": "Wikimedia Commons (한국관광공사, 공공누리 제1유형)",
+      "author": "한국관광공사(조윤권)",
+      "url": "https://commons.wikimedia.org/wiki/File:Mukhohang_Port.jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Mukhohang_Port.jpg/3840px-Mukhohang_Port.jpg"
+    ],
+    "credit": "동해 묵호항, 한국관광공사(조윤권), 2025 — 한국관광공사 / 이미지: Wikimedia Commons (한국관광공사, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
     "key": "watermelons",
     "title": "수박 더미",
     "category": "사진",
@@ -2475,6 +3547,29 @@
       "https://upload.wikimedia.org/wikipedia/commons/2/2f/National_Watermelon.jpg"
     ],
     "credit": "수박 더미, Kuwanishbek, 2024 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "seorak-cable-car",
+    "title": "설악산 케이블카",
+    "category": "사진",
+    "topic": "탈것",
+    "level": "어려움",
+    "author": "베르나르 가뇽",
+    "year": "2022",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "베르나르 가뇽",
+      "url": "https://commons.wikimedia.org/wiki/File:Seoraksan_Cable_Car_04.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seoraksan_Cable_Car_04.jpg/3840px-Seoraksan_Cable_Car_04.jpg"
+    ],
+    "credit": "설악산 케이블카, 베르나르 가뇽, 2022 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
   },
   {
     "key": "lake-mcdonald-pebbles",
@@ -2523,6 +3618,75 @@
     "credit": "킬라우에아 화산의 용암 분수, 미국 지질조사국(USGS), 2018 — 미국 지질조사국 하와이 화산관측소 / 이미지: Wikimedia Commons (USGS), 퍼블릭 도메인"
   },
   {
+    "key": "gochang-mudflat",
+    "title": "고창 갯벌",
+    "category": "사진",
+    "topic": "자연",
+    "level": "어려움",
+    "author": "문화재청(국가유산청)",
+    "year": "2022",
+    "holder": "문화재청(국가유산청)",
+    "source": {
+      "name": "Wikimedia Commons (문화재청(국가유산청), 공공누리 제1유형)",
+      "author": "문화재청(국가유산청)",
+      "url": "https://commons.wikimedia.org/wiki/File:Gochang_tidal_flat_02.jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Gochang_tidal_flat_02.jpg/3840px-Gochang_tidal_flat_02.jpg"
+    ],
+    "credit": "고창 갯벌, 문화재청(국가유산청), 2022 — 문화재청(국가유산청) / 이미지: Wikimedia Commons (문화재청(국가유산청), 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "suncheon-bay",
+    "title": "노을 지는 순천만",
+    "category": "사진",
+    "topic": "자연",
+    "level": "어려움",
+    "author": "문화재청(국가유산청)",
+    "year": "2016",
+    "holder": "문화재청(국가유산청)",
+    "source": {
+      "name": "Wikimedia Commons (문화재청(국가유산청), 공공누리 제1유형)",
+      "author": "문화재청(국가유산청)",
+      "url": "https://commons.wikimedia.org/wiki/File:%EC%88%9C%EC%B2%9C%EB%A7%8C_2016%EB%85%84_%EC%B4%AC%EC%98%81(%EC%B6%9C%EC%B2%98_%EB%AC%B8%ED%99%94%EC%9E%AC%EC%B2%AD_%EB%8C%80%EB%B3%80%EC%9D%B8%EC%8B%A4).jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/%EC%88%9C%EC%B2%9C%EB%A7%8C_2016%EB%85%84_%EC%B4%AC%EC%98%81%28%EC%B6%9C%EC%B2%98_%EB%AC%B8%ED%99%94%EC%9E%AC%EC%B2%AD_%EB%8C%80%EB%B3%80%EC%9D%B8%EC%8B%A4%29.jpg/3840px-%EC%88%9C%EC%B2%9C%EB%A7%8C_2016%EB%85%84_%EC%B4%AC%EC%98%81%28%EC%B6%9C%EC%B2%98_%EB%AC%B8%ED%99%94%EC%9E%AC%EC%B2%AD_%EB%8C%80%EB%B3%80%EC%9D%B8%EC%8B%A4%29.jpg"
+    ],
+    "credit": "노을 지는 순천만, 문화재청(국가유산청), 2016 — 문화재청(국가유산청) / 이미지: Wikimedia Commons (문화재청(국가유산청), 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "boseong-tea",
+    "title": "보성 녹차밭",
+    "category": "사진",
+    "topic": "자연",
+    "level": "어려움",
+    "author": "lumoplank",
+    "year": "2024",
+    "holder": "위키미디어 공용(플리커)",
+    "source": {
+      "name": "Wikimedia Commons (플리커)",
+      "author": "lumoplank",
+      "url": "https://commons.wikimedia.org/wiki/File:Boseong_-_Boseong3018.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Boseong_-_Boseong3018.jpg/3840px-Boseong_-_Boseong3018.jpg"
+    ],
+    "credit": "보성 녹차밭, lumoplank, 2024 — 위키미디어 공용(플리커) / 이미지: Wikimedia Commons (플리커), CC0 1.0"
+  },
+  {
     "key": "zion-autumn",
     "title": "자이언 국립공원의 단풍",
     "category": "사진",
@@ -2544,6 +3708,174 @@
       "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Autumn_on_the_East_Side_%286255322074%29.jpg/3840px-Autumn_on_the_East_Side_%286255322074%29.jpg"
     ],
     "credit": "자이언 국립공원의 단풍, 미국 국립공원관리청(NPS), 2011 — 미국 자이언 국립공원 / 이미지: Wikimedia Commons (Zion NPS Flickr), 퍼블릭 도메인"
+  },
+  {
+    "key": "gotgam-drying",
+    "title": "주렁주렁 곶감 말리기",
+    "category": "사진",
+    "topic": "계절",
+    "level": "어려움",
+    "author": "zzangedit(Pixabay)",
+    "year": "2016",
+    "holder": "위키미디어 공용(Pixabay)",
+    "source": {
+      "name": "Wikimedia Commons (Pixabay)",
+      "author": "zzangedit(Pixabay)",
+      "url": "https://commons.wikimedia.org/wiki/File:Gotgam_dying_in_Hahoe_Village.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Gotgam_dying_in_Hahoe_Village.jpg/3840px-Gotgam_dying_in_Hahoe_Village.jpg"
+    ],
+    "credit": "주렁주렁 곶감 말리기, zzangedit(Pixabay), 2016 — 위키미디어 공용(Pixabay) / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
+  },
+  {
+    "key": "rainbow-fields",
+    "title": "들판 위 커다란 무지개",
+    "category": "사진",
+    "topic": "계절",
+    "level": "어려움",
+    "author": "Micheal1evans (커먼즈 사용자)",
+    "year": "2025",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Micheal1evans",
+      "url": "https://commons.wikimedia.org/wiki/File:Rainbow_over_Whitchurch.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/d/d9/Rainbow_over_Whitchurch.jpg"
+    ],
+    "crop": [
+      0,
+      0.15,
+      1,
+      1
+    ],
+    "note": "위쪽 빈 하늘을 조금 잘라 냄",
+    "credit": "들판 위 커다란 무지개, Micheal1evans (커먼즈 사용자), 2025 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "maple-leaf-carpet",
+    "title": "수북이 쌓인 단풍잎",
+    "category": "사진",
+    "topic": "계절",
+    "level": "어려움",
+    "author": "Bacon9000 (커먼즈 사용자)",
+    "year": "2025",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Bacon9000",
+      "url": "https://commons.wikimedia.org/wiki/File:20251101_Autumn_Leaves.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/20251101_Autumn_Leaves.jpg/3840px-20251101_Autumn_Leaves.jpg"
+    ],
+    "credit": "수북이 쌓인 단풍잎, Bacon9000 (커먼즈 사용자), 2025 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "christmas-mini-village",
+    "title": "크리스마스 장식 마을",
+    "category": "사진",
+    "topic": "계절",
+    "level": "어려움",
+    "author": "네이선 앤더슨",
+    "year": "2016",
+    "holder": "개인 촬영 (Unsplash)",
+    "source": {
+      "name": "Wikimedia Commons (Unsplash)",
+      "author": "Nathan Anderson nathananderson",
+      "url": "https://commons.wikimedia.org/wiki/File:Christmas_holiday_model_%28Unsplash%29.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Christmas_holiday_model_%28Unsplash%29.jpg/3840px-Christmas_holiday_model_%28Unsplash%29.jpg"
+    ],
+    "credit": "크리스마스 장식 마을, 네이선 앤더슨, 2016 — 개인 촬영 (Unsplash) / 이미지: Wikimedia Commons (Unsplash), CC0 1.0"
+  },
+  {
+    "key": "ferris-wheel-tibidabo",
+    "title": "산 위의 알록달록 대관람차",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "어려움",
+    "author": "DimiTalen (커먼즈 사용자)",
+    "year": "2023",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "DimiTalen",
+      "url": "https://commons.wikimedia.org/wiki/File:Giradabo_ferris_wheel_from_atop_Talaia_del_Tibidabo%2C_Barcelona%2C_2023.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Giradabo_ferris_wheel_from_atop_Talaia_del_Tibidabo%2C_Barcelona%2C_2023.jpg/3840px-Giradabo_ferris_wheel_from_atop_Talaia_del_Tibidabo%2C_Barcelona%2C_2023.jpg"
+    ],
+    "credit": "산 위의 알록달록 대관람차, DimiTalen (커먼즈 사용자), 2023 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "toy-brick-sea",
+    "title": "장난감 블록 바다",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "어려움",
+    "author": "레온하르트 렌츠",
+    "year": "2019",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Leonhard Lenz",
+      "url": "https://commons.wikimedia.org/wiki/File:36C3_CCL_on_day_2_06.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/36C3_CCL_on_day_2_06.jpg/3840px-36C3_CCL_on_day_2_06.jpg"
+    ],
+    "credit": "장난감 블록 바다, 레온하르트 렌츠, 2019 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "juice-candy-cubes",
+    "title": "알록달록 네모 사탕",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "어려움",
+    "author": "Fumikas Sagisavas (커먼즈 사용자)",
+    "year": "2025",
+    "holder": "개인 촬영",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Fumikas Sagisavas",
+      "url": "https://commons.wikimedia.org/wiki/File:Colorful_juice_cubes_gummy_candy.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/a/a7/Colorful_juice_cubes_gummy_candy.jpg"
+    ],
+    "credit": "알록달록 네모 사탕, Fumikas Sagisavas (커먼즈 사용자), 2025 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
   },
   {
     "key": "pluto",
@@ -2745,6 +4077,82 @@
       "https://upload.wikimedia.org/wikipedia/commons/e/e9/Great_Wall_of_China%2C_China_%28Unsplash%29.jpg"
     ],
     "credit": "산을 넘는 만리장성, 디에고 히메네스, 2017 — 중국 만리장성 / 이미지: Wikimedia Commons (Unsplash, Diego Jimenez), CC0 1.0"
+  },
+  {
+    "key": "gamcheon-village",
+    "title": "부산 감천문화마을",
+    "category": "사진",
+    "topic": "명소·건축",
+    "level": "어려움",
+    "author": "베르나르 가뇽",
+    "year": "2022",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "베르나르 가뇽",
+      "url": "https://commons.wikimedia.org/wiki/File:Gamcheon_Culture_Village.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Gamcheon_Culture_Village.jpg/3840px-Gamcheon_Culture_Village.jpg"
+    ],
+    "crop": [
+      0,
+      0,
+      1,
+      0.83
+    ],
+    "note": "아래쪽 간판과 손가락을 잘라 냄",
+    "credit": "부산 감천문화마을, 베르나르 가뇽, 2022 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "jeonju-hanok",
+    "title": "전주 한옥마을 지붕",
+    "category": "사진",
+    "topic": "명소·건축",
+    "level": "어려움",
+    "author": "베르나르 가뇽",
+    "year": "2022",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "베르나르 가뇽",
+      "url": "https://commons.wikimedia.org/wiki/File:Jeonju_Hanok_Maeul_02.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Jeonju_Hanok_Maeul_02.jpg/3840px-Jeonju_Hanok_Maeul_02.jpg"
+    ],
+    "credit": "전주 한옥마을 지붕, 베르나르 가뇽, 2022 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "namwon-nongak",
+    "title": "남원 농악 놀이",
+    "category": "사진",
+    "topic": "전통",
+    "level": "어려움",
+    "author": "문화재청(국가유산청)",
+    "year": "2016",
+    "holder": "문화재청(국가유산청)",
+    "source": {
+      "name": "Wikimedia Commons (문화재청(국가유산청), 공공누리 제1유형)",
+      "author": "문화재청(국가유산청)",
+      "url": "https://commons.wikimedia.org/wiki/File:%EB%82%A8%EC%9B%90%EB%86%8D%EC%95%85.jpg"
+    },
+    "license": {
+      "name": "공공누리 제1유형 (출처표시)",
+      "url": "https://www.kogl.or.kr/info/licenseType1.do"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/%EB%82%A8%EC%9B%90%EB%86%8D%EC%95%85.jpg/3840px-%EB%82%A8%EC%9B%90%EB%86%8D%EC%95%85.jpg"
+    ],
+    "credit": "남원 농악 놀이, 문화재청(국가유산청), 2016 — 문화재청(국가유산청) / 이미지: Wikimedia Commons (문화재청(국가유산청), 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
   },
   {
     "key": "bighorn-poster",
