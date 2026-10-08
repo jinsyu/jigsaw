@@ -447,6 +447,236 @@
     ]
   },
   {
+    "key": "owlet-face",
+    "title": "아기 부엉이 얼굴",
+    "category": "사진",
+    "topic": "동물",
+    "level": "쉬움",
+    "author": "미국 어류야생동물국",
+    "year": "2021",
+    "holder": "미국 어류·야생동물관리국",
+    "source": {
+      "name": "Wikimedia Commons (USFWS)",
+      "author": "미국 어류야생동물국",
+      "url": "https://commons.wikimedia.org/wiki/File:Great_horned_owl_along_lower_Columbia_River_(51903790929).jpg"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/b/bd/Great_horned_owl_along_lower_Columbia_River_%2851903790929%29.jpg"
+    ],
+    "credit": "아기 부엉이 얼굴, 미국 어류야생동물국, 2021 — 미국 어류·야생동물관리국 / 이미지: Wikimedia Commons (USFWS), 퍼블릭 도메인"
+  },
+  {
+    "key": "baby-rabbits",
+    "title": "짚 위의 아기 토끼들",
+    "category": "사진",
+    "topic": "동물",
+    "level": "쉬움",
+    "author": "펠버",
+    "year": "2011",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "펠버",
+      "url": "https://commons.wikimedia.org/wiki/File:Deilenaar.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Deilenaar.jpg/3840px-Deilenaar.jpg"
+    ],
+    "credit": "짚 위의 아기 토끼들, 펠버, 2011 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "kitten-litter",
+    "title": "잔디밭의 아기 고양이 다섯",
+    "category": "사진",
+    "topic": "동물",
+    "level": "쉬움",
+    "author": "얀 말란더",
+    "year": "2014",
+    "holder": "위키미디어 공용(Pixabay)",
+    "source": {
+      "name": "Wikimedia Commons (Pixabay)",
+      "author": "얀 말란더",
+      "url": "https://commons.wikimedia.org/wiki/File:Litter_of_kittens.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/1/17/Litter_of_kittens.jpg"
+    ],
+    "credit": "잔디밭의 아기 고양이 다섯, 얀 말란더, 2014 — 위키미디어 공용(Pixabay) / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
+  },
+  {
+    "key": "baby-goat",
+    "title": "풀밭에 엎드린 아기 염소",
+    "category": "사진",
+    "topic": "동물",
+    "level": "쉬움",
+    "author": "윌프레도르",
+    "year": "2013",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "윌프레도르",
+      "url": "https://commons.wikimedia.org/wiki/File:Goat_baby_in_Margarita_Island.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/6/6a/Goat_baby_in_Margarita_Island.jpg"
+    ],
+    "credit": "풀밭에 엎드린 아기 염소, 윌프레도르, 2013 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "mare-foal",
+    "title": "하얀 엄마 말과 까만 망아지",
+    "category": "사진",
+    "topic": "동물",
+    "level": "쉬움",
+    "author": "프랙탈 칼레이도스코프",
+    "year": "2014",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "프랙탈 칼레이도스코프",
+      "url": "https://commons.wikimedia.org/wiki/File:Moeder_en_zoon.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/0/06/Moeder_en_zoon.jpg"
+    ],
+    "credit": "하얀 엄마 말과 까만 망아지, 프랙탈 칼레이도스코프, 2014 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "hamster-clover",
+    "title": "토끼풀 옆 햄스터",
+    "category": "사진",
+    "topic": "동물",
+    "level": "쉬움",
+    "author": "Lo",
+    "year": "2011",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Lo",
+      "url": "https://commons.wikimedia.org/wiki/File:Hamster_in_the_yard.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/9/94/Hamster_in_the_yard.jpg"
+    ],
+    "credit": "토끼풀 옆 햄스터, Lo, 2011 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "emperor-penguin-chicks",
+    "title": "아기 황제펭귄 네 마리",
+    "category": "사진",
+    "topic": "동물",
+    "level": "쉬움",
+    "author": "호세 로페스 주니어",
+    "year": "1988",
+    "holder": "미국 국방부",
+    "source": {
+      "name": "Wikimedia Commons (미 국방부)",
+      "author": "호세 로페스 주니어",
+      "url": "https://commons.wikimedia.org/wiki/File:Emperor_penguin_chicks_at_Sea_World_%C2%B7_DF-ST-90-04598.JPG"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/6/62/Emperor_penguin_chicks_at_Sea_World_%C2%B7_DF-ST-90-04598.JPG"
+    ],
+    "credit": "아기 황제펭귄 네 마리, 호세 로페스 주니어, 1988 — 미국 국방부 / 이미지: Wikimedia Commons (미 국방부), 퍼블릭 도메인"
+  },
+  {
+    "key": "golden-puppy-flowers",
+    "title": "보라 꽃밭의 골든 리트리버 강아지",
+    "category": "사진",
+    "topic": "동물",
+    "level": "쉬움",
+    "author": "RetyiRetyi",
+    "year": "2016",
+    "holder": "위키미디어 공용(Pixabay)",
+    "source": {
+      "name": "Wikimedia Commons (Pixabay)",
+      "author": "RetyiRetyi",
+      "url": "https://commons.wikimedia.org/wiki/File:Golden-retriever-1827903_1920.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/8/88/Golden-retriever-1827903_1920.jpg"
+    ],
+    "credit": "보라 꽃밭의 골든 리트리버 강아지, RetyiRetyi, 2016 — 위키미디어 공용(Pixabay) / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
+  },
+  {
+    "key": "sun-conure",
+    "title": "주황 노랑 태양앵무",
+    "category": "사진",
+    "topic": "동물",
+    "level": "쉬움",
+    "author": "Drcbrothephotographer",
+    "year": "2025",
+    "holder": "위키미디어 공용(경주 버드파크)",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Drcbrothephotographer",
+      "url": "https://commons.wikimedia.org/wiki/File:Sun_conures_in_Gyeongju_Bird_Park_(3).jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Sun_conures_in_Gyeongju_Bird_Park_%283%29.jpg/3840px-Sun_conures_in_Gyeongju_Bird_Park_%283%29.jpg"
+    ],
+    "credit": "주황 노랑 태양앵무, Drcbrothephotographer, 2025 — 위키미디어 공용(경주 버드파크) / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "elephant-calf",
+    "title": "엄마 코끼리와 아기 코끼리",
+    "category": "사진",
+    "topic": "동물",
+    "level": "쉬움",
+    "author": "Clipartqueen",
+    "year": "2013",
+    "holder": "위키미디어 공용(Pixabay)",
+    "source": {
+      "name": "Wikimedia Commons (Pixabay)",
+      "author": "Clipartqueen",
+      "url": "https://commons.wikimedia.org/wiki/File:Elephant-and-baby-elephant-in-zoo-Copenhagen.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/2/2b/Elephant-and-baby-elephant-in-zoo-Copenhagen.jpg"
+    ],
+    "credit": "엄마 코끼리와 아기 코끼리, Clipartqueen, 2013 — 위키미디어 공용(Pixabay) / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
+  },
+  {
     "key": "clownfish-trio",
     "title": "흰동가리 세 마리",
     "category": "사진",
@@ -468,6 +698,36 @@
       "https://upload.wikimedia.org/wikipedia/commons/c/c3/False_Clownfish_1a.jpg"
     ],
     "credit": "흰동가리 세 마리, Bruxton, 2024 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "dolphin-jump",
+    "title": "나란히 뛰어오르는 돌고래",
+    "category": "사진",
+    "topic": "바다",
+    "level": "쉬움",
+    "author": "페데리코 게디니",
+    "year": "2015",
+    "holder": "위키미디어 공용(Pixabay)",
+    "source": {
+      "name": "Wikimedia Commons (Pixabay)",
+      "author": "페데리코 게디니",
+      "url": "https://commons.wikimedia.org/wiki/File:Dolphins-1170342.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/d/d6/Dolphins-1170342.jpg"
+    ],
+    "crop": [
+      0,
+      0,
+      1,
+      0.7
+    ],
+    "note": "아래쪽 보트와 사람을 잘라 냄",
+    "credit": "나란히 뛰어오르는 돌고래, 페데리코 게디니, 2015 — 위키미디어 공용(Pixabay) / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
   },
   {
     "key": "fruit-basket",
@@ -629,6 +889,121 @@
       "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/2019_Iowa_Tractor_Ride_with_Secretary_Perdue_%2848118905002%29.jpg/3840px-2019_Iowa_Tractor_Ride_with_Secretary_Perdue_%2848118905002%29.jpg"
     ],
     "credit": "빨간 트랙터, 미국 농무부(USDA), 2019 — 미국 농무부(USDA) / 이미지: Wikimedia Commons (미국 농무부), 퍼블릭 도메인"
+  },
+  {
+    "key": "green-double-decker",
+    "title": "초록색 2층 버스",
+    "category": "사진",
+    "topic": "탈것",
+    "level": "쉬움",
+    "author": "Mertbiol",
+    "year": "2025",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Mertbiol",
+      "url": "https://commons.wikimedia.org/wiki/File:RML2456_London_Transport_Routemaster_at_Dorking_station,_Surrey_-_June_2025.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/d/d4/RML2456_London_Transport_Routemaster_at_Dorking_station%2C_Surrey_-_June_2025.jpg"
+    ],
+    "credit": "초록색 2층 버스, Mertbiol, 2025 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "yellow-school-bus",
+    "title": "노란 스쿨버스",
+    "category": "사진",
+    "topic": "탈것",
+    "level": "쉬움",
+    "author": "Rundvald",
+    "year": "2007",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Rundvald",
+      "url": "https://commons.wikimedia.org/wiki/File:School-bus-Atlanta1.JPG"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/a/a6/School-bus-Atlanta1.JPG"
+    ],
+    "credit": "노란 스쿨버스, Rundvald, 2007 — 위키미디어 공용 / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+  },
+  {
+    "key": "sailboat-regatta",
+    "title": "파란 바다의 돛단배 경주",
+    "category": "사진",
+    "topic": "탈것",
+    "level": "쉬움",
+    "author": "에밀리 그린(미군)",
+    "year": "2009",
+    "holder": "미국 국방부(DVIDS)",
+    "source": {
+      "name": "Wikimedia Commons (DVIDS)",
+      "author": "에밀리 그린(미군)",
+      "url": "https://commons.wikimedia.org/wiki/File:Yacht_Club_Sailboat_Regatta_DVIDS233601.jpg"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/b/b8/Yacht_Club_Sailboat_Regatta_DVIDS233601.jpg"
+    ],
+    "credit": "파란 바다의 돛단배 경주, 에밀리 그린(미군), 2009 — 미국 국방부(DVIDS) / 이미지: Wikimedia Commons (DVIDS), 퍼블릭 도메인"
+  },
+  {
+    "key": "hot-air-balloon-festival",
+    "title": "열기구 축제",
+    "category": "사진",
+    "topic": "탈것",
+    "level": "쉬움",
+    "author": "Jiafei Slay Queen",
+    "year": "2024",
+    "holder": "위키미디어 공용(태국 붕보라펫 열기구 축제)",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Jiafei Slay Queen",
+      "url": "https://commons.wikimedia.org/wiki/File:Hot_air_balloon_festival_in_Bueng_Boraphet_-_angle_2.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Hot_air_balloon_festival_in_Bueng_Boraphet_-_angle_2.jpg/3840px-Hot_air_balloon_festival_in_Bueng_Boraphet_-_angle_2.jpg"
+    ],
+    "credit": "열기구 축제, Jiafei Slay Queen, 2024 — 위키미디어 공용(태국 붕보라펫 열기구 축제) / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "police-car",
+    "title": "경찰서 앞 경찰차",
+    "category": "사진",
+    "topic": "탈것",
+    "level": "쉬움",
+    "author": "미국 농무부",
+    "year": "2017",
+    "holder": "미국 농무부(USDA)",
+    "source": {
+      "name": "Wikimedia Commons (USDA)",
+      "author": "미국 농무부",
+      "url": "https://commons.wikimedia.org/wiki/File:RD_CFG-Hondo_Police_Interceptor_Utility_Vehicles_-_Community_Facility_Grant_(20171205-RD-LSC-0423).jpg"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/RD_CFG-Hondo_Police_Interceptor_Utility_Vehicles_-_Community_Facility_Grant_%2820171205-RD-LSC-0423%29.jpg/3840px-RD_CFG-Hondo_Police_Interceptor_Utility_Vehicles_-_Community_Facility_Grant_%2820171205-RD-LSC-0423%29.jpg"
+    ],
+    "credit": "경찰서 앞 경찰차, 미국 농무부, 2017 — 미국 농무부(USDA) / 이미지: Wikimedia Commons (USDA), 퍼블릭 도메인"
   },
   {
     "key": "sand-toy-truck",
@@ -843,6 +1218,52 @@
       "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Grosuplje-192709.jpg/3840px-Grosuplje-192709.jpg"
     ],
     "credit": "공원의 흔들 말 놀이기구, 미로 곰시, 연도 미상 — 개인 촬영 (Unsplash) / 이미지: Wikimedia Commons (Unsplash), CC0 1.0"
+  },
+  {
+    "key": "donut-box",
+    "title": "상자 속 알록달록 도넛",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "쉬움",
+    "author": "지다네",
+    "year": "2008",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "지다네",
+      "url": "https://commons.wikimedia.org/wiki/File:Krispy_Kreme_Doughnuts.JPG"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/5/5b/Krispy_Kreme_Doughnuts.JPG"
+    ],
+    "credit": "상자 속 알록달록 도넛, 지다네, 2008 — 위키미디어 공용 / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+  },
+  {
+    "key": "gimbap",
+    "title": "접시에 담은 김밥",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "쉬움",
+    "author": "changupn",
+    "year": "2014",
+    "holder": "위키미디어 공용(Pixabay)",
+    "source": {
+      "name": "Wikimedia Commons (Pixabay)",
+      "author": "changupn",
+      "url": "https://commons.wikimedia.org/wiki/File:Gimbap_(pixabay).jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/0/0e/Gimbap_%28pixabay%29.jpg"
+    ],
+    "credit": "접시에 담은 김밥, changupn, 2014 — 위키미디어 공용(Pixabay) / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
   },
   {
     "key": "bongsan-masks",
@@ -1455,6 +1876,121 @@
     "credit": "잎 위의 사슴벌레, Janezdrilc (커먼즈 사용자), 2021 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
   },
   {
+    "key": "otter-group",
+    "title": "통나무 위의 수달 네 마리",
+    "category": "사진",
+    "topic": "동물",
+    "level": "보통",
+    "author": "미국 산림청",
+    "year": "2022",
+    "holder": "미국 산림청 알래스카 지역",
+    "source": {
+      "name": "Wikimedia Commons (USDA 산림청)",
+      "author": "미국 산림청",
+      "url": "https://commons.wikimedia.org/wiki/File:River_Otters-Tongass-BLL-019_(52503093499).jpg"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/River_Otters-Tongass-BLL-019_%2852503093499%29.jpg/3840px-River_Otters-Tongass-BLL-019_%2852503093499%29.jpg"
+    ],
+    "credit": "통나무 위의 수달 네 마리, 미국 산림청, 2022 — 미국 산림청 알래스카 지역 / 이미지: Wikimedia Commons (USDA 산림청), 퍼블릭 도메인"
+  },
+  {
+    "key": "giraffe-closeup",
+    "title": "기린 얼굴 가까이",
+    "category": "사진",
+    "topic": "동물",
+    "level": "보통",
+    "author": "데릭 코치",
+    "year": "2013",
+    "holder": "위키미디어 공용(오클랜드 동물원)",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "데릭 코치",
+      "url": "https://commons.wikimedia.org/wiki/File:Giraffa_camelopardalis_reticulata_at_Oakland_Zoo_-_close-up_on_head.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/Giraffa_camelopardalis_reticulata_at_Oakland_Zoo_-_close-up_on_head.jpg/3840px-Giraffa_camelopardalis_reticulata_at_Oakland_Zoo_-_close-up_on_head.jpg"
+    ],
+    "credit": "기린 얼굴 가까이, 데릭 코치, 2013 — 위키미디어 공용(오클랜드 동물원) / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "alpaca-herd",
+    "title": "산 아래 알파카 무리",
+    "category": "사진",
+    "topic": "동물",
+    "level": "보통",
+    "author": "필리프 라부아",
+    "year": "2006",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "필리프 라부아",
+      "url": "https://commons.wikimedia.org/wiki/File:Alpacas.JPG"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/f/fe/Alpacas.JPG"
+    ],
+    "credit": "산 아래 알파카 무리, 필리프 라부아, 2006 — 위키미디어 공용 / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+  },
+  {
+    "key": "chameleon",
+    "title": "꼬리를 만 카멜레온",
+    "category": "사진",
+    "topic": "동물",
+    "level": "보통",
+    "author": "드레귀스",
+    "year": "2008",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "드레귀스",
+      "url": "https://commons.wikimedia.org/wiki/File:Chamaeleo_calyptratus_female.jpg"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/d/de/Chamaeleo_calyptratus_female.jpg"
+    ],
+    "credit": "꼬리를 만 카멜레온, 드레귀스, 2008 — 위키미디어 공용 / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+  },
+  {
+    "key": "fennec-sleeping",
+    "title": "웅크려 자는 사막여우",
+    "category": "사진",
+    "topic": "동물",
+    "level": "보통",
+    "author": "마르코 알름바우어",
+    "year": "2016",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "마르코 알름바우어",
+      "url": "https://commons.wikimedia.org/wiki/File:W%C3%BCstenfuchs_(Vulpes_zerda).jpg"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/W%C3%BCstenfuchs_%28Vulpes_zerda%29.jpg/3840px-W%C3%BCstenfuchs_%28Vulpes_zerda%29.jpg"
+    ],
+    "credit": "웅크려 자는 사막여우, 마르코 알름바우어, 2016 — 위키미디어 공용 / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+  },
+  {
     "key": "sea-otter",
     "title": "물 위에서 쉬는 해달",
     "category": "사진",
@@ -1614,6 +2150,52 @@
       "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Udo%2C_Jeju_Province%2C_South_Korea_05.jpg/3840px-Udo%2C_Jeju_Province%2C_South_Korea_05.jpg"
     ],
     "credit": "제주 우도와 성산일출봉, 제주영상·문화산업진흥원, 2023 — 제주영상·문화산업진흥원 / 이미지: Wikimedia Commons (제주영상·문화산업진흥원, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
+  },
+  {
+    "key": "whale-tail",
+    "title": "물보라 치는 고래 꼬리",
+    "category": "사진",
+    "topic": "바다",
+    "level": "보통",
+    "author": "NOAA 해양보호구역",
+    "year": "2014",
+    "holder": "미국 해양대기청(NOAA)",
+    "source": {
+      "name": "Wikimedia Commons (NOAA 국립해양보호구역)",
+      "author": "NOAA 해양보호구역",
+      "url": "https://commons.wikimedia.org/wiki/File:HIHWNMS_-_Fluke_(33457029203).jpg"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/HIHWNMS_-_Fluke_%2833457029203%29.jpg/3840px-HIHWNMS_-_Fluke_%2833457029203%29.jpg"
+    ],
+    "credit": "물보라 치는 고래 꼬리, NOAA 해양보호구역, 2014 — 미국 해양대기청(NOAA) / 이미지: Wikimedia Commons (NOAA 국립해양보호구역), 퍼블릭 도메인"
+  },
+  {
+    "key": "turtle-hatchlings",
+    "title": "모래 위 아기 바다거북",
+    "category": "사진",
+    "topic": "바다",
+    "level": "보통",
+    "author": "미국 어류야생동물국",
+    "year": "연도 미상",
+    "holder": "미국 어류·야생동물관리국",
+    "source": {
+      "name": "Wikimedia Commons (USFWS)",
+      "author": "미국 어류야생동물국",
+      "url": "https://commons.wikimedia.org/wiki/File:Loggerhead_sea_turtle_hatchlings_caretta_caretta.jpg"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/3/31/Loggerhead_sea_turtle_hatchlings_caretta_caretta.jpg"
+    ],
+    "credit": "모래 위 아기 바다거북, 미국 어류야생동물국, 연도 미상 — 미국 어류·야생동물관리국 / 이미지: Wikimedia Commons (USFWS), 퍼블릭 도메인"
   },
   {
     "key": "tulip-field",
@@ -1936,6 +2518,105 @@
       "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Made_in_Germany_Tin_clockwork_toy_train_from_around_1900_pic-018.JPG/3840px-Made_in_Germany_Tin_clockwork_toy_train_from_around_1900_pic-018.JPG"
     ],
     "credit": "옛날 양철 장난감 기차, AlfvanBeem (커먼즈 사용자), 2012 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "ktx-train",
+    "title": "서울역의 KTX",
+    "category": "사진",
+    "topic": "탈것",
+    "level": "보통",
+    "author": "Syced",
+    "year": "2007",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "Syced",
+      "url": "https://commons.wikimedia.org/wiki/File:KTX_in_Seoul_2.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/c/c1/KTX_in_Seoul_2.jpg"
+    ],
+    "credit": "서울역의 KTX, Syced, 2007 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "steam-train-viaduct",
+    "title": "연기 뿜는 꼬마 증기기차",
+    "category": "사진",
+    "topic": "탈것",
+    "level": "보통",
+    "author": "윌리엄 데이비스",
+    "year": "2019",
+    "holder": "위키미디어 공용(영국 탈리린 철도)",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "윌리엄 데이비스",
+      "url": "https://commons.wikimedia.org/wiki/File:Talyllyn_Railway_No._6_%22Douglas%22_on_the_Dolgoch_Viaduct_-_April_2019.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/a/a1/Talyllyn_Railway_No._6_%22Douglas%22_on_the_Dolgoch_Viaduct_-_April_2019.jpg"
+    ],
+    "credit": "연기 뿜는 꼬마 증기기차, 윌리엄 데이비스, 2019 — 위키미디어 공용(영국 탈리린 철도) / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "plane-takeoff",
+    "title": "하늘로 떠오르는 비행기",
+    "category": "사진",
+    "topic": "탈것",
+    "level": "보통",
+    "author": "알프 판 베임",
+    "year": "2017",
+    "holder": "위키미디어 공용(암스테르담 스히폴 공항)",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "알프 판 베임",
+      "url": "https://commons.wikimedia.org/wiki/File:EI-RJU_Cityjet_British_Aerospace_Avro_RJ85,_takeoff_from_Schiphol_(EHAM-AMS)_runway_36L_pic1.JPG"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/3/3a/EI-RJU_Cityjet_British_Aerospace_Avro_RJ85%2C_takeoff_from_Schiphol_%28EHAM-AMS%29_runway_36L_pic1.JPG"
+    ],
+    "crop": [
+      0,
+      0.22,
+      1,
+      0.95
+    ],
+    "note": "위쪽 빈 하늘과 아래 가장자리를 잘라 냄",
+    "credit": "하늘로 떠오르는 비행기, 알프 판 베임, 2017 — 위키미디어 공용(암스테르담 스히폴 공항) / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+  },
+  {
+    "key": "fireboat-salute",
+    "title": "물을 뿜는 소방선",
+    "category": "사진",
+    "topic": "탈것",
+    "level": "보통",
+    "author": "미 해군",
+    "year": "2006",
+    "holder": "미국 해군",
+    "source": {
+      "name": "Wikimedia Commons (미 해군)",
+      "author": "미 해군",
+      "url": "https://commons.wikimedia.org/wiki/File:US_Navy_060524-N-9640H-004_A_New_York_City_fireboat_renders_honors_to_U.S._Navy_ships_arriving_for_Fleet_Week_New_York_2006,.jpg"
+    },
+    "license": {
+      "name": "퍼블릭 도메인",
+      "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/4/4c/US_Navy_060524-N-9640H-004_A_New_York_City_fireboat_renders_honors_to_U.S._Navy_ships_arriving_for_Fleet_Week_New_York_2006%2C.jpg"
+    ],
+    "credit": "물을 뿜는 소방선, 미 해군, 2006 — 미국 해군 / 이미지: Wikimedia Commons (미 해군), 퍼블릭 도메인"
   },
   {
     "key": "prismatic-spring",
@@ -2693,6 +3374,188 @@
       "https://upload.wikimedia.org/wikipedia/commons/a/a9/Broken_Crayons_%28221013349%29.jpeg"
     ],
     "credit": "부러진 크레파스 조각, 엘리사 카펠 본, 2015 — 개인 촬영 (500px) / 이미지: Wikimedia Commons (500px), CC0 1.0"
+  },
+  {
+    "key": "gelato-case",
+    "title": "여러 맛 아이스크림 진열장",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "다데롯",
+    "year": "2024",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "다데롯",
+      "url": "https://commons.wikimedia.org/wiki/File:Gelato_-_Napier,_New_Zealand.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/e/ea/Gelato_-_Napier%2C_New_Zealand.jpg"
+    ],
+    "credit": "여러 맛 아이스크림 진열장, 다데롯, 2024 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "tanghulu",
+    "title": "빨간 과일 꼬치 탕후루",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "포포 르 시앵",
+    "year": "2013",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "포포 르 시앵",
+      "url": "https://commons.wikimedia.org/wiki/File:TangHuLu.JPG"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/59/TangHuLu.JPG/3840px-TangHuLu.JPG"
+    ],
+    "credit": "빨간 과일 꼬치 탕후루, 포포 르 시앵, 2013 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "heart-cookies",
+    "title": "하트 모양 과자",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "슈테판 로렌츠",
+    "year": "연도 미상",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "슈테판 로렌츠",
+      "url": "https://commons.wikimedia.org/wiki/File:Heart_shaped_cookies.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/Heart_shaped_cookies.jpg/3840px-Heart_shaped_cookies.jpg"
+    ],
+    "credit": "하트 모양 과자, 슈테판 로렌츠, 연도 미상 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "sushi-platter",
+    "title": "초밥 한 접시",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "모이미르 후라비",
+    "year": "2024",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "모이미르 후라비",
+      "url": "https://commons.wikimedia.org/wiki/File:Sushi_Plate_in_Organic_Sushi_Prague_4_G.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/71/Sushi_Plate_in_Organic_Sushi_Prague_4_G.jpg/3840px-Sushi_Plate_in_Organic_Sushi_Prague_4_G.jpg"
+    ],
+    "crop": [
+      0.15,
+      0.18,
+      0.87,
+      0.85
+    ],
+    "note": "접시 둘레 빈 식탁을 잘라 냄",
+    "credit": "초밥 한 접시, 모이미르 후라비, 2024 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "bakery-pastries",
+    "title": "빵집 진열대",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "앤디 리",
+    "year": "2024",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "앤디 리",
+      "url": "https://commons.wikimedia.org/wiki/File:Items_in_GAIL's_Bakery,_Seven_Dials,_Brighton_1_2024-03-15.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/Items_in_GAIL%27s_Bakery%2C_Seven_Dials%2C_Brighton_1_2024-03-15.jpg/3840px-Items_in_GAIL%27s_Bakery%2C_Seven_Dials%2C_Brighton_1_2024-03-15.jpg"
+    ],
+    "crop": [
+      0,
+      0.05,
+      1,
+      0.72
+    ],
+    "note": "아래쪽 나무 진열대를 잘라 냄",
+    "credit": "빵집 진열대, 앤디 리, 2024 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "paper-star-lanterns",
+    "title": "종이 별 등불",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "EileenMcM",
+    "year": "2025",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "EileenMcM",
+      "url": "https://commons.wikimedia.org/wiki/File:Hanging_colored_paper_lights.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/30/Hanging_colored_paper_lights.jpg/3840px-Hanging_colored_paper_lights.jpg"
+    ],
+    "crop": [
+      0,
+      0,
+      1,
+      0.9
+    ],
+    "note": "아래쪽 사람 머리를 잘라 냄",
+    "credit": "종이 별 등불, EileenMcM, 2025 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "umbrella-sky",
+    "title": "하늘을 덮은 우산",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "보통",
+    "author": "mklempar",
+    "year": "2018",
+    "holder": "위키미디어 공용(북마케도니아 스코페)",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "mklempar",
+      "url": "https://commons.wikimedia.org/wiki/File:Umbrellas_in_Skopje_Old_Bazaar.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/Umbrellas_in_Skopje_Old_Bazaar.jpg/3840px-Umbrellas_in_Skopje_Old_Bazaar.jpg"
+    ],
+    "credit": "하늘을 덮은 우산, mklempar, 2018 — 위키미디어 공용(북마케도니아 스코페) / 이미지: Wikimedia Commons, CC0 1.0"
   },
   {
     "key": "blue-marble",
@@ -3526,6 +4389,29 @@
     "credit": "동해 묵호항, 한국관광공사(조윤권), 2025 — 한국관광공사 / 이미지: Wikimedia Commons (한국관광공사, 공공누리 제1유형), 공공누리 제1유형 (출처표시)"
   },
   {
+    "key": "aquarium-cichlids",
+    "title": "수족관 물고기 떼",
+    "category": "사진",
+    "topic": "바다",
+    "level": "어려움",
+    "author": "다데롯",
+    "year": "2024",
+    "holder": "위키미디어 공용(뉴질랜드 국립수족관)",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "다데롯",
+      "url": "https://commons.wikimedia.org/wiki/File:National_Aquarium_of_New_Zealand_-_Napier,_NZ_-_DSC05784.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d6/National_Aquarium_of_New_Zealand_-_Napier%2C_NZ_-_DSC05784.jpg/3840px-National_Aquarium_of_New_Zealand_-_Napier%2C_NZ_-_DSC05784.jpg"
+    ],
+    "credit": "수족관 물고기 떼, 다데롯, 2024 — 위키미디어 공용(뉴질랜드 국립수족관) / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
     "key": "watermelons",
     "title": "수박 더미",
     "category": "사진",
@@ -3876,6 +4762,52 @@
       "https://upload.wikimedia.org/wikipedia/commons/a/a7/Colorful_juice_cubes_gummy_candy.jpg"
     ],
     "credit": "알록달록 네모 사탕, Fumikas Sagisavas (커먼즈 사용자), 2025 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "tteokbokki",
+    "title": "떡볶이",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "어려움",
+    "author": "푸미카스 사기사바스",
+    "year": "2024",
+    "holder": "위키미디어 공용",
+    "source": {
+      "name": "Wikimedia Commons",
+      "author": "푸미카스 사기사바스",
+      "url": "https://commons.wikimedia.org/wiki/File:Korean_rice_cake_(tteokbokki).jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/2/23/Korean_rice_cake_%28tteokbokki%29.jpg"
+    ],
+    "credit": "떡볶이, 푸미카스 사기사바스, 2024 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0"
+  },
+  {
+    "key": "balloon-wall",
+    "title": "알록달록 풍선 벽",
+    "category": "사진",
+    "topic": "사람·생활",
+    "level": "어려움",
+    "author": "한스 브락스마이어",
+    "year": "2012",
+    "holder": "위키미디어 공용(Pixabay)",
+    "source": {
+      "name": "Wikimedia Commons (Pixabay)",
+      "author": "한스 브락스마이어",
+      "url": "https://commons.wikimedia.org/wiki/File:Balloons_Colorful_Shooting_Gallery_Folk_Festival.jpg"
+    },
+    "license": {
+      "name": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "images": [
+      "https://upload.wikimedia.org/wikipedia/commons/b/b3/Balloons_Colorful_Shooting_Gallery_Folk_Festival.jpg"
+    ],
+    "credit": "알록달록 풍선 벽, 한스 브락스마이어, 2012 — 위키미디어 공용(Pixabay) / 이미지: Wikimedia Commons (Pixabay), CC0 1.0"
   },
   {
     "key": "pluto",
