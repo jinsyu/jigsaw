@@ -498,7 +498,8 @@ export function orderedCategories(items) {
 // illustration (the theme when neither is known).
 export function cardDetail(builtin) {
   if (builtin.category === '사진' && builtin.topic) return builtin.topic;
-  return [builtin.source?.author, builtin.year].filter(Boolean).join(', ') || builtin.topic || builtin.category;
+  const year = builtin.year === '연도 미상' ? null : builtin.year;
+  return [builtin.source?.author, year].filter(Boolean).join(', ') || builtin.topic || builtin.category;
 }
 
 // Theme shortcuts under the search field: what is searched (`word`) and the button text.

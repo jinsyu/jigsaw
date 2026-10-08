@@ -164,29 +164,6 @@
       "holder": "위키미디어 공용"
     },
     {
-      "key": "clownfish-trio",
-      "title": "흰동가리 세 마리",
-      "category": "사진",
-      "topic": "바다",
-      "level": "쉬움",
-      "width": 1800,
-      "height": 1657,
-      "src": "/images/builtin/clownfish-trio.webp",
-      "thumb": "/images/builtin/clownfish-trio-thumb.webp",
-      "source": {
-        "name": "Wikimedia Commons",
-        "author": "Bruxton",
-        "url": "https://commons.wikimedia.org/wiki/File:False_Clownfish_1a.jpg"
-      },
-      "license": {
-        "name": "CC0 1.0",
-        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
-      },
-      "credit": "흰동가리 세 마리, Bruxton, 2024 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0",
-      "year": "2024",
-      "holder": "위키미디어 공용"
-    },
-    {
       "key": "goldfish-tank",
       "title": "파란 수조의 금붕어",
       "category": "사진",
@@ -254,6 +231,259 @@
       "credit": "무지개 앵무새 얼굴, 피터르 헬링, 2015 — 위키미디어 공용(Pexels) / 이미지: Wikimedia Commons (Pexels), CC0 1.0",
       "year": "2015",
       "holder": "위키미디어 공용(Pexels)"
+    },
+    {
+      "key": "monarch-butterfly",
+      "title": "제왕나비와 박주가리 꽃",
+      "category": "사진",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/monarch-butterfly.webp",
+      "thumb": "/images/builtin/monarch-butterfly-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "미국 어류야생동물관리국",
+        "url": "https://commons.wikimedia.org/wiki/File:Monarch_butterfly_on_butterfly_milkweed_(53069280718).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "제왕나비와 박주가리 꽃 — U.S. Fish and Wildlife Service, 퍼블릭 도메인",
+      "year": "",
+      "holder": "U.S. Fish and Wildlife Service"
+    },
+    {
+      "key": "river-otter",
+      "title": "수달 얼굴",
+      "category": "사진",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1038,
+      "src": "/images/builtin/river-otter.webp",
+      "thumb": "/images/builtin/river-otter-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Pixabay, 2019년 이전 CC0)",
+        "author": "pixel2013",
+        "url": "https://commons.wikimedia.org/wiki/File:North_American_river_otter.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "수달 얼굴, pixel2013, 2016 — 개인 촬영 / 이미지: Wikimedia Commons (Pixabay, 2019년 이전 CC0), CC0 1.0",
+      "year": "2016",
+      "holder": "개인 촬영"
+    },
+    {
+      "key": "macaws",
+      "title": "마코앵무 두 마리",
+      "category": "사진",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1196,
+      "src": "/images/builtin/macaws.webp",
+      "thumb": "/images/builtin/macaws-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Flickr)",
+        "author": "데릭 쿠체",
+        "url": "https://commons.wikimedia.org/wiki/File:Ara_ararauna_%2B_Ara_chloropterus_at_Cougar_Mountain_Zoological_Park_-8a.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "마코앵무 두 마리, 데릭 쿠체, 2009 — 쿠거마운틴 동물원(미국) / 이미지: Wikimedia Commons (Flickr), CC0 1.0",
+      "year": "2009",
+      "holder": "쿠거마운틴 동물원(미국)"
+    },
+    {
+      "key": "flamingo",
+      "title": "홍학",
+      "category": "사진",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1195,
+      "src": "/images/builtin/flamingo.webp",
+      "thumb": "/images/builtin/flamingo-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "Wilfredor",
+        "url": "https://commons.wikimedia.org/wiki/File:Phoenicopterus_ruber_in_S%C3%A3o_Paulo_Zoo.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "홍학, Wilfredor, 2014 — 상파울루 동물원(브라질) / 이미지: Wikimedia Commons, CC0 1.0",
+      "year": "2014",
+      "holder": "상파울루 동물원(브라질)"
+    },
+    {
+      "key": "hedgehog",
+      "title": "풀밭의 고슴도치",
+      "category": "사진",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/hedgehog.webp",
+      "thumb": "/images/builtin/hedgehog-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Pixabay, 2019년 이전 CC0)",
+        "author": "byapryl",
+        "url": "https://commons.wikimedia.org/wiki/File:Hedgehog_on_grass_in_the_morning.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "풀밭의 고슴도치, byapryl, 2015 — 개인 촬영 / 이미지: Wikimedia Commons (Pixabay, 2019년 이전 CC0), CC0 1.0",
+      "year": "2015",
+      "holder": "개인 촬영"
+    },
+    {
+      "key": "squirrel",
+      "title": "먹이 먹는 다람쥐",
+      "category": "사진",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/squirrel.webp",
+      "thumb": "/images/builtin/squirrel-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "제스로 버스비",
+        "url": "https://commons.wikimedia.org/wiki/File:Grey_Squirrel_20211205.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "먹이 먹는 다람쥐, 제스로 버스비, 2021 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0",
+      "year": "2021",
+      "holder": "개인 촬영"
+    },
+    {
+      "key": "kitten",
+      "title": "꽃과 노는 아기 고양이",
+      "category": "사진",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1198,
+      "src": "/images/builtin/kitten.webp",
+      "thumb": "/images/builtin/kitten-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Pixabay, 2019년 이전 CC0)",
+        "author": "디미트리 하우테만",
+        "url": "https://commons.wikimedia.org/wiki/File:A_curious_kitten_%28Pixabay%29.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "꽃과 노는 아기 고양이, 디미트리 하우테만, 2017 — 개인 촬영 / 이미지: Wikimedia Commons (Pixabay, 2019년 이전 CC0), CC0 1.0",
+      "year": "2017",
+      "holder": "개인 촬영"
+    },
+    {
+      "key": "corgi-puppy",
+      "title": "서서 웃는 아기 코기",
+      "category": "사진",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1202,
+      "height": 1800,
+      "src": "/images/builtin/corgi-puppy.webp",
+      "thumb": "/images/builtin/corgi-puppy-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Pixabay, 2019년 이전 CC0)",
+        "author": "Huoadg5888",
+        "url": "https://commons.wikimedia.org/wiki/File:Fawn_and_white_Welsh_Corgi_puppy_standing_on_rear_legs_and_sticking_out_the_tongue.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "서서 웃는 아기 코기, Huoadg5888, 2016 — 개인 촬영 / 이미지: Wikimedia Commons (Pixabay, 2019년 이전 CC0), CC0 1.0",
+      "year": "2016",
+      "holder": "개인 촬영"
+    },
+    {
+      "key": "triceratops-park",
+      "title": "숲속의 트리케라톱스",
+      "category": "사진",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/triceratops-park.webp",
+      "thumb": "/images/builtin/triceratops-park-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Christian-wittmann-1964)",
+        "author": "크리스티안 비트만",
+        "url": "https://commons.wikimedia.org/wiki/File:Triceratops_Dinopark_Denkendorf.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "숲속의 트리케라톱스, 크리스티안 비트만, 2020 — 덴켄도르프 공룡 공원(독일) / 이미지: Wikimedia Commons (Christian-wittmann-1964), CC0 1.0",
+      "year": "2020",
+      "holder": "덴켄도르프 공룡 공원(독일)"
+    },
+    {
+      "key": "clownfish-trio",
+      "title": "흰동가리 세 마리",
+      "category": "사진",
+      "topic": "바다",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1657,
+      "src": "/images/builtin/clownfish-trio.webp",
+      "thumb": "/images/builtin/clownfish-trio-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "Bruxton",
+        "url": "https://commons.wikimedia.org/wiki/File:False_Clownfish_1a.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "흰동가리 세 마리, Bruxton, 2024 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0",
+      "year": "2024",
+      "holder": "위키미디어 공용"
+    },
+    {
+      "key": "fruit-basket",
+      "title": "과일 바구니",
+      "category": "사진",
+      "topic": "꽃·식물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1491,
+      "src": "/images/builtin/fruit-basket.webp",
+      "thumb": "/images/builtin/fruit-basket-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "디르크 잉고 프랑케",
+        "url": "https://commons.wikimedia.org/wiki/File:Fruit_basket_alessi.JPG"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "과일 바구니, 디르크 잉고 프랑케, 2013 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0",
+      "year": "2013",
+      "holder": "위키미디어 공용"
     },
     {
       "key": "fire-truck-red",
@@ -487,29 +717,6 @@
       "note": "양옆의 빈 회색 벽을 잘라 냄"
     },
     {
-      "key": "fruit-basket",
-      "title": "과일 바구니",
-      "category": "사진",
-      "topic": "꽃·식물",
-      "level": "쉬움",
-      "width": 1800,
-      "height": 1491,
-      "src": "/images/builtin/fruit-basket.webp",
-      "thumb": "/images/builtin/fruit-basket-thumb.webp",
-      "source": {
-        "name": "Wikimedia Commons",
-        "author": "디르크 잉고 프랑케",
-        "url": "https://commons.wikimedia.org/wiki/File:Fruit_basket_alessi.JPG"
-      },
-      "license": {
-        "name": "CC0 1.0",
-        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
-      },
-      "credit": "과일 바구니, 디르크 잉고 프랑케, 2013 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0",
-      "year": "2013",
-      "holder": "위키미디어 공용"
-    },
-    {
       "key": "pink-cupcakes",
       "title": "분홍 컵케이크",
       "category": "사진",
@@ -554,190 +761,6 @@
       "credit": "무지개 막대사탕, Evan-Amos, 2011 — 위키미디어 공용 / 이미지: Wikimedia Commons, CC0 1.0",
       "year": "2011",
       "holder": "위키미디어 공용"
-    },
-    {
-      "key": "monarch-butterfly",
-      "title": "제왕나비와 박주가리 꽃",
-      "category": "사진",
-      "topic": "동물",
-      "level": "쉬움",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/monarch-butterfly.webp",
-      "thumb": "/images/builtin/monarch-butterfly-thumb.webp",
-      "source": {
-        "name": "Wikimedia Commons",
-        "author": "미국 어류야생동물관리국",
-        "url": "https://commons.wikimedia.org/wiki/File:Monarch_butterfly_on_butterfly_milkweed_(53069280718).jpg"
-      },
-      "license": {
-        "name": "퍼블릭 도메인",
-        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
-      },
-      "credit": "제왕나비와 박주가리 꽃 — U.S. Fish and Wildlife Service, 퍼블릭 도메인",
-      "year": "",
-      "holder": "U.S. Fish and Wildlife Service"
-    },
-    {
-      "key": "river-otter",
-      "title": "수달 얼굴",
-      "category": "사진",
-      "topic": "동물",
-      "level": "쉬움",
-      "width": 1800,
-      "height": 1038,
-      "src": "/images/builtin/river-otter.webp",
-      "thumb": "/images/builtin/river-otter-thumb.webp",
-      "source": {
-        "name": "Wikimedia Commons (Pixabay, 2019년 이전 CC0)",
-        "author": "pixel2013",
-        "url": "https://commons.wikimedia.org/wiki/File:North_American_river_otter.jpg"
-      },
-      "license": {
-        "name": "CC0 1.0",
-        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
-      },
-      "credit": "수달 얼굴, pixel2013, 2016 — 개인 촬영 / 이미지: Wikimedia Commons (Pixabay, 2019년 이전 CC0), CC0 1.0",
-      "year": "2016",
-      "holder": "개인 촬영"
-    },
-    {
-      "key": "macaws",
-      "title": "마코앵무 두 마리",
-      "category": "사진",
-      "topic": "동물",
-      "level": "쉬움",
-      "width": 1800,
-      "height": 1196,
-      "src": "/images/builtin/macaws.webp",
-      "thumb": "/images/builtin/macaws-thumb.webp",
-      "source": {
-        "name": "Wikimedia Commons (Flickr)",
-        "author": "데릭 쿠체",
-        "url": "https://commons.wikimedia.org/wiki/File:Ara_ararauna_%2B_Ara_chloropterus_at_Cougar_Mountain_Zoological_Park_-8a.jpg"
-      },
-      "license": {
-        "name": "CC0 1.0",
-        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
-      },
-      "credit": "마코앵무 두 마리, 데릭 쿠체, 2009 — 쿠거마운틴 동물원(미국) / 이미지: Wikimedia Commons (Flickr), CC0 1.0",
-      "year": "2009",
-      "holder": "쿠거마운틴 동물원(미국)"
-    },
-    {
-      "key": "flamingo",
-      "title": "홍학",
-      "category": "사진",
-      "topic": "동물",
-      "level": "쉬움",
-      "width": 1800,
-      "height": 1195,
-      "src": "/images/builtin/flamingo.webp",
-      "thumb": "/images/builtin/flamingo-thumb.webp",
-      "source": {
-        "name": "Wikimedia Commons",
-        "author": "Wilfredor",
-        "url": "https://commons.wikimedia.org/wiki/File:Phoenicopterus_ruber_in_S%C3%A3o_Paulo_Zoo.jpg"
-      },
-      "license": {
-        "name": "CC0 1.0",
-        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
-      },
-      "credit": "홍학, Wilfredor, 2014 — 상파울루 동물원(브라질) / 이미지: Wikimedia Commons, CC0 1.0",
-      "year": "2014",
-      "holder": "상파울루 동물원(브라질)"
-    },
-    {
-      "key": "hedgehog",
-      "title": "풀밭의 고슴도치",
-      "category": "사진",
-      "topic": "동물",
-      "level": "쉬움",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/hedgehog.webp",
-      "thumb": "/images/builtin/hedgehog-thumb.webp",
-      "source": {
-        "name": "Wikimedia Commons (Pixabay, 2019년 이전 CC0)",
-        "author": "byapryl",
-        "url": "https://commons.wikimedia.org/wiki/File:Hedgehog_on_grass_in_the_morning.jpg"
-      },
-      "license": {
-        "name": "CC0 1.0",
-        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
-      },
-      "credit": "풀밭의 고슴도치, byapryl, 2015 — 개인 촬영 / 이미지: Wikimedia Commons (Pixabay, 2019년 이전 CC0), CC0 1.0",
-      "year": "2015",
-      "holder": "개인 촬영"
-    },
-    {
-      "key": "squirrel",
-      "title": "먹이 먹는 다람쥐",
-      "category": "사진",
-      "topic": "동물",
-      "level": "쉬움",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/squirrel.webp",
-      "thumb": "/images/builtin/squirrel-thumb.webp",
-      "source": {
-        "name": "Wikimedia Commons",
-        "author": "제스로 버스비",
-        "url": "https://commons.wikimedia.org/wiki/File:Grey_Squirrel_20211205.jpg"
-      },
-      "license": {
-        "name": "CC0 1.0",
-        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
-      },
-      "credit": "먹이 먹는 다람쥐, 제스로 버스비, 2021 — 개인 촬영 / 이미지: Wikimedia Commons, CC0 1.0",
-      "year": "2021",
-      "holder": "개인 촬영"
-    },
-    {
-      "key": "kitten",
-      "title": "꽃과 노는 아기 고양이",
-      "category": "사진",
-      "topic": "동물",
-      "level": "쉬움",
-      "width": 1800,
-      "height": 1198,
-      "src": "/images/builtin/kitten.webp",
-      "thumb": "/images/builtin/kitten-thumb.webp",
-      "source": {
-        "name": "Wikimedia Commons (Pixabay, 2019년 이전 CC0)",
-        "author": "디미트리 하우테만",
-        "url": "https://commons.wikimedia.org/wiki/File:A_curious_kitten_%28Pixabay%29.jpg"
-      },
-      "license": {
-        "name": "CC0 1.0",
-        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
-      },
-      "credit": "꽃과 노는 아기 고양이, 디미트리 하우테만, 2017 — 개인 촬영 / 이미지: Wikimedia Commons (Pixabay, 2019년 이전 CC0), CC0 1.0",
-      "year": "2017",
-      "holder": "개인 촬영"
-    },
-    {
-      "key": "corgi-puppy",
-      "title": "서서 웃는 아기 코기",
-      "category": "사진",
-      "topic": "동물",
-      "level": "쉬움",
-      "width": 1202,
-      "height": 1800,
-      "src": "/images/builtin/corgi-puppy.webp",
-      "thumb": "/images/builtin/corgi-puppy-thumb.webp",
-      "source": {
-        "name": "Wikimedia Commons (Pixabay, 2019년 이전 CC0)",
-        "author": "Huoadg5888",
-        "url": "https://commons.wikimedia.org/wiki/File:Fawn_and_white_Welsh_Corgi_puppy_standing_on_rear_legs_and_sticking_out_the_tongue.jpg"
-      },
-      "license": {
-        "name": "CC0 1.0",
-        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
-      },
-      "credit": "서서 웃는 아기 코기, Huoadg5888, 2016 — 개인 촬영 / 이미지: Wikimedia Commons (Pixabay, 2019년 이전 CC0), CC0 1.0",
-      "year": "2016",
-      "holder": "개인 촬영"
     },
     {
       "key": "giant-panda",
@@ -1131,6 +1154,98 @@
       "holder": "위키미디어 공용"
     },
     {
+      "key": "trex-skeleton-smithsonian",
+      "title": "입을 쩍 벌린 티라노사우루스 화석",
+      "category": "사진",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1800,
+      "height": 1196,
+      "src": "/images/builtin/trex-skeleton-smithsonian.webp",
+      "thumb": "/images/builtin/trex-skeleton-smithsonian-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (미국 농무부)",
+        "author": "미국 농무부(USDA)",
+        "url": "https://commons.wikimedia.org/wiki/File:Tyrannosaurus_Rex_skeleton_is_on_display_in_the_Dinosaurs_hall_at_the_Smithsonian%27s_National_Museum_of_Natural_History_in_Washington,_D.C..jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "입을 쩍 벌린 티라노사우루스 화석, 미국 농무부(USDA), 2013 — 스미스소니언 국립자연사박물관 / 이미지: Wikimedia Commons (미국 농무부), 퍼블릭 도메인",
+      "year": "2013",
+      "holder": "스미스소니언 국립자연사박물관"
+    },
+    {
+      "key": "trex-skeleton-kids",
+      "title": "아이들을 내려다보는 티라노사우루스",
+      "category": "사진",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1200,
+      "height": 1800,
+      "src": "/images/builtin/trex-skeleton-kids.webp",
+      "thumb": "/images/builtin/trex-skeleton-kids-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Gary Todd)",
+        "author": "게리 토드",
+        "url": "https://commons.wikimedia.org/wiki/File:Tyrannosaurus_Rex_(Zhengzhou).jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "아이들을 내려다보는 티라노사우루스, 게리 토드, 2015 — 정저우 박물관(중국) / 이미지: Wikimedia Commons (Gary Todd), CC0 1.0",
+      "year": "2015",
+      "holder": "정저우 박물관(중국)"
+    },
+    {
+      "key": "stegosaurus-skeleton",
+      "title": "등판이 뾰족한 스테고사우루스 화석",
+      "category": "사진",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/stegosaurus-skeleton.webp",
+      "thumb": "/images/builtin/stegosaurus-skeleton-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Gary Todd)",
+        "author": "게리 토드",
+        "url": "https://commons.wikimedia.org/wiki/File:Stegosaurus_Skeleton_(36329568742).jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "등판이 뾰족한 스테고사우루스 화석, 게리 토드, 2017 — 런던 자연사박물관 / 이미지: Wikimedia Commons (Gary Todd), CC0 1.0",
+      "year": "2017",
+      "holder": "런던 자연사박물관"
+    },
+    {
+      "key": "allosaurus-quarry",
+      "title": "알로사우루스 뼈와 그림",
+      "category": "사진",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/allosaurus-quarry.webp",
+      "thumb": "/images/builtin/allosaurus-quarry-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NPS)",
+        "author": "미국 국립공원관리청(NPS)",
+        "url": "https://commons.wikimedia.org/wiki/File:Allosaurus_Exhibit_-_Quarry_Exhibit_Hall_Lower_Floor_(54f8df4d-301f-4f70-9f06-aa96c5c9d65c).JPG"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "알로사우루스 뼈와 그림, 미국 국립공원관리청(NPS), 2015 — 다이너소어 국립기념물 채석장 전시관 / 이미지: Wikimedia Commons (NPS), 퍼블릭 도메인",
+      "year": "2015",
+      "holder": "다이너소어 국립기념물 채석장 전시관"
+    },
+    {
       "key": "sea-otter",
       "title": "물 위에서 쉬는 해달",
       "category": "사진",
@@ -1395,7 +1510,7 @@
       "thumb": "/images/builtin/shuttle-on-747-thumb.webp",
       "source": {
         "name": "Wikimedia Commons (NASA)",
-        "author": "미국 항공우주국(NASA)",
+        "author": "NASA",
         "url": "https://commons.wikimedia.org/wiki/File:Endeavour_after_STS-126_on_SCA_over_Mojave_from_above.jpg"
       },
       "license": {
@@ -1418,7 +1533,7 @@
       "thumb": "/images/builtin/plane-golden-gate-thumb.webp",
       "source": {
         "name": "Wikimedia Commons (NASA)",
-        "author": "미국 항공우주국(NASA) 에임스 연구센터",
+        "author": "NASA 에임스 연구센터",
         "url": "https://commons.wikimedia.org/wiki/File:CV-990_(NASA-712)_Galileo_II_aircraft_in_flight_over_the_San_Francisco's_Golden_Gate_Bridge_(ARC-1969-AC76-0060-43).jpg"
       },
       "license": {
@@ -1741,7 +1856,7 @@
       "thumb": "/images/builtin/curiosity-selfie-thumb.webp",
       "source": {
         "name": "Wikimedia Commons (NASA/JPL-Caltech/MSSS)",
-        "author": "미국 항공우주국(NASA)·JPL",
+        "author": "NASA·JPL",
         "url": "https://commons.wikimedia.org/wiki/File:Curiosity_Self-Portrait_at_'Big_Sky'_Drilling_Site.jpg"
       },
       "license": {
@@ -1764,7 +1879,7 @@
       "thumb": "/images/builtin/iss-over-earth-thumb.webp",
       "source": {
         "name": "Wikimedia Commons (NASA)",
-        "author": "미국 항공우주국(NASA)",
+        "author": "NASA",
         "url": "https://commons.wikimedia.org/wiki/File:STS-134_International_Space_Station_after_undocking.jpg"
       },
       "license": {
@@ -1787,7 +1902,7 @@
       "thumb": "/images/builtin/spacewalk-thumb.webp",
       "source": {
         "name": "Wikimedia Commons (NASA)",
-        "author": "미국 항공우주국(NASA)",
+        "author": "NASA",
         "url": "https://commons.wikimedia.org/wiki/File:Bruce_McCandless_II_during_EVA_in_1984.jpg"
       },
       "license": {
@@ -1811,7 +1926,7 @@
       "thumb": "/images/builtin/shuttle-launch-thumb.webp",
       "source": {
         "name": "Wikimedia Commons (NASA)",
-        "author": "미국 항공우주국(NASA)",
+        "author": "NASA",
         "url": "https://commons.wikimedia.org/wiki/File:STS120LaunchHiRes-edit1.jpg"
       },
       "license": {
@@ -1834,7 +1949,7 @@
       "thumb": "/images/builtin/iss-bahamas-view-thumb.webp",
       "source": {
         "name": "Wikimedia Commons (NASA)",
-        "author": "미국 항공우주국(NASA)",
+        "author": "NASA",
         "url": "https://commons.wikimedia.org/wiki/File:ISS-51_Florida,_The_Bahamas_and_Cuba_with_the_Cygnus_cargo_craft.jpg"
       },
       "license": {
@@ -1843,6 +1958,76 @@
       },
       "credit": "우주정거장에서 본 바하마 바다, 미국 항공우주국(NASA), 2017 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인",
       "year": "2017",
+      "holder": "미국 항공우주국(NASA)"
+    },
+    {
+      "key": "robonaut",
+      "title": "우주정거장에서 일한 로봇 로보넛 2",
+      "category": "사진",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/robonaut.webp",
+      "thumb": "/images/builtin/robonaut-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA Headquarters)",
+        "author": "키건 바버(NASA)",
+        "url": "https://commons.wikimedia.org/wiki/File:Robonaut_2_on_display_at_NASM_(NHQ202410240003).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "우주정거장에서 일한 로봇 로보넛 2, 키건 바버(NASA), 2024 — 미국 국립항공우주박물관 / 이미지: Wikimedia Commons (NASA Headquarters), 퍼블릭 도메인",
+      "year": "2024",
+      "holder": "미국 국립항공우주박물관"
+    },
+    {
+      "key": "valkyrie-robot",
+      "title": "NASA 로봇 발키리",
+      "category": "사진",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1680,
+      "height": 1800,
+      "src": "/images/builtin/valkyrie-robot.webp",
+      "thumb": "/images/builtin/valkyrie-robot-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA)",
+        "author": "NASA",
+        "url": "https://commons.wikimedia.org/wiki/File:Valkyrie-robot-4.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "NASA 로봇 발키리, 미국 항공우주국(NASA), 2013 — 미국 항공우주국(NASA) 존슨 우주센터 / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인",
+      "year": "2013",
+      "holder": "미국 항공우주국(NASA) 존슨 우주센터",
+      "note": "왼쪽 빈 배경을 잘라 냄"
+    },
+    {
+      "key": "canadarm-spacewalk",
+      "title": "로봇 팔에 매달린 우주인",
+      "category": "사진",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/canadarm-spacewalk.webp",
+      "thumb": "/images/builtin/canadarm-spacewalk-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA)",
+        "author": "호시데 아키히코(NASA)",
+        "url": "https://commons.wikimedia.org/wiki/File:ISS-65_Pesquet_on_the_end_of_the_Canadarm2.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "로봇 팔에 매달린 우주인, 호시데 아키히코(NASA), 2021 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인",
+      "year": "2021",
       "holder": "미국 항공우주국(NASA)"
     },
     {
@@ -2340,7 +2525,7 @@
       "thumb": "/images/builtin/perseverance-ingenuity-thumb.webp",
       "source": {
         "name": "Wikimedia Commons (NASA/JPL-Caltech/MSSS)",
-        "author": "미국 항공우주국(NASA)·JPL",
+        "author": "NASA·JPL",
         "url": "https://commons.wikimedia.org/wiki/File:Perseverance_selfie,_looking_at_WATSON_(PIA24542).jpg"
       },
       "license": {
@@ -2363,7 +2548,7 @@
       "thumb": "/images/builtin/jupiter-south-pole-thumb.webp",
       "source": {
         "name": "Wikimedia Commons (NASA/JPL-Caltech/SwRI/MSSS, 처리 Betsy Asher Hall·Gervasio Robles)",
-        "author": "미국 항공우주국(NASA)·JPL",
+        "author": "NASA·JPL",
         "url": "https://commons.wikimedia.org/wiki/File:PIA21641-Jupiter-SouthernStorms-JunoCam-cropped.jpg"
       },
       "license": {
@@ -2374,6 +2559,53 @@
       "year": "2017",
       "holder": "미국 항공우주국(NASA)",
       "note": "행성 둘레 까만 우주를 대부분 잘라 냄"
+    },
+    {
+      "key": "rho-ophiuchi",
+      "title": "알록달록 별 구름 (뱀주인자리 성운)",
+      "category": "사진",
+      "topic": "우주·과학",
+      "level": "어려움",
+      "width": 1800,
+      "height": 1765,
+      "src": "/images/builtin/rho-ophiuchi.webp",
+      "thumb": "/images/builtin/rho-ophiuchi-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA/JPL-Caltech/WISE Team)",
+        "author": "NASA·JPL·WISE 팀",
+        "url": "https://commons.wikimedia.org/wiki/File:Rho_Ophiuchi.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "알록달록 별 구름 (뱀주인자리 성운), 미국 항공우주국(NASA)·JPL·WISE 팀, 2010 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA/JPL-Caltech/WISE Team), 퍼블릭 도메인",
+      "year": "2010",
+      "holder": "미국 항공우주국(NASA)"
+    },
+    {
+      "key": "helix-nebula",
+      "title": "우주의 눈 (나선 성운)",
+      "category": "사진",
+      "topic": "우주·과학",
+      "level": "어려움",
+      "width": 1646,
+      "height": 1800,
+      "src": "/images/builtin/helix-nebula.webp",
+      "thumb": "/images/builtin/helix-nebula-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA/JPL-Caltech)",
+        "author": "NASA·JPL",
+        "url": "https://commons.wikimedia.org/wiki/File:Helix_Nebula_-_Unraveling_at_the_Seams.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "우주의 눈 (나선 성운), 미국 항공우주국(NASA)·JPL, 2012 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA/JPL-Caltech), 퍼블릭 도메인",
+      "year": "2012",
+      "holder": "미국 항공우주국(NASA)",
+      "note": "가장자리 검은 하늘을 잘라 냄"
     },
     {
       "key": "cheomseongdae",
@@ -2706,6 +2938,144 @@
       "note": "도판 여백과 위쪽 연필 스케치, 아래 글자를 잘라 냄"
     },
     {
+      "key": "morrison-mural",
+      "title": "강가의 쥐라기 공룡들",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1800,
+      "height": 1216,
+      "src": "/images/builtin/morrison-mural.webp",
+      "thumb": "/images/builtin/morrison-mural-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NPS)",
+        "author": "밥 월터스·테스 키신저",
+        "url": "https://commons.wikimedia.org/wiki/File:A_second_section_of_the_Morrison_Mural._(9d9b83eb-1dd8-b71b-0bae-bb53b61b3c4b).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "강가의 쥐라기 공룡들, 밥 월터스·테스 키신저, 2011 — 다이너소어 국립기념물(미국 국립공원관리청) / 이미지: Wikimedia Commons (NPS), 퍼블릭 도메인",
+      "year": "2011",
+      "holder": "다이너소어 국립기념물(미국 국립공원관리청)"
+    },
+    {
+      "key": "knight-brontosaurus",
+      "title": "늪에 사는 브론토사우루스",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1800,
+      "height": 1182,
+      "src": "/images/builtin/knight-brontosaurus.webp",
+      "thumb": "/images/builtin/knight-brontosaurus-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "찰스 R. 나이트",
+        "url": "https://commons.wikimedia.org/wiki/File:Pasta-Brontosaurus.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "늪에 사는 브론토사우루스, 찰스 R. 나이트, 1897 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1897",
+      "holder": "미국 자연사박물관"
+    },
+    {
+      "key": "knight-laelaps",
+      "title": "뛰어오르는 공룡 라엘랍스",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1800,
+      "height": 1222,
+      "src": "/images/builtin/knight-laelaps.webp",
+      "thumb": "/images/builtin/knight-laelaps-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "찰스 R. 나이트",
+        "url": "https://commons.wikimedia.org/wiki/File:Laelaps-Charles_Knight-1897.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "뛰어오르는 공룡 라엘랍스, 찰스 R. 나이트, 1897 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1897",
+      "holder": "미국 자연사박물관"
+    },
+    {
+      "key": "knight-protoceratops",
+      "title": "알을 지키는 프로토케라톱스",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1800,
+      "height": 1435,
+      "src": "/images/builtin/knight-protoceratops.webp",
+      "thumb": "/images/builtin/knight-protoceratops-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (필드 자연사박물관)",
+        "author": "찰스 R. 나이트",
+        "url": "https://commons.wikimedia.org/wiki/File:Nesting_Protoceratops.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "알을 지키는 프로토케라톱스, 찰스 R. 나이트, 1927 — 필드 자연사박물관 / 이미지: Wikimedia Commons (필드 자연사박물관), 퍼블릭 도메인",
+      "year": "1927",
+      "holder": "필드 자연사박물관"
+    },
+    {
+      "key": "knight-hadrosaurs",
+      "title": "물가의 오리주둥이 공룡",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1800,
+      "height": 1253,
+      "src": "/images/builtin/knight-hadrosaurs.webp",
+      "thumb": "/images/builtin/knight-hadrosaurs-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "찰스 R. 나이트",
+        "url": "https://commons.wikimedia.org/wiki/File:Knight_hadrosaurs.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "물가의 오리주둥이 공룡, 찰스 R. 나이트, 1897 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1897",
+      "holder": "미국 자연사박물관"
+    },
+    {
+      "key": "knight-stegosaurus",
+      "title": "숲속의 스테고사우루스",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1800,
+      "height": 1210,
+      "src": "/images/builtin/knight-stegosaurus.webp",
+      "thumb": "/images/builtin/knight-stegosaurus-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "찰스 R. 나이트",
+        "url": "https://commons.wikimedia.org/wiki/File:Stego.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "숲속의 스테고사우루스, 찰스 R. 나이트, 1901 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1901",
+      "holder": "미국 자연사박물관"
+    },
+    {
       "key": "banana-flower",
       "title": "바나나 꽃과 열매",
       "category": "삽화",
@@ -2891,6 +3261,29 @@
       "holder": "미국 의회도서관"
     },
     {
+      "key": "curiosity-skycrane",
+      "title": "줄에 매달려 화성에 내리는 큐리오시티",
+      "category": "삽화",
+      "topic": "탈것",
+      "level": "보통",
+      "width": 1800,
+      "height": 1012,
+      "src": "/images/builtin/curiosity-skycrane.webp",
+      "thumb": "/images/builtin/curiosity-skycrane-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA/JPL-Caltech)",
+        "author": "NASA·JPL",
+        "url": "https://commons.wikimedia.org/wiki/File:Curiosity_Touching_Down,_Artist%27s_Concept.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "줄에 매달려 화성에 내리는 큐리오시티, 미국 항공우주국(NASA)·JPL, 2012 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL-Caltech), 퍼블릭 도메인",
+      "year": "2012",
+      "holder": "미국 항공우주국(NASA) 제트추진연구소"
+    },
+    {
       "key": "grand-canyon-poster",
       "title": "그랜드캐니언 포스터",
       "category": "삽화",
@@ -2985,6 +3378,312 @@
       "year": "1938",
       "holder": "미국 의회도서관",
       "note": "위아래 안내 글자를 잘라 냄"
+    },
+    {
+      "key": "grand-tour-poster",
+      "title": "행성 여행 '그랜드 투어' 포스터",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1517,
+      "height": 1800,
+      "src": "/images/builtin/grand-tour-poster.webp",
+      "thumb": "/images/builtin/grand-tour-poster-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA/JPL-Caltech)",
+        "author": "NASA·JPL",
+        "url": "https://commons.wikimedia.org/wiki/File:JPL_Visions_of_the_Future,_Grand_Tour.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "행성 여행 '그랜드 투어' 포스터, 미국 항공우주국(NASA)·JPL, 2016 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL-Caltech), 퍼블릭 도메인",
+      "year": "2016",
+      "holder": "미국 항공우주국(NASA) 제트추진연구소",
+      "note": "아래 글자를 잘라 냄"
+    },
+    {
+      "key": "mars-poster",
+      "title": "화성으로 떠나는 여행 포스터",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1800,
+      "height": 1795,
+      "src": "/images/builtin/mars-poster.webp",
+      "thumb": "/images/builtin/mars-poster-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA/JPL-Caltech)",
+        "author": "NASA·JPL",
+        "url": "https://commons.wikimedia.org/wiki/File:JPL_Visions_of_the_Future,_Mars.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "화성으로 떠나는 여행 포스터, 미국 항공우주국(NASA)·JPL, 2016 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL-Caltech), 퍼블릭 도메인",
+      "year": "2016",
+      "holder": "미국 항공우주국(NASA) 제트추진연구소",
+      "note": "위아래 글자를 잘라 냄"
+    },
+    {
+      "key": "earth-poster",
+      "title": "우주 여행자가 바라본 지구 포스터",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1541,
+      "height": 1800,
+      "src": "/images/builtin/earth-poster.webp",
+      "thumb": "/images/builtin/earth-poster-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA/JPL-Caltech)",
+        "author": "NASA·JPL",
+        "url": "https://commons.wikimedia.org/wiki/File:JPL_Visions_of_the_Future,_Earth.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "우주 여행자가 바라본 지구 포스터, 미국 항공우주국(NASA)·JPL, 2016 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL-Caltech), 퍼블릭 도메인",
+      "year": "2016",
+      "holder": "미국 항공우주국(NASA) 제트추진연구소",
+      "note": "아래 글자를 잘라 냄"
+    },
+    {
+      "key": "enceladus-poster",
+      "title": "얼음 분수 위성 엔셀라두스 여행 포스터",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1576,
+      "height": 1800,
+      "src": "/images/builtin/enceladus-poster.webp",
+      "thumb": "/images/builtin/enceladus-poster-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA/JPL-Caltech)",
+        "author": "NASA·JPL",
+        "url": "https://commons.wikimedia.org/wiki/File:JPL_Visions_of_the_Future,_Enceladus.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "얼음 분수 위성 엔셀라두스 여행 포스터, 미국 항공우주국(NASA)·JPL, 2016 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL-Caltech), 퍼블릭 도메인",
+      "year": "2016",
+      "holder": "미국 항공우주국(NASA) 제트추진연구소",
+      "note": "아래 글자를 잘라 냄"
+    },
+    {
+      "key": "kepler-16b-poster",
+      "title": "해가 두 개인 행성 여행 포스터",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1800,
+      "height": 1756,
+      "src": "/images/builtin/kepler-16b-poster.webp",
+      "thumb": "/images/builtin/kepler-16b-poster-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA/JPL-Caltech, 외계행성 여행사)",
+        "author": "NASA·JPL",
+        "url": "https://commons.wikimedia.org/wiki/File:Kepler-16b_39x27_CMYK-1.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "해가 두 개인 행성 여행 포스터, 미국 항공우주국(NASA)·JPL, 2018 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL-Caltech, 외계행성 여행사), 퍼블릭 도메인",
+      "year": "2018",
+      "holder": "미국 항공우주국(NASA) 제트추진연구소",
+      "note": "위아래 글자를 잘라 냄"
+    },
+    {
+      "key": "kepler-186f-poster",
+      "title": "빨간 풀이 자라는 행성 여행 포스터",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1569,
+      "height": 1800,
+      "src": "/images/builtin/kepler-186f-poster.webp",
+      "thumb": "/images/builtin/kepler-186f-poster-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA/JPL-Caltech, 외계행성 여행사)",
+        "author": "NASA·JPL",
+        "url": "https://commons.wikimedia.org/wiki/File:Kepler-186f_39x27_CMYK-1.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "빨간 풀이 자라는 행성 여행 포스터, 미국 항공우주국(NASA)·JPL, 2018 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL-Caltech, 외계행성 여행사), 퍼블릭 도메인",
+      "year": "2018",
+      "holder": "미국 항공우주국(NASA) 제트추진연구소",
+      "note": "아래 글자를 잘라 냄"
+    },
+    {
+      "key": "lava-planet-poster",
+      "title": "용암 바다 행성 여행 포스터",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1569,
+      "height": 1800,
+      "src": "/images/builtin/lava-planet-poster.webp",
+      "thumb": "/images/builtin/lava-planet-poster-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA/JPL-Caltech, 외계행성 여행사)",
+        "author": "조비 해리스(NASA·JPL)",
+        "url": "https://commons.wikimedia.org/wiki/File:55_Cancri_e_Final_1_30.png"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "용암 바다 행성 여행 포스터, 조비 해리스(NASA·JPL), 2018 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL-Caltech, 외계행성 여행사), 퍼블릭 도메인",
+      "year": "2018",
+      "holder": "미국 항공우주국(NASA) 제트추진연구소",
+      "note": "아래 글자와 테두리를 잘라 냄"
+    },
+    {
+      "key": "cassini-saturn",
+      "title": "토성 고리에 도착한 카시니 탐사선",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1800,
+      "height": 1200,
+      "src": "/images/builtin/cassini-saturn.webp",
+      "thumb": "/images/builtin/cassini-saturn-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA/JPL)",
+        "author": "NASA·JPL",
+        "url": "https://commons.wikimedia.org/wiki/File:Cassini_Saturn_Orbit_Insertion.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "토성 고리에 도착한 카시니 탐사선, 미국 항공우주국(NASA)·JPL, 2002 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL), 퍼블릭 도메인",
+      "year": "2002",
+      "holder": "미국 항공우주국(NASA) 제트추진연구소"
+    },
+    {
+      "key": "humans-on-mars",
+      "title": "화성을 탐험하는 우주인",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1800,
+      "height": 1050,
+      "src": "/images/builtin/humans-on-mars.webp",
+      "thumb": "/images/builtin/humans-on-mars-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA)",
+        "author": "팻 롤링스(NASA)",
+        "url": "https://commons.wikimedia.org/wiki/File:Humans_on_Mars.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "화성을 탐험하는 우주인, 팻 롤링스(NASA), 1995 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인",
+      "year": "1995",
+      "holder": "미국 항공우주국(NASA)"
+    },
+    {
+      "key": "moon-base-rover",
+      "title": "달 기지와 우주 자동차",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1209,
+      "height": 1800,
+      "src": "/images/builtin/moon-base-rover.webp",
+      "thumb": "/images/builtin/moon-base-rover-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA)",
+        "author": "NASA",
+        "url": "https://commons.wikimedia.org/wiki/File:This_illustration_of_Moon_to_Mars_transportation_and_habitation_shows_astronauts_driving_a_pressurized_rover_away_from_the_dome_of_a_translucent_lunar_habitat_(Moon_to_Mars_Transportation_and_Habitation).png"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "달 기지와 우주 자동차, 미국 항공우주국(NASA), 연도 미상 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인",
+      "year": "연도 미상",
+      "holder": "미국 항공우주국(NASA)"
+    },
+    {
+      "key": "space-colony-sphere",
+      "title": "우주에 떠 있는 마을 (우주 식민지 상상화)",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1800,
+      "height": 1418,
+      "src": "/images/builtin/space-colony-sphere.webp",
+      "thumb": "/images/builtin/space-colony-sphere-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA)",
+        "author": "릭 귀디스(NASA 에임스)",
+        "url": "https://commons.wikimedia.org/wiki/File:Spacecolony3edit.jpeg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "우주에 떠 있는 마을 (우주 식민지 상상화), 릭 귀디스(NASA 에임스), 1970년대 — 미국 항공우주국(NASA) 에임스 연구센터 / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인",
+      "year": "1970년대",
+      "holder": "미국 항공우주국(NASA) 에임스 연구센터"
+    },
+    {
+      "key": "space-colony-torus",
+      "title": "도넛 모양 우주 도시 안쪽",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1800,
+      "height": 1425,
+      "src": "/images/builtin/space-colony-torus.webp",
+      "thumb": "/images/builtin/space-colony-torus-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA Ames Research Center)",
+        "author": "돈 데이비스(NASA 에임스)",
+        "url": "https://commons.wikimedia.org/wiki/File:Stanford_Torus_interior.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "도넛 모양 우주 도시 안쪽, 돈 데이비스(NASA 에임스), 1970년대 — 미국 항공우주국(NASA) 에임스 연구센터 / 이미지: Wikimedia Commons (NASA Ames Research Center), 퍼블릭 도메인",
+      "year": "1970년대",
+      "holder": "미국 항공우주국(NASA) 에임스 연구센터"
+    },
+    {
+      "key": "mars-colony",
+      "title": "화성 기지의 채소 농장",
+      "category": "삽화",
+      "topic": "우주·과학",
+      "level": "보통",
+      "width": 1800,
+      "height": 1391,
+      "src": "/images/builtin/mars-colony.webp",
+      "thumb": "/images/builtin/mars-colony-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (NASA Ames Research Center)",
+        "author": "NASA 에임스 연구센터",
+        "url": "https://commons.wikimedia.org/wiki/File:Concept_Mars_colony.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "화성 기지의 채소 농장, 미국 항공우주국(NASA) 에임스 연구센터, 연도 미상 — 미국 항공우주국(NASA) 에임스 연구센터 / 이미지: Wikimedia Commons (NASA Ames Research Center), 퍼블릭 도메인",
+      "year": "연도 미상",
+      "holder": "미국 항공우주국(NASA) 에임스 연구센터"
     },
     {
       "key": "carolina-parrot",
