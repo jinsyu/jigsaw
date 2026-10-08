@@ -8,6 +8,7 @@
 import { RtError } from '../rt-client.js';
 import { makeNonce } from './auth.js';
 import { h, pieceIcon, setTitle } from './dom.js';
+import { pictureHero } from '../home-practice.js';
 
 const GIS_SCRIPT = 'https://accounts.google.com/gsi/client';
 
@@ -55,6 +56,14 @@ function intro() {
       const images = index?.images ?? [];
       const picked = INTRO_PICTURES.map((key) => images.find((image) => image.key === key)).filter(Boolean);
       mosaic.replaceChildren(...picked.map((image) => h('img', { src: image.thumb, alt: '', loading: 'lazy', decoding: 'async' })));
+      // The logo on the card becomes a puzzle of an easy picture, as on the home page.
+      const logo = document.querySelector('.t-login-hero');
+      const easy = images.filter((i) => i.level === '쉬움' && i.category === '사진' && !INTRO_PICTURES.includes(i.key));
+      if (logo && easy.length) {
+        const puzzle = pictureHero(easy[Math.floor(Math.random() * easy.length)]);
+        puzzle.setAttribute('class', 't-login-hero hero-picture');
+        logo.replaceWith(puzzle);
+      }
       count.textContent = images.length ? `내장 그림 ${images.length}장` : '내장 그림';
     })
     .catch(() => {});
