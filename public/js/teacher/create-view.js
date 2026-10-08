@@ -501,6 +501,18 @@ export function cardDetail(builtin) {
   return [builtin.source?.author, builtin.year].filter(Boolean).join(', ') || builtin.topic || builtin.category;
 }
 
+// Theme shortcuts under the search field: what is searched (`word`) and the button text.
+const THEME_SHORTCUTS = [
+  { word: '동물', label: '동물' },
+  { word: '탈것', label: '탈것' },
+  { word: '바다', label: '바다' },
+  { word: '우주', label: '우주' },
+  { word: '꽃', label: '꽃·식물' },
+  { word: '상상', label: '이야기' },
+  { word: '명소', label: '명소' },
+  { word: '쉬움', label: '쉬운 그림' },
+];
+
 // Words a built-in picture can be found by: title, theme, kind, level, maker, year.
 export function pictureSearchText(builtin) {
   return normalizeSearch([builtin.title, builtin.topic, builtin.category, builtin.level, builtin.source?.author, builtin.year].filter(Boolean).join(' '));
@@ -554,6 +566,27 @@ function pictureFilter(cards, grid) {
     },
   });
   const search = h('label', { class: 't-search' }, icon('search', 18), field);
+  // One tap fills the field with a theme (the themes pictures have, children's favourites first).
+  const themes = THEME_SHORTCUTS.filter((t) => cards.some((card) => card.search.includes(normalizeSearch(t.word))));
+  const shortcuts = h(
+    'div',
+    { class: 't-themes', role: 'group', 'aria-label': '주제로 찾기' },
+    themes.map((t) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: 't-theme',
+          'aria-controls': grid.id,
+          onclick: () => {
+            field.value = t.word;
+            filter();
+          },
+        },
+        t.label,
+      ),
+    ),
+  );
 
   function reveal(card, visible) {
     card.node.hidden = !visible;
@@ -564,6 +597,7 @@ function pictureFilter(cards, grid) {
   function show(category) {
     current = category;
     if (field.value) field.value = '';
+    for (const button of shortcuts.children) button.setAttribute('aria-pressed', 'false');
     status.textContent = '';
     categories.forEach((c, i) => {
       buttons[i].setAttribute('aria-pressed', String(c === category));
@@ -575,6 +609,7 @@ function pictureFilter(cards, grid) {
   }
   function filter() {
     const query = normalizeSearch(field.value);
+    themes.forEach((t, i) => shortcuts.children[i].setAttribute('aria-pressed', String(query === normalizeSearch(t.word))));
     if (!query) {
       show(current);
       return;
@@ -593,7 +628,7 @@ function pictureFilter(cards, grid) {
     status.textContent = found ? `${found}장 찾았어요` : '찾는 그림이 없어요. 다른 말로 찾아보거나 분류를 눌러 보세요.';
   }
   show(current);
-  return [h('div', { class: 't-pic-filter' }, search, group), status, grid];
+  return [h('div', { class: 't-pic-filter' }, search, shortcuts, group), status, grid];
 }
 
 // Source line under the preview: outside pictures name the work, maker, holder and licence,
