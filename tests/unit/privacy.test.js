@@ -71,7 +71,7 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
   });
 
   it('gives the contact address the operator chose to publish, and no other e-mail', () => {
-    const CONTACT = 'jinsyu.com@gmail.com';
+    const CONTACT = 'jinsyu@gyosil.app';
     expect(html).toContain(`href="mailto:${CONTACT}"`);
     const addresses = [...text.matchAll(/[\w.+-]+@[\w-]+\.[a-z]{2,}/gi)].map((m) => m[0]);
     expect(addresses.length).toBeGreaterThan(0);
