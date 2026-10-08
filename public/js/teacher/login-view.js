@@ -44,7 +44,7 @@ export function loginErrorMessage(error) {
 }
 
 // Pictures shown on the sign-in page (built-in keys; any that are missing are skipped).
-const INTRO_PICTURES = ['starry-night', 'monarch-butterfly', 'magpie-tiger', 'great-wave', 'wizard-of-oz', 'ssireum'];
+const INTRO_PICTURES = ['giant-panda', 'starry-night', 'magpie-tiger', 'corgi-puppy', 'great-wave', 'macaws'];
 
 // What 함께 퍼즐 is, beside the sign-in card, for a teacher who comes here first.
 function intro() {
