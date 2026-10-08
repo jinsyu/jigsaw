@@ -1,0 +1,14 @@
+# Template of a site file for another app on the rt server (docs/ops.md '새 앱 추가').
+# Copy it to /etc/caddy/sites/<app>.caddy (the name must end in .caddy; this file does not, so
+# Caddy never loads it), then replace the address and the port from the port table.
+# - No `log` directive: no access log, so no client IP addresses (the server-wide filter in
+#   /etc/caddy/Caddyfile cleans the error log).
+# - No `trusted_proxies`: X-Forwarded-For is always the real client address.
+# - The app listens on 127.0.0.1 only; Caddy is the only way in.
+# - stream_close_delay (recommended): open WebSockets survive a Caddy reload for up to 5 minutes
+#   instead of being closed at once.
+app.example.com {
+	reverse_proxy 127.0.0.1:3500 {
+		stream_close_delay 5m
+	}
+}

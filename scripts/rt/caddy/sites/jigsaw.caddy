@@ -1,0 +1,12 @@
+# /etc/caddy/sites/jigsaw.caddy: the jigsaw rt server, imported by /etc/caddy/Caddyfile.
+# Installed by scripts/rt/setup.sh (docs/ops.md). No `log` (no access log) and no
+# `trusted_proxies` (see the Caddyfile). HTTPS certificates are automatic. WebSocket and long
+# polling pass through reverse_proxy.
+# stream_close_delay: a Caddy reload (for example when another app's site file is added) closes
+# open WebSockets at once by default; with the delay they stay open up to 5 minutes, so classes
+# are not cut by a reload. A restart of jigsaw-rt or Caddy itself still disconnects (D17).
+rt.gyosil.app {
+	reverse_proxy 127.0.0.1:3400 {
+		stream_close_delay 5m
+	}
+}
