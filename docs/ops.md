@@ -15,7 +15,7 @@
 | 비밀값 | `/etc/jigsaw-rt.env` (root, 600). 키 목록과 설명은 `server/.env.example` |
 | 백업 | `jigsaw-backup.timer` → `scripts/db/backup.sh`, 파일은 `/var/backups/jigsaw` (600), 접속 주소는 `/etc/jigsaw-backup.env` (root, 600) |
 | 로그 | journald, 14일 보관 (`/etc/systemd/journald.conf.d/zz-jigsaw.conf`) |
-| Caddy | `/etc/caddy/Caddyfile` (`scripts/rt/Caddyfile`). 접근 로그 없음, 기본(오류) 로그에서 접속자 주소·포트·요청 헤더 제거, `trusted_proxies` 없음 |
+| Caddy | `/etc/caddy/Caddyfile` (`scripts/rt/Caddyfile`). 접근 로그 없음, 기본 로그(오류·tls·admin.api)에서 접속자 주소·포트·요청 헤더 제거, `trusted_proxies` 없음 |
 
 - 저장소가 공개라 서버는 https 로 clone·pull 한다. **deploy key·GitHub 토큰은 쓰지 않는다.** 저장소를 비공개로 바꾸면 그때 읽기 전용 deploy key 를 만든다.
 - 배포(다시 시작)는 모든 수업을 몇 초 끊는다. 학생·교사 화면은 자동으로 다시 연결되고 판은 이어진다(spec D17). 그래도 **배포는 수업 시간 밖에** 한다.

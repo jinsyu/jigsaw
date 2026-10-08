@@ -4,6 +4,8 @@
 # - Caddy's default log still records errors (for example a 502 while the server restarts) with
 #   the request; the filter below drops the client address, port and request headers from it
 #   and keeps the error itself.
+# - The same filter covers every other logger of the default log: `remote` (address:port) of
+#   the tls logger (certificate checks) and remote_ip, remote_port and headers of admin.api.
 # No `trusted_proxies`: Caddy ignores an X-Forwarded-For sent by the client and sets it to the
 # real client address, which the server reads with RT_TRUST_PROXY=1.
 # HTTPS certificates are automatic. WebSocket and long polling pass through reverse_proxy.
@@ -16,6 +18,10 @@
 				request>client_ip delete
 				request>remote_port delete
 				request>headers delete
+				remote delete
+				remote_ip delete
+				remote_port delete
+				headers delete
 			}
 		}
 	}

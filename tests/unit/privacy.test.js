@@ -65,9 +65,9 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
     expect(text).not.toContain('서버 연결 도구');
   });
 
-  it('leaves only the start date for the operator to fill in (written on the day of the public launch)', () => {
-    expect(html).toContain('data-todo="effective-date"');
-    expect([...html.matchAll(/data-todo="([^"]+)"/g)].map((m) => m[1])).toEqual(['effective-date']);
+  it('applies from the public launch, 8 October 2026, with nothing left for the operator to fill in', () => {
+    expect(text).toContain('이 방침은 2026년 10월 8일부터 적용합니다');
+    expect(html).not.toContain('data-todo');
   });
 
   it('gives the contact address the operator chose to publish, and no other e-mail', () => {

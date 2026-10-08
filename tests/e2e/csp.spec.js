@@ -191,3 +191,96 @@ test('the production CSP: every page loads without a violation, with the rt serv
   expect(unexpected).toEqual([]);
   expect(errors).toEqual([]);
 });
+
+// The real GIS first draws a pre-render of its button (a Google logo SVG sized by inline style
+// attributes, blocked by the CSP without 'unsafe-inline'), then swaps in its 300x44 frame. Our
+// stylesheet holds the button slot at the button's size, so the unsized logo never shows at the
+// size of the card and nothing below the slot moves when the frame comes in.
+test('the production CSP: the Google button slot keeps the button size while GIS pre-renders', async ({ page, baseURL }, testInfo) => {
+  test.skip(!['desktop-1440', 'phone-360'].includes(testInfo.project.name), 'one wide and one phone screen');
+  const productionCsp = headersFor('/', VERCEL)['Content-Security-Policy'];
+  const { unexpected } = await asHostedSite(page, baseURL, { csp: productionCsp });
+  await fakeGis(page, { prerender: true });
+  await watchCsp(page.context());
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(`${SITE}/teacher`);
+
+  const slot = page.locator('.t-google-slot');
+  const foot = page.locator('.t-login-foot');
+  await expect(slot.locator('.gis-prerender svg')).toBeAttached();
+  // The web font (Pretendard) can come in between two measurements and change the text height.
+  await page.evaluate(() => document.fonts.ready);
+  // The pre-render's inline styles are blocked, as on the hosted site (the slot does not rely on them).
+  expect((await violations(page)).every((v) => v.startsWith('style-src-attr '))).toBe(true);
+  expect(await violations(page)).not.toEqual([]);
+  const prerender = {
+    slot: await slot.boundingBox(),
+    svg: await slot.locator('svg').boundingBox(),
+    foot: await foot.boundingBox(),
+  };
+  await page.screenshot({ path: testInfo.outputPath('gis-prerender.png'), fullPage: true });
+  expect(prerender.slot.height).toBe(44);
+  expect(prerender.svg.height).toBeLessThanOrEqual(24);
+  expect(prerender.svg.width).toBeLessThanOrEqual(24);
+
+  await page.evaluate(() => window.__gisFinish());
+  await expect(slot.locator('iframe')).toBeAttached();
+  const after = { slot: await slot.boundingBox(), foot: await foot.boundingBox() };
+  expect(after.slot.height).toBe(44);
+  // What comes below the slot stays where it was, relative to the slot.
+  expect(after.foot.y - after.slot.y).toBeCloseTo(prerender.foot.y - prerender.slot.y, 1);
+  await expectNoHorizontalOverflow(page);
+  expect(unexpected).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+// Taking the hosted screens offline: a config.js without the rt address (hasRtServer false)
+// shows 준비 중 on the teacher and student screens, and nothing asks the rt server or Google.
+test('the production CSP without an rt address: the screens say 준비 중 and nothing asks the rt server or Google', async ({ page, baseURL }, testInfo) => {
+  test.skip(!['desktop-1440', 'phone-360'].includes(testInfo.project.name), 'one wide and one phone screen');
+  const productionCsp = headersFor('/', VERCEL)['Content-Security-Policy'];
+  const hosts = new Set();
+  page.on('request', (request) => hosts.add(new URL(request.url()).host));
+  page.on('websocket', (ws) => hosts.add(new URL(ws.url()).host));
+  const { unexpected } = await asHostedSite(page, baseURL, { csp: productionCsp });
+  const hostedRtLine = `rtUrl: '${HOSTED_RT}',`;
+  await page.route(`${SITE}/js/config.js`, async (route) => {
+    const response = await route.fetch({ url: `${baseURL}/js/config.js` });
+    const text = await response.text();
+    expect(text).toContain(hostedRtLine);
+    const headers = { ...response.headers() };
+    if (headers['content-security-policy']) headers['content-security-policy'] = productionCsp;
+    await route.fulfill({ response, headers, body: text.replace(hostedRtLine, "rtUrl: '',") });
+  });
+  await watchCsp(page.context());
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+
+  const visit = async (path) => {
+    const response = await page.goto(`${SITE}${path}`);
+    expect(response.headers()['content-security-policy'], path).toBe(productionCsp);
+    await page.waitForLoadState('networkidle');
+  };
+  for (const path of ['/teacher', '/teacher/new']) {
+    await visit(path);
+    await expect(page.getByRole('heading', { level: 1, name: '선생님 화면은 준비 중이에요' })).toBeVisible();
+    await expect(page.getByRole('link', { name: '처음 화면으로' })).toHaveAttribute('href', '/');
+    expect(await violations(page), path).toEqual([]);
+    await expectNoHorizontalOverflow(page);
+  }
+  await page.screenshot({ path: testInfo.outputPath('production-teacher-not-ready.png'), fullPage: true });
+  for (const path of ['/join', '/join?code=123456', '/play']) {
+    await visit(path);
+    await expect(page.getByRole('heading', { level: 1, name: '아직 들어갈 수 없어요' })).toBeVisible();
+    await expect(page.getByText('학생 입장은 준비 중이에요. 선생님께 알려 주세요.')).toBeVisible();
+    expect(await violations(page), path).toEqual([]);
+    await expectNoHorizontalOverflow(page);
+  }
+  await page.screenshot({ path: testInfo.outputPath('production-student-not-ready.png'), fullPage: true });
+  testInfo.annotations.push({ type: 'hosts', description: [...hosts].join(', ') });
+  // Only the site and the font CDN: no rt server, Google or Supabase.
+  expect([...hosts].filter((h) => !['jigsaw.gyosil.app', 'cdn.jsdelivr.net'].includes(h))).toEqual([]);
+  expect(unexpected).toEqual([]);
+  expect(errors).toEqual([]);
+});

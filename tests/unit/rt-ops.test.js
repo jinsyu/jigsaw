@@ -99,6 +99,15 @@ describe('scripts/rt/Caddyfile', () => {
       expect(global).toMatch(new RegExp(`^\\t+${field} delete$`, 'm'));
     }
   });
+
+  // Other loggers of the default log: tls ("served key authentication certificate" during a
+  // certificate check has `remote`: address:port) and admin.api (remote_ip, remote_port, headers).
+  it('drops the client address from the tls and admin.api loggers too', () => {
+    const global = directives.slice(0, directives.indexOf('rt.gyosil.app {'));
+    for (const field of ['remote', 'remote_ip', 'remote_port', 'headers']) {
+      expect(global).toMatch(new RegExp(`^\\t+${field} delete$`, 'm'));
+    }
+  });
 });
 
 describe('journald and backup settings', () => {

@@ -271,3 +271,8 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
   - (d) 백업 접속은 Supabase Session pooler(IPv4) 문자열을 쓴다(Direct connection 은 IPv6 전용).
   - (e) `pg_dump` 클라이언트는 17(apt.postgresql.org). T25 에서 `select version();` 으로 원격 버전을 확인하고 더 높으면 `setup.sh` 의 `PG_CLIENT_MAJOR` 를 올린다.
   - (f) journald 보관 14일(`MaxRetentionSec=14day`, `MaxFileSec=1day`, `ForwardToSyslog=no`)은 서버 전체 journal 에 적용한다. Ubuntu 의 `/usr/lib/systemd/journald.conf.d/syslog.conf` 가 `ForwardToSyslog=yes` 를 넣고 설정 조각은 파일 이름 순으로 적용되므로 파일 이름을 `zz-jigsaw.conf` 로 한다.
+- **T25 운영 후속**:
+  - (a) 교사 로그인 GIS 버튼 깜빡임: GIS 사전 렌더의 인라인 스타일이 CSP(`style-src` 에 `unsafe-inline` 없음)로 막혀 Google 로고 SVG 가 카드 크기로 보였다. CSP 는 그대로 두고 `teacher.css` 에서 `.t-google-slot` 을 높이 44px·세로 넘침 자르기로, 그 안의 SVG 를 18px 로 고정했다. `csp.spec` 의 사전 렌더 흉내(`fakeGis(page, { prerender: true })`) 시험으로 확인한다.
+  - (b) '준비 중' 시험 복원: 운영 주소 흉내에서 `config.js` 응답만 `rtUrl: ''` 로 바꿔 교사(`/teacher`, `/teacher/new`)·학생(`/join`, `/play`) '준비 중', rt·Google 요청 0, CSP 위반 0 을 `csp.spec` 에서 확인한다.
+  - (c) 개인정보 처리방침 시행일을 운영 공개일 2026년 10월 8일로 채우고 `data-todo` 표시를 없앴다(`privacy.test`).
+  - (d) Caddy 전역 로그 필터에 `remote`(tls 로거의 인증서 검증 접속 주소:포트)와 `remote_ip`·`remote_port`·`headers`(admin.api 로거)를 더했다. caddy:2(v2.11.7) 컨테이너에서 validate 와, 필터 전후 로그에서 두 로거의 해당 필드가 지워지는 것을 확인했다(`rt-ops.test`). 서버 반영은 `setup.sh --replace-caddyfile` 재실행.
