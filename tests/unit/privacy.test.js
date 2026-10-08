@@ -30,7 +30,7 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
     expect(text).toContain('수업이 끝나고 30일 뒤 삭제');
     expect(text).toContain('늦어도 24시간 뒤 자동 삭제');
     expect(text).toContain("퍼즐 그림, '내 그림' 목록 교사가 지울 때까지");
-    expect(text).not.toMatch(/1년|쓰지 않은 그림/);
+    expect(text).not.toMatch(/(?<!\d)1년|쓰지 않은 그림/); // '1년' as a retention period, not a year like 1941년
     expect(text).toContain('탈퇴할 때까지');
   });
 

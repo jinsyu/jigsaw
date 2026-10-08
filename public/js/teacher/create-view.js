@@ -494,8 +494,10 @@ export function orderedCategories(items) {
   return [...CATEGORY_ORDER.filter((c) => present.includes(c)), ...present.filter((c) => !CATEGORY_ORDER.includes(c))];
 }
 
-// Card note: the maker and year (the theme when neither is known).
+// Card note: what a photo shows (동물, 탈것, ...); the maker and year of a painting or an
+// illustration (the theme when neither is known).
 export function cardDetail(builtin) {
+  if (builtin.category === '사진' && builtin.topic) return builtin.topic;
   return [builtin.source?.author, builtin.year].filter(Boolean).join(', ') || builtin.topic || builtin.category;
 }
 

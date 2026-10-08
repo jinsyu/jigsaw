@@ -12,7 +12,7 @@ describe('built-in picture card note', () => {
 
   it('shows the artist and year for outside pictures', () => {
     expect(cardDetail(index.images.find((i) => i.key === 'starry-night'))).toBe('빈센트 반 고흐, 1889');
-    expect(cardDetail(index.images.find((i) => i.key === 'hyangwonjeong'))).toBe('Huntsmanleader'); // no year
+    expect(cardDetail(index.images.find((i) => i.key === 'hyangwonjeong'))).toBe('명소·건축'); // a photo: what it shows
   });
 
   it('never leaves a card without a note', () => {

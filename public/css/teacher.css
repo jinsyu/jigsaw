@@ -423,7 +423,8 @@ a.t-session:hover { box-shadow: 0 6px 18px rgba(20, 30, 60, .08), inset 0 0 0 1.
 }
 /* Short wide screens (1024 x 768): a smaller preview keeps piece and group counts above the fade. */
 @media (min-width: 960px) and (max-height: 820px) {
-  .t-preview svg { max-height: 150px; }
+  .t-preview svg { max-height: 120px; }
+  .t-side-body { gap: 18px; }
 }
 @media (max-width: 479px) {
   .t-card { padding: 16px; }

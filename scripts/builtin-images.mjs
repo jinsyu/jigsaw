@@ -1,7 +1,8 @@
 // Builds the built-in pictures from scripts/builtin-external.json (public domain, CC0,
 // 공공누리 제1유형): downloads the originals into BUILTIN_ORIGINALS (default: the OS temp folder,
 // never the repository), crops or joins them as recorded there, and resizes them.
-// Writes public/images/builtin/<key>.webp (long side 1800), <key>-thumb.webp (long side 720)
+// Writes public/images/builtin/<key>.webp (long side 1800, less if the file would be too big),
+// <key>-thumb.webp (long side 720)
 // and index.json (in the order of the JSON file). Usage: pnpm images:builtin   (needs network)
 // Sources, licences and checks: docs/image-candidates.md.
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -16,7 +17,8 @@ const OUT = join(ROOT, 'public/images/builtin');
 const LONG_SIDE = { full: 1800, thumb: 720 }; // pictures keep their own proportions
 const RASTER_QUALITY = { full: 0.8, thumb: 0.78 };
 // Whole classes load a picture at once on school Wi-Fi: keep files under these sizes
-// (the encoder quality steps down until they fit, but not below RASTER_MIN_QUALITY).
+// (the encoder quality steps down until they fit, but not below RASTER_MIN_QUALITY; then the
+// picture is made smaller, long side down to 70%).
 const MAX_BYTES = { full: 500_000, thumb: 80_000 };
 const RASTER_MIN_QUALITY = 0.5;
 const EXTERNAL = JSON.parse(readFileSync(join(ROOT, 'scripts/builtin-external.json'), 'utf8'));
@@ -96,23 +98,27 @@ async function renderExternal(page, picture) {
       const sw = Math.round((x1 - x0) * joined.width);
       const sh = Math.round((y1 - y0) * joined.height);
       const out = {};
+      const bytes = (u) => ((u.length - u.indexOf(',') - 1) * 3) / 4;
       for (const name of ['full', 'thumb']) {
-        const k = longSide[name] / Math.max(sw, sh);
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(sw * k);
-        canvas.height = Math.round(sh * k);
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(joined, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-        let q = quality[name];
-        let url = canvas.toDataURL('image/webp', q);
-        if (!url.startsWith('data:image/webp')) throw new Error('this browser cannot encode WebP');
-        const bytes = (u) => ((u.length - u.indexOf(',') - 1) * 3) / 4;
-        while (bytes(url) > maxBytes[name] && q > minQuality + 1e-9) {
-          q = Math.max(minQuality, q - 0.05);
-          url = canvas.toDataURL('image/webp', q);
+        // Quality steps down to minQuality; a picture still too big is drawn 10% smaller.
+        for (const scale of [1, 0.9, 0.8, 0.7]) {
+          const k = (longSide[name] * scale) / Math.max(sw, sh);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(sw * k);
+          canvas.height = Math.round(sh * k);
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(joined, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+          let q = quality[name];
+          let url = canvas.toDataURL('image/webp', q);
+          if (!url.startsWith('data:image/webp')) throw new Error('this browser cannot encode WebP');
+          while (bytes(url) > maxBytes[name] && q > minQuality + 1e-9) {
+            q = Math.max(minQuality, q - 0.05);
+            url = canvas.toDataURL('image/webp', q);
+          }
+          out[name] = { width: canvas.width, height: canvas.height, quality: q, data: url.slice(url.indexOf(',') + 1) };
+          if (bytes(url) <= maxBytes[name]) break;
         }
-        out[name] = { width: canvas.width, height: canvas.height, quality: q, data: url.slice(url.indexOf(',') + 1) };
       }
       return out;
     },
