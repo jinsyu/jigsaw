@@ -10,36 +10,27 @@ function readWebpHeader(path) {
   return bytes.subarray(0, 4).toString('latin1') + bytes.subarray(8, 12).toString('latin1');
 }
 
-describe('built-in pictures index', () => {
-  const selfMade = index.images.filter((i) => i.category === '자체 제작');
-  const outside = index.images.filter((i) => i.category !== '자체 제작');
+const CATEGORIES = ['사진', '삽화', '명화', '우리 그림'];
+const TOPICS = ['동물', '자연', '우주·과학', '사람·생활', '명소·건축', '탈것', '꽃·식물', '바다', '계절', '전통', '상상·이야기'];
+const LEVELS = ['쉬움', '보통', '어려움'];
 
-  it('has a version and 50 pictures: 20 self-made (the six mockup scenes first) and 30 outside', () => {
+describe('built-in pictures index', () => {
+  const outside = index.images;
+
+  it('has a version and only outside pictures (no drawings of our own), each key once', () => {
     expect(index.version).toBe(1);
-    expect(index.images).toHaveLength(50);
-    expect(new Set(index.images.map((i) => i.key)).size).toBe(50);
-    expect(selfMade).toHaveLength(20);
-    expect(selfMade.slice(0, 6).map((i) => i.key)).toEqual(['sea', 'village', 'space', 'garden', 'classroom', 'friends']);
-    for (const i of selfMade) {
-      expect(i.source.name).toBe('함께 퍼즐 자체 제작');
-      expect(i.topic.length).toBeGreaterThan(0); // the old theme (자연, 학교, ...)
-      // 3:2 landscape (1800 x 1200) or 2:3 portrait (1200 x 1800).
-      expect(i.width > i.height ? '1800x1200' : '1200x1800').toBe(`${i.width}x${i.height}`);
-    }
-    const portrait = selfMade.filter((i) => i.height > i.width);
-    expect(portrait.length).toBeGreaterThanOrEqual(2);
-    expect(portrait.length).toBeLessThanOrEqual(3);
+    expect(index.images.length).toBeGreaterThanOrEqual(30);
+    expect(new Set(index.images.map((i) => i.key)).size).toBe(index.images.length);
+    expect(index.images.filter((i) => i.source.name === '함께 퍼즐 자체 제작')).toEqual([]);
   });
 
-  it('sorts the outside pictures into the agreed groups', () => {
-    const count = (c) => outside.filter((i) => i.category === c).length;
-    expect(outside).toHaveLength(30);
-    expect({ 명화: count('명화'), '우리 그림': count('우리 그림'), 사진: count('사진'), 삽화: count('삽화') }).toEqual({
-      명화: 12,
-      '우리 그림': 9,
-      사진: 6,
-      삽화: 3,
-    });
+  it('sorts every picture into a kind, a theme and a level', () => {
+    for (const i of index.images) {
+      expect(CATEGORIES, i.key).toContain(i.category);
+      expect(TOPICS, i.key).toContain(i.topic);
+      expect(LEVELS, i.key).toContain(i.level);
+    }
+    for (const c of CATEGORIES) expect(index.images.filter((i) => i.category === c).length, c).toBeGreaterThanOrEqual(3);
   });
 
   it.each(outside.map((i) => [i.key, i]))('%s (outside) says who made it, where it is from and its licence', (_, i) => {

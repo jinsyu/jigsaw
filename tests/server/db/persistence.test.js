@@ -53,7 +53,7 @@ function playingClass(registry, teacherId = TEACHERS.one.id) {
   const { result } = registry.createSession(teacherId, {
     pieceCount: 12,
     groupCount: 3,
-    picture: { builtinKey: 'sea', aspect: 1999 / 1123 },
+    picture: { builtinKey: 'neuschwanstein', aspect: 1999 / 1123 },
   });
   const session = registry.session(result.sessionId);
   created.add(session.id);

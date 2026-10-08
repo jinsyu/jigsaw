@@ -333,7 +333,6 @@ export function renderCreate(main, ctx) {
       .then((builtins) => {
         if (!alive) return;
         tabButtons.builtin.querySelector('.t-tab-count').textContent = String(builtins.length);
-        const first = builtins[0];
         const pictures = builtins.map((b) => ({
           value: `builtin:${b.key}`,
           title: b.title,
@@ -347,25 +346,28 @@ export function renderCreate(main, ctx) {
             width: b.width,
             height: b.height,
             src: b.src,
-            selfMade: b.category === SELF_MADE,
             credit: b.credit,
             sourceUrl: b.source?.url ?? null,
             licenseName: b.license?.name ?? null,
             licenseUrl: b.license?.url ?? null,
           },
         }));
-        const cards = pictures.map((p) => ({
+        // The first picture of the first chip is chosen at the start.
+        const firstKind = orderedCategories(pictures)[0];
+        const first = pictures.find((p) => p.category === firstKind);
+        const cards = pictures.map((p, i) => ({
           category: p.category,
+          search: pictureSearchText(builtins[i]),
           node: pictureCard({
             src: p.thumb,
             title: p.title,
             detail: p.detail,
-            radio: choiceRadio(p.value, p.picture, p === pictures[0] && !state.picture),
+            radio: choiceRadio(p.value, p.picture, p === first && !state.picture),
           }),
         }));
         const grid = h('div', { class: 't-pics', role: 'radiogroup', 'aria-label': '내장 그림', id: 't-builtin-grid' }, cards.map((c) => c.node));
-        panel.replaceChildren(categoryChips(cards, grid), grid);
-        if (!state.picture && first) choosePicture(pictures[0].picture);
+        panel.replaceChildren(...pictureFilter(cards, grid));
+        if (!state.picture && first) choosePicture(first.picture);
       })
       .catch((err) => {
         console.error(err);
@@ -480,19 +482,36 @@ export function renderCreate(main, ctx) {
   };
 }
 
-const SELF_MADE = '자체 제작';
-const CATEGORY_ORDER = [SELF_MADE, '명화', '우리 그림', '사진', '삽화'];
+// Kinds of built-in pictures, in chip order (photos and picture-book art first: the youngest
+// classes like them best). Kinds not listed here come after, in index order.
+const CATEGORY_ORDER = ['사진', '삽화', '명화', '우리 그림'];
 
-// Card note: the theme for self-made scenes, the artist and year for outside pictures.
-export function cardDetail(builtin) {
-  if (builtin.category === SELF_MADE) return builtin.topic ?? SELF_MADE;
-  return [builtin.source?.author, builtin.year].filter(Boolean).join(', ');
+// The kinds present in `items` ({ category }), in chip order.
+export function orderedCategories(items) {
+  const present = [...new Set(items.map((item) => item.category))];
+  return [...CATEGORY_ORDER.filter((c) => present.includes(c)), ...present.filter((c) => !CATEGORY_ORDER.includes(c))];
 }
 
-// Category chips above the built-in pictures: a group of toggle buttons (one pressed),
-// arrow keys move between them, and the row scrolls sideways on narrow screens.
-function categoryChips(cards, grid) {
-  const categories = CATEGORY_ORDER.filter((c) => cards.some((card) => card.category === c));
+// Card note: the maker and year (the theme when neither is known).
+export function cardDetail(builtin) {
+  return [builtin.source?.author, builtin.year].filter(Boolean).join(', ') || builtin.topic || builtin.category;
+}
+
+// Words a built-in picture can be found by: title, theme, kind, maker, year.
+export function pictureSearchText(builtin) {
+  return normalizeSearch([builtin.title, builtin.topic, builtin.category, builtin.source?.author, builtin.year].filter(Boolean).join(' '));
+}
+// Lower case, no spaces: '반 고흐' and '반고흐' find the same pictures.
+export function normalizeSearch(text) {
+  return String(text ?? '').toLowerCase().replace(/\s+/g, '');
+}
+
+// Above the built-in pictures: a search field and category chips (a group of toggle buttons,
+// one pressed; arrow keys move between them; the row scrolls sideways on narrow screens).
+// While the field has words, the chips let go and every picture that matches shows.
+function pictureFilter(cards, grid) {
+  const categories = orderedCategories(cards);
+  let current = categories[0];
   const buttons = categories.map((category) =>
     h(
       'button',
@@ -512,28 +531,70 @@ function categoryChips(cards, grid) {
     show(categories[i]);
     buttons[i].focus();
   });
+  const status = h('p', { class: 't-search-status', role: 'status' });
+  const field = h('input', {
+    type: 'search',
+    class: 't-search-input',
+    placeholder: '그림 찾기 (예: 바다, 호랑이, 고흐)',
+    'aria-label': '내장 그림 찾기',
+    'aria-controls': grid.id,
+    enterkeyhint: 'search',
+    autocomplete: 'off',
+    oninput: () => filter(),
+    onkeydown: (event) => {
+      if (event.key === 'Escape' && field.value) {
+        event.preventDefault();
+        field.value = '';
+        filter();
+      }
+    },
+  });
+  const search = h('label', { class: 't-search' }, icon('search', 18), field);
+
+  function reveal(card, visible) {
+    card.node.hidden = !visible;
+    // A lazy image that was hidden waits for layout before loading: ask for it now.
+    const img = card.node.querySelector('img');
+    if (visible && img?.loading === 'lazy') img.loading = 'eager';
+  }
   function show(category) {
+    current = category;
+    if (field.value) field.value = '';
+    status.textContent = '';
     categories.forEach((c, i) => {
       buttons[i].setAttribute('aria-pressed', String(c === category));
       buttons[i].tabIndex = c === category ? 0 : -1;
     });
-    for (const card of cards) {
-      card.node.hidden = card.category !== category;
-      // A lazy image that was hidden waits for layout before loading: ask for it now.
-      const img = card.node.querySelector('img');
-      if (!card.node.hidden && img?.loading === 'lazy') img.loading = 'eager';
-    }
+    for (const card of cards) reveal(card, card.category === category);
     grid.setAttribute('aria-label', `내장 그림: ${category}`);
     buttons[categories.indexOf(category)].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
   }
-  show(categories[0]);
-  return group;
+  function filter() {
+    const query = normalizeSearch(field.value);
+    if (!query) {
+      show(current);
+      return;
+    }
+    categories.forEach((c, i) => {
+      buttons[i].setAttribute('aria-pressed', 'false');
+      buttons[i].tabIndex = c === current ? 0 : -1;
+    });
+    let found = 0;
+    for (const card of cards) {
+      const visible = card.search.includes(query);
+      reveal(card, visible);
+      if (visible) found += 1;
+    }
+    grid.setAttribute('aria-label', `내장 그림: '${field.value.trim()}' 찾은 결과`);
+    status.textContent = found ? `${found}장 찾았어요` : '찾는 그림이 없어요. 다른 말로 찾아보거나 분류를 눌러 보세요.';
+  }
+  show(current);
+  return [h('div', { class: 't-pic-filter' }, search, group), status, grid];
 }
 
 // Source line under the preview: outside pictures name the work, maker, holder and licence,
 // with links to the original and the licence.
 function creditLine(picture) {
-  if (picture.selfMade) return ['함께 퍼즐이 직접 그린 그림이에요.'];
   if (!picture.credit) return [];
   const link = (href, text) => h('a', { href, target: '_blank', rel: 'noopener noreferrer' }, text);
   return [

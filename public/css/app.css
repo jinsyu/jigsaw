@@ -53,6 +53,39 @@
 .teacher-link a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; color: var(--pri); font-weight: 700; text-decoration: none; }
 .policy-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: 13px; color: var(--muted); }
 
+/* Home: wider on big screens for the practice pictures; the code part keeps its width. */
+.page.home { max-width: 1040px; }
+.home > :not(.practice) { max-width: 392px; }
+.home > .brand, .home > .home-foot, .home > .spacer { max-width: none; }
+.home .code-form, .home .resume { width: 100%; }
+
+/* Home: '혼자 맞춰 보기' (js/home-practice.js), alone on /play?demo=1. */
+.practice {
+  width: 100%; margin-top: 40px; padding: 22px 18px 18px; border-radius: 24px; text-align: left;
+  background: #fff; box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.practice[hidden] { display: none; }
+.practice-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; margin-bottom: 16px; }
+.practice h2 { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
+.practice-sub { margin-top: 4px; font-size: 14.5px; color: var(--sub); }
+.practice-pieces { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--board); }
+.practice-pieces button {
+  border: 0; border-radius: 10px; min-height: 40px; padding: 0 12px; background: none; color: var(--sub);
+  font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer;
+}
+.practice-pieces button[aria-pressed="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(30, 36, 51, 0.12); }
+.practice-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 640px) { .practice-list { grid-template-columns: repeat(4, minmax(0, 1fr)); } .practice { padding: 26px 26px 22px; } }
+.practice-card {
+  display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; text-decoration: none; color: var(--ink);
+  background: var(--board); box-shadow: 0 1px 0 var(--line); transition: transform .15s ease, box-shadow .15s ease;
+}
+.practice-card img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #EDE6DA; }
+.practice-card span { padding: 9px 12px 11px; font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.practice-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(30, 36, 51, 0.12); }
+@media (prefers-reduced-motion: reduce) { .practice-card { transition: none; } .practice-card:hover { transform: none; } }
+.practice-more { margin-top: 14px; width: 100%; }
+
 /* Home: back to the class this device joined (js/app.js showResume). */
 .resume {
   margin-top: 18px; width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
@@ -334,3 +367,18 @@ html.is-play, html.is-play body { height: 100%; overflow: hidden; overscroll-beh
 @media (orientation: landscape) and (min-width: 1280px) {
   .pz-tray { width: 268px; }
 }
+
+/* Solo practice (/play?demo=1, js/play/demo.js): back to the home page, and a card when done. */
+.pz-back { flex: none; width: 40px; height: 40px; color: var(--ink); text-decoration: none; }
+.pz-done {
+  position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 5;
+  width: min(340px, calc(100% - 32px)); padding: 22px 20px 18px; border-radius: 22px; text-align: center;
+  background: #fff; box-shadow: 0 18px 48px rgba(30, 36, 51, 0.22); animation: pz-done-in .35s ease-out both;
+}
+.pz-done-title { font-size: 22px; font-weight: 800; color: #17693C; letter-spacing: -0.02em; }
+.pz-done-time { margin-top: 6px; color: var(--sub); font-size: 15px; }
+.pz-done-actions { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pz-done-actions .btn { font-size: 15px; padding: 10px 8px; }
+@keyframes pz-done-in { from { opacity: 0; transform: translate(-50%, 12px); } }
+.pz-board:has(.pz-done) .pz-hint { display: none; }
+@media (prefers-reduced-motion: reduce) { .pz-done { animation: none; } }

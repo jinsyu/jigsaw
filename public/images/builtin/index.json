@@ -2,409 +2,11 @@
   "version": 1,
   "images": [
     {
-      "key": "sea",
-      "title": "바다 친구들",
-      "category": "자체 제작",
-      "topic": "자연",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/sea.webp",
-      "thumb": "/images/builtin/sea-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "바다 친구들 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "village",
-      "title": "숲속 마을",
-      "category": "자체 제작",
-      "topic": "자연",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/village.webp",
-      "thumb": "/images/builtin/village-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "숲속 마을 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "space",
-      "title": "우주 여행",
-      "category": "자체 제작",
-      "topic": "과학",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/space.webp",
-      "thumb": "/images/builtin/space-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "우주 여행 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "garden",
-      "title": "꽃밭",
-      "category": "자체 제작",
-      "topic": "자연",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/garden.webp",
-      "thumb": "/images/builtin/garden-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "꽃밭 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "classroom",
-      "title": "우리 반 교실",
-      "category": "자체 제작",
-      "topic": "학교",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/classroom.webp",
-      "thumb": "/images/builtin/classroom-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "우리 반 교실 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "friends",
-      "title": "우리 반 친구들",
-      "category": "자체 제작",
-      "topic": "학교",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/friends.webp",
-      "thumb": "/images/builtin/friends-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "우리 반 친구들 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "picnic",
-      "title": "봄 소풍",
-      "category": "자체 제작",
-      "topic": "계절",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/picnic.webp",
-      "thumb": "/images/builtin/picnic-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "봄 소풍 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "water-play",
-      "title": "여름 물놀이",
-      "category": "자체 제작",
-      "topic": "계절",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/water-play.webp",
-      "thumb": "/images/builtin/water-play-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "여름 물놀이 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "autumn-field",
-      "title": "가을 들판",
-      "category": "자체 제작",
-      "topic": "계절",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/autumn-field.webp",
-      "thumb": "/images/builtin/autumn-field-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "가을 들판 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "snowman",
-      "title": "겨울 눈사람",
-      "category": "자체 제작",
-      "topic": "계절",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/snowman.webp",
-      "thumb": "/images/builtin/snowman-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "겨울 눈사람 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "sports-day",
-      "title": "운동회",
-      "category": "자체 제작",
-      "topic": "학교",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/sports-day.webp",
-      "thumb": "/images/builtin/sports-day-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "운동회 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "playground",
-      "title": "놀이터",
-      "category": "자체 제작",
-      "topic": "학교",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/playground.webp",
-      "thumb": "/images/builtin/playground-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "놀이터 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "farm",
-      "title": "농장 동물",
-      "category": "자체 제작",
-      "topic": "동물",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/farm.webp",
-      "thumb": "/images/builtin/farm-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "농장 동물 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "giraffe",
-      "title": "기린과 코끼리",
-      "category": "자체 제작",
-      "topic": "동물",
-      "width": 1200,
-      "height": 1800,
-      "src": "/images/builtin/giraffe.webp",
-      "thumb": "/images/builtin/giraffe-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "기린과 코끼리 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "dinosaurs",
-      "title": "공룡 계곡",
-      "category": "자체 제작",
-      "topic": "동물",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/dinosaurs.webp",
-      "thumb": "/images/builtin/dinosaurs-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "공룡 계곡 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "train",
-      "title": "기차 여행",
-      "category": "자체 제작",
-      "topic": "탈것",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/train.webp",
-      "thumb": "/images/builtin/train-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "기차 여행 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "balloons",
-      "title": "열기구",
-      "category": "자체 제작",
-      "topic": "탈것",
-      "width": 1200,
-      "height": 1800,
-      "src": "/images/builtin/balloons.webp",
-      "thumb": "/images/builtin/balloons-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "열기구 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "lighthouse",
-      "title": "밤바다 등대",
-      "category": "자체 제작",
-      "topic": "자연",
-      "width": 1200,
-      "height": 1800,
-      "src": "/images/builtin/lighthouse.webp",
-      "thumb": "/images/builtin/lighthouse-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "밤바다 등대 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "chuseok",
-      "title": "추석 보름달",
-      "category": "자체 제작",
-      "topic": "명절",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/chuseok.webp",
-      "thumb": "/images/builtin/chuseok-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "추석 보름달 — 함께 퍼즐 자체 제작"
-    },
-    {
-      "key": "seollal",
-      "title": "설날 연날리기",
-      "category": "자체 제작",
-      "topic": "명절",
-      "width": 1800,
-      "height": 1200,
-      "src": "/images/builtin/seollal.webp",
-      "thumb": "/images/builtin/seollal-thumb.webp",
-      "source": {
-        "name": "함께 퍼즐 자체 제작",
-        "author": "함께 퍼즐",
-        "url": null
-      },
-      "license": {
-        "name": "함께 퍼즐 수업용으로 자유롭게 사용",
-        "url": null
-      },
-      "credit": "설날 연날리기 — 함께 퍼즐 자체 제작"
-    },
-    {
       "key": "starry-night",
       "title": "별이 빛나는 밤",
       "category": "명화",
+      "topic": "자연",
+      "level": "보통",
       "width": 1800,
       "height": 1425,
       "src": "/images/builtin/starry-night.webp",
@@ -426,6 +28,8 @@
       "key": "cafe-terrace",
       "title": "밤의 카페 테라스",
       "category": "명화",
+      "topic": "명소·건축",
+      "level": "보통",
       "width": 1371,
       "height": 1800,
       "src": "/images/builtin/cafe-terrace.webp",
@@ -447,6 +51,8 @@
       "key": "bedroom",
       "title": "침실",
       "category": "명화",
+      "topic": "사람·생활",
+      "level": "쉬움",
       "width": 1800,
       "height": 1405,
       "src": "/images/builtin/bedroom.webp",
@@ -468,6 +74,8 @@
       "key": "wheat-cypresses",
       "title": "사이프러스가 있는 밀밭",
       "category": "명화",
+      "topic": "자연",
+      "level": "보통",
       "width": 1800,
       "height": 1410,
       "src": "/images/builtin/wheat-cypresses.webp",
@@ -489,6 +97,8 @@
       "key": "water-lily-bridge",
       "title": "수련 연못 위의 다리",
       "category": "명화",
+      "topic": "꽃·식물",
+      "level": "어려움",
       "width": 1435,
       "height": 1800,
       "src": "/images/builtin/water-lily-bridge.webp",
@@ -511,6 +121,8 @@
       "key": "poppy-field",
       "title": "아르장퇴유 근처 양귀비 들판",
       "category": "명화",
+      "topic": "꽃·식물",
+      "level": "보통",
       "width": 1800,
       "height": 1331,
       "src": "/images/builtin/poppy-field.webp",
@@ -533,6 +145,8 @@
       "key": "moulin-galette",
       "title": "물랭 드 라 갈레트의 무도회",
       "category": "명화",
+      "topic": "사람·생활",
+      "level": "어려움",
       "width": 1800,
       "height": 1338,
       "src": "/images/builtin/moulin-galette.webp",
@@ -554,6 +168,8 @@
       "key": "grande-jatte",
       "title": "그랑드 자트 섬의 일요일 오후",
       "category": "명화",
+      "topic": "사람·생활",
+      "level": "보통",
       "width": 1800,
       "height": 1198,
       "src": "/images/builtin/grande-jatte.webp",
@@ -575,6 +191,8 @@
       "key": "childrens-games",
       "title": "아이들의 놀이",
       "category": "명화",
+      "topic": "사람·생활",
+      "level": "어려움",
       "width": 1800,
       "height": 1307,
       "src": "/images/builtin/childrens-games.webp",
@@ -596,6 +214,8 @@
       "key": "hunters-snow",
       "title": "눈 속의 사냥꾼",
       "category": "명화",
+      "topic": "계절",
+      "level": "보통",
       "width": 1800,
       "height": 1281,
       "src": "/images/builtin/hunters-snow.webp",
@@ -617,6 +237,8 @@
       "key": "great-wave",
       "title": "가나가와 해변의 큰 파도",
       "category": "명화",
+      "topic": "바다",
+      "level": "보통",
       "width": 1800,
       "height": 1232,
       "src": "/images/builtin/great-wave.webp",
@@ -639,6 +261,8 @@
       "key": "sunflowers",
       "title": "해바라기",
       "category": "명화",
+      "topic": "꽃·식물",
+      "level": "보통",
       "width": 1364,
       "height": 1800,
       "src": "/images/builtin/sunflowers.webp",
@@ -660,6 +284,8 @@
       "key": "ssireum",
       "title": "씨름",
       "category": "우리 그림",
+      "topic": "전통",
+      "level": "보통",
       "width": 1463,
       "height": 1800,
       "src": "/images/builtin/ssireum.webp",
@@ -682,6 +308,8 @@
       "key": "seodang",
       "title": "서당",
       "category": "우리 그림",
+      "topic": "전통",
+      "level": "어려움",
       "width": 1513,
       "height": 1800,
       "src": "/images/builtin/seodang.webp",
@@ -704,6 +332,8 @@
       "key": "mudong",
       "title": "춤추는 아이",
       "category": "우리 그림",
+      "topic": "전통",
+      "level": "보통",
       "width": 1485,
       "height": 1800,
       "src": "/images/builtin/mudong.webp",
@@ -726,6 +356,8 @@
       "key": "chaekgado",
       "title": "책가도",
       "category": "우리 그림",
+      "topic": "전통",
+      "level": "보통",
       "width": 1800,
       "height": 818,
       "src": "/images/builtin/chaekgado.webp",
@@ -748,6 +380,8 @@
       "key": "magpie-tiger",
       "title": "까치와 호랑이",
       "category": "우리 그림",
+      "topic": "동물",
+      "level": "보통",
       "width": 1038,
       "height": 1800,
       "src": "/images/builtin/magpie-tiger.webp",
@@ -770,6 +404,8 @@
       "key": "irworobongdo",
       "title": "일월오봉도",
       "category": "우리 그림",
+      "topic": "전통",
+      "level": "쉬움",
       "width": 1800,
       "height": 944,
       "src": "/images/builtin/irworobongdo.webp",
@@ -792,6 +428,8 @@
       "key": "sipjangsaeng",
       "title": "십장생도",
       "category": "우리 그림",
+      "topic": "동물",
+      "level": "보통",
       "width": 1800,
       "height": 1144,
       "src": "/images/builtin/sipjangsaeng.webp",
@@ -814,6 +452,8 @@
       "key": "taepyeong",
       "title": "태평성시도",
       "category": "우리 그림",
+      "topic": "전통",
+      "level": "어려움",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/taepyeong.webp",
@@ -836,6 +476,8 @@
       "key": "dog-puppies",
       "title": "어미개와 강아지",
       "category": "우리 그림",
+      "topic": "동물",
+      "level": "보통",
       "width": 1045,
       "height": 1800,
       "src": "/images/builtin/dog-puppies.webp",
@@ -857,6 +499,8 @@
       "key": "blue-marble",
       "title": "블루 마블 (지구)",
       "category": "사진",
+      "topic": "우주·과학",
+      "level": "보통",
       "width": 1800,
       "height": 900,
       "src": "/images/builtin/blue-marble.webp",
@@ -878,6 +522,8 @@
       "key": "pluto",
       "title": "명왕성",
       "category": "사진",
+      "topic": "우주·과학",
+      "level": "어려움",
       "width": 1800,
       "height": 1800,
       "src": "/images/builtin/pluto.webp",
@@ -899,6 +545,8 @@
       "key": "prismatic-spring",
       "title": "그랜드 프리즈매틱 온천",
       "category": "사진",
+      "topic": "자연",
+      "level": "보통",
       "width": 1800,
       "height": 1189,
       "src": "/images/builtin/prismatic-spring.webp",
@@ -920,6 +568,8 @@
       "key": "neuschwanstein",
       "title": "노이슈반슈타인성",
       "category": "사진",
+      "topic": "명소·건축",
+      "level": "보통",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/neuschwanstein.webp",
@@ -941,6 +591,8 @@
       "key": "monarch-butterfly",
       "title": "제왕나비와 박주가리 꽃",
       "category": "사진",
+      "topic": "동물",
+      "level": "쉬움",
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/monarch-butterfly.webp",
@@ -962,6 +614,8 @@
       "key": "hyangwonjeong",
       "title": "경복궁 향원정",
       "category": "사진",
+      "topic": "명소·건축",
+      "level": "보통",
       "width": 1800,
       "height": 1350,
       "src": "/images/builtin/hyangwonjeong.webp",
@@ -983,6 +637,8 @@
       "key": "nursery-alice",
       "title": "너서리 앨리스",
       "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "쉬움",
       "width": 1800,
       "height": 1221,
       "src": "/images/builtin/nursery-alice.webp",
@@ -1004,6 +660,8 @@
       "key": "wizard-of-oz",
       "title": "오즈의 마법사 표지",
       "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "쉬움",
       "width": 1452,
       "height": 1800,
       "src": "/images/builtin/wizard-of-oz.webp",
@@ -1025,6 +683,8 @@
       "key": "under-the-window",
       "title": "창문 아래 (표지)",
       "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "쉬움",
       "width": 1446,
       "height": 1800,
       "src": "/images/builtin/under-the-window.webp",

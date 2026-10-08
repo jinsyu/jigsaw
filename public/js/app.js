@@ -13,6 +13,12 @@ function setupHome() {
   enhanceCodeField(document.querySelector('.code-form .code-field'));
   const saved = latestSaved(localStorage);
   if (saved) showResume(saved);
+  const practice = document.querySelector('.home .practice');
+  if (practice) {
+    import('./home-practice.js')
+      .then(({ setupPractice }) => setupPractice(practice))
+      .catch((error) => console.error(error));
+  }
 }
 
 // Same device, same class: one tap back to the waiting screen (or the puzzle).

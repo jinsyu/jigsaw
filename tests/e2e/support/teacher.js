@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 import pg from 'pg';
 import { io as connect } from 'socket.io-client';
 import { layoutFor } from '../../../public/js/puzzle/geometry.js';
+import { WIDE } from './pictures.js';
 import { LOCAL_TEACHER_ID, devTeacherToken, teacherAuthInitScript } from '../../../scripts/lib/local-teacher.mjs';
 
 export const RT_URL = 'http://127.0.0.1:3400';
@@ -88,7 +89,7 @@ const sockets = new Set();
  * Opens a class through the rt API (like 수업 열기). Returns { id, code, token }.
  * Classes opened here are ended and deleted by cleanUpClasses().
  */
-export async function openClass({ pieces = 24, groups = 6, builtinKey = 'sea', imageId = null, hints = {}, teacherId = LOCAL_TEACHER_ID } = {}) {
+export async function openClass({ pieces = 24, groups = 6, builtinKey = WIDE, imageId = null, hints = {}, teacherId = LOCAL_TEACHER_ID } = {}) {
   const token = await teacherToken(teacherId);
   const picture = imageId ? { imageId } : { builtinKey };
   const { status, body } = await rtApi('/api/sessions', { method: 'POST', token, json: { pieceCount: pieces, groupCount: groups, picture, hints } });

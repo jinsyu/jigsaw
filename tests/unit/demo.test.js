@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createDemoStore, demoPieceCount } from '../../public/js/play/demo.js';
 
+const WIDE = { src: '/images/builtin/wide.webp', width: 1800, height: 1200 };
+
 describe('demo piece count (/play?demo=1&pieces=...)', () => {
   it('takes 12, 24, 48 or 70 from the address', () => {
     for (const n of [12, 24, 48, 70]) expect(demoPieceCount(`?demo=1&pieces=${n}`)).toBe(n);
@@ -14,7 +16,7 @@ describe('demo piece count (/play?demo=1&pieces=...)', () => {
 
   it('deals every piece into the tray', () => {
     for (const n of [12, 24, 48, 70]) {
-      const state = createDemoStore(n).getState();
+      const state = createDemoStore(n, {}, WIDE).getState();
       expect(state.tray).toHaveLength(n);
       expect(new Set(state.tray).size).toBe(n);
       expect(state.layout.cols * state.layout.rows).toBe(n);
@@ -38,8 +40,8 @@ describe('demo help settings (&preview=1&outline=0&button=0&underlay=1)', () => 
   });
 
   it('puts the settings in the store state, with defaults filled in', () => {
-    expect(createDemoStore(24).getState().hints).toEqual({ preview: false, outline: true, pictureButton: true, underlay: false });
-    expect(createDemoStore(24, { preview: true, underlay: true }).getState().hints).toEqual({
+    expect(createDemoStore(24, {}, WIDE).getState().hints).toEqual({ preview: false, outline: true, pictureButton: true, underlay: false });
+    expect(createDemoStore(24, { preview: true, underlay: true }, WIDE).getState().hints).toEqual({
       preview: true,
       outline: true,
       pictureButton: true,
@@ -49,18 +51,30 @@ describe('demo help settings (&preview=1&outline=0&button=0&underlay=1)', () => 
 });
 
 describe('demo picture (&picture=<key>)', () => {
-  it('reads a built-in key, anything malformed gives sea', async () => {
+  it('reads a built-in key, anything missing or malformed gives none (the default)', async () => {
     const { demoPictureKey } = await import('../../public/js/play/demo.js');
-    expect(demoPictureKey('?demo=1')).toBe('sea');
-    expect(demoPictureKey('?demo=1&picture=giraffe')).toBe('giraffe');
-    expect(demoPictureKey('?demo=1&picture=')).toBe('sea');
-    expect(demoPictureKey('?demo=1&picture=Giraffe')).toBe('sea');
-    expect(demoPictureKey('?demo=1&picture=../x')).toBe('sea');
+    expect(demoPictureKey('?demo=1')).toBeNull();
+    expect(demoPictureKey('?demo=1&picture=great-wave')).toBe('great-wave');
+    expect(demoPictureKey('?demo=1&picture=')).toBeNull();
+    expect(demoPictureKey('?demo=1&picture=Giraffe')).toBeNull();
+    expect(demoPictureKey('?demo=1&picture=../x')).toBeNull();
+  });
+
+  it('loads the picture of a key, or the first built-in picture for none or an unknown key', async () => {
+    const { loadDemoPicture } = await import('../../public/js/play/demo.js');
+    const index = { images: [
+      { key: 'a', src: '/a.webp', width: 1800, height: 1200, credit: 'A' },
+      { key: 'b', src: '/b.webp', width: 1200, height: 1800, credit: 'B' },
+    ] };
+    const fetchImpl = async () => ({ ok: true, json: async () => index });
+    expect(await loadDemoPicture('b', fetchImpl)).toEqual({ src: '/b.webp', width: 1200, height: 1800, credit: 'B' });
+    expect(await loadDemoPicture(null, fetchImpl)).toEqual({ src: '/a.webp', width: 1800, height: 1200, credit: 'A' });
+    expect(await loadDemoPicture('zzz', fetchImpl)).toMatchObject({ src: '/a.webp' });
   });
 
   it('lays a portrait picture out as a portrait puzzle', () => {
-    const state = createDemoStore(24, {}, { src: '/images/builtin/giraffe.webp', width: 1200, height: 1800 }).getState();
+    const state = createDemoStore(24, {}, { src: '/images/builtin/tall.webp', width: 1200, height: 1800 }).getState();
     expect(state.layout.cols).toBeLessThan(state.layout.rows);
-    expect(state.picture.src).toBe('/images/builtin/giraffe.webp');
+    expect(state.picture.src).toBe('/images/builtin/tall.webp');
   });
 });

@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { FIRST, INDEX, KINDS, cardDetail, ofKind } from './support/pictures.js';
+import { normalizeSearch, pictureSearchText } from '../../public/js/teacher/create-view.js';
 import { closeSql, signInPage } from './support/teacher.js';
 
 // 새 수업 만들기: built-in pictures by category, card notes, the source line of the chosen
@@ -18,26 +20,29 @@ async function openCreate(page, context) {
   await signInPage(context);
   await page.goto('/teacher/new');
   await expect(page.getByRole('heading', { level: 1, name: '새 수업 만들기' })).toBeVisible();
-  await expect(page.locator('.t-chip-filter')).toHaveCount(5);
+  await expect(page.locator('.t-chip-filter')).toHaveCount(KINDS.length);
 }
 
+// Pictures whose title, theme, kind, maker or year has `words` (create-view.js pictureSearchText).
+const INDEX_COUNT = (words) => INDEX.images.filter((i) => pictureSearchText(i).includes(normalizeSearch(words))).length;
 const visibleCards = (page) => page.locator('#t-builtin-grid .t-pic:visible');
 
 test('built-in pictures by category: chips, card notes and the source line', async ({ page, context }, testInfo) => {
   const errors = trackErrors(page);
   await openCreate(page, context);
   const chips = page.getByRole('group', { name: '내장 그림 분류' }).getByRole('button');
-  await expect(chips).toHaveText(['자체 제작20', '명화12', '우리 그림9', '사진6', '삽화3']);
+  await expect(chips).toHaveText(KINDS.map((kind) => `${kind}${ofKind(kind).length}`));
   await expect(chips.first()).toHaveAttribute('aria-pressed', 'true');
-  await expect(visibleCards(page)).toHaveCount(20);
-  await expect(visibleCards(page).first().locator('small')).toHaveText('자연'); // theme of a self-made scene
-  await expect(page.locator('#t-credit')).toHaveText('함께 퍼즐이 직접 그린 그림이에요.');
+  await expect(visibleCards(page)).toHaveCount(ofKind(KINDS[0]).length);
+  await expect(visibleCards(page).first().locator('small')).toHaveText(cardDetail(FIRST));
+  await expect(page.locator('#t-credit')).toContainText(FIRST.credit);
 
   // Paintings: artist and year on the cards; choosing one shows its source line with links.
-  await chips.nth(1).click();
-  await expect(chips.nth(1)).toHaveAttribute('aria-pressed', 'true');
+  const paintings = KINDS.indexOf('명화');
+  await chips.nth(paintings).click();
+  await expect(chips.nth(paintings)).toHaveAttribute('aria-pressed', 'true');
   await expect(chips.first()).toHaveAttribute('aria-pressed', 'false');
-  await expect(visibleCards(page)).toHaveCount(12);
+  await expect(visibleCards(page)).toHaveCount(ofKind('명화').length);
   const starry = visibleCards(page).filter({ hasText: '별이 빛나는 밤' });
   await expect(starry.locator('small')).toHaveText('빈센트 반 고흐, 1889');
   await starry.click();
@@ -48,15 +53,28 @@ test('built-in pictures by category: chips, card notes and the source line', asy
   await expect(credit.getByRole('link', { name: '라이선스' })).toHaveAttribute('href', 'https://creativecommons.org/publicdomain/mark/1.0/');
 
   // Keyboard: arrows move between chips (and show that group); the choice stays chosen.
-  await chips.nth(1).focus();
+  await chips.nth(0).focus();
   await page.keyboard.press('ArrowRight');
-  await expect(chips.nth(2)).toBeFocused();
-  await expect(chips.nth(2)).toHaveAttribute('aria-pressed', 'true');
-  await expect(visibleCards(page)).toHaveCount(9);
+  await expect(chips.nth(1)).toBeFocused();
+  await expect(chips.nth(1)).toHaveAttribute('aria-pressed', 'true');
+  await expect(visibleCards(page)).toHaveCount(ofKind(KINDS[1]).length);
   await expect(page.locator('.t-preview-title')).toHaveText('별이 빛나는 밤');
   await page.keyboard.press('End');
-  await expect(chips.nth(4)).toBeFocused();
-  await expect(visibleCards(page)).toHaveCount(3);
+  await expect(chips.nth(KINDS.length - 1)).toBeFocused();
+  await expect(visibleCards(page)).toHaveCount(ofKind(KINDS.at(-1)).length);
+
+  // Search: words find pictures of every kind; the chips let go; clearing goes back.
+  const search = page.getByRole('searchbox', { name: '내장 그림 찾기' });
+  await search.fill('고흐');
+  await expect(visibleCards(page)).toHaveCount(INDEX_COUNT('고흐'));
+  for (let i = 0; i < KINDS.length; i++) await expect(chips.nth(i)).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('status').filter({ hasText: '장 찾았어요' })).toBeVisible();
+  await search.fill('없는그림이름');
+  await expect(visibleCards(page)).toHaveCount(0);
+  await expect(page.getByText('찾는 그림이 없어요.')).toBeVisible();
+  await search.press('Escape');
+  await expect(search).toHaveValue('');
+  await expect(chips.nth(KINDS.length - 1)).toHaveAttribute('aria-pressed', 'true');
 
   // No sideways scrolling of the page; on phones the chip row scrolls by itself.
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -162,7 +180,7 @@ test('card notes stay whole on narrow screens, and a category shows its pictures
   test.skip(testInfo.project.name !== 'phone-360' && testInfo.project.name !== 'desktop-1440', 'narrowest and widest');
   await openCreate(page, context);
   const chips = page.getByRole('group', { name: '내장 그림 분류' }).getByRole('button');
-  for (const index of [1, 2, 3, 4]) {
+  for (const index of KINDS.keys()) {
     await chips.nth(index).click();
     // Thumbnails of the shown category load at once (no blank cards after switching).
     await expect

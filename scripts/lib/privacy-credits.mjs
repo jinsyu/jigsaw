@@ -7,17 +7,15 @@
 export const START = '<!-- builtin-credits:start (scripts/builtin-images.mjs writes this part) -->';
 export const END = '<!-- builtin-credits:end -->';
 
-const SELF_MADE = '자체 제작';
-const GROUPS = ['명화', '우리 그림', '사진', '삽화'];
+const GROUPS = ['사진', '삽화', '명화', '우리 그림'];
 
 const escape = (text) =>
   String(text).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 export function renderCredits(images) {
-  const selfMade = images.filter((i) => i.category === SELF_MADE);
-  const outside = images.filter((i) => i.category !== SELF_MADE);
+  const outside = images;
   const lines = [
-    `<p>수업 만들기에서 고를 수 있는 내장 그림은 ${images.length}장입니다. ${selfMade.length}장은 함께 퍼즐이 직접 그린 그림이고, ${outside.length}장은 저작권이 끝났거나(퍼블릭 도메인) 자유 이용이 허락된(CC0, 공공누리 제1유형) 명화·우리 옛 그림·사진·삽화입니다. 수업에 자유롭게 쓸 수 있습니다.</p>`,
+    `<p>수업 만들기에서 고를 수 있는 내장 그림은 ${images.length}장입니다. 모두 저작권이 끝났거나(퍼블릭 도메인) 자유 이용이 허락된(CC0, 공공누리 제1유형) 사진·삽화·명화·우리 옛 그림입니다. 수업에 자유롭게 쓸 수 있습니다.</p>`,
   ];
   for (const group of GROUPS) {
     const items = outside.filter((i) => i.category === group);

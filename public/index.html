@@ -44,6 +44,21 @@
     <button class="btn pri big" type="submit">들어가기</button>
   </form>
   <p class="hint">QR 코드를 찍으면 코드를 넣지 않아도 돼요</p>
+  <section class="practice" id="practice" aria-labelledby="practice-title" hidden>
+    <div class="practice-head">
+      <div>
+        <h2 id="practice-title">혼자 맞춰 보기</h2>
+        <p class="practice-sub">코드가 없어도 그림을 골라 연습할 수 있어요</p>
+      </div>
+      <div class="practice-pieces" role="group" aria-label="조각 수">
+        <button type="button" data-pieces="12" aria-pressed="true">12조각</button>
+        <button type="button" data-pieces="24" aria-pressed="false">24조각</button>
+        <button type="button" data-pieces="48" aria-pressed="false">48조각</button>
+      </div>
+    </div>
+    <ul class="practice-list"></ul>
+    <button class="btn practice-more" type="button">다른 그림 보기</button>
+  </section>
   <div class="spacer"></div>
   <div class="home-foot">
     <p class="teacher-link">선생님이신가요? <a href="/teacher">수업 만들기 →</a></p>

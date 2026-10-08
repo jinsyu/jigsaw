@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { WIDE } from './support/pictures.js';
 import { storageAdmin } from './support/storage.js';
 import { classControl, cleanUpClasses, closeSql, deleteImages, nodeStudent, openClass, signInPage, sql, storeImage } from './support/teacher.js';
 import { expectNoHorizontalOverflow } from './support/puzzle.js';
@@ -390,7 +391,7 @@ test('reduced motion: no progress transitions or badge pop (boards jump instead 
 test("a class with the teacher's own picture: the boards cut it from the signed URL the server sent", async ({ browser }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-1440', 'one size is enough');
   test.setTimeout(120_000);
-  const image = await storeImage(readFileSync(new URL('../../public/images/builtin/sea.webp', import.meta.url)));
+  const image = await storeImage(readFileSync(new URL(`../../public/images/builtin/${WIDE}.webp`, import.meta.url)));
   createdImages.push(image.id);
   const { cls } = await fullClass({
     pieces: 12,

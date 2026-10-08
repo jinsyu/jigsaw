@@ -33,7 +33,7 @@ const publicFiles = filesUnder(join(ROOT, 'public')).filter((f) => ['.html', '.j
 
 describe('Content-Security-Policy (vercel.json)', () => {
   it('applies to every page and file', () => {
-    for (const path of ['/', '/privacy', '/play', '/teacher/new', '/js/app.js', '/images/builtin/sea.webp']) {
+    for (const path of ['/', '/privacy', '/play', '/teacher/new', '/js/app.js', '/images/builtin/great-wave.webp']) {
       expect(headersFor(path, config)['Content-Security-Policy']).toBe(csp);
     }
   });

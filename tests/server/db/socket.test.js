@@ -100,7 +100,7 @@ async function openClass({ groupCount = 2, teacherId = TEACHERS.one.id } = {}) {
   const res = await fetch(`http://127.0.0.1:${port}/api/sessions`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', origin: ORIGIN, authorization: `Bearer ${signTeacherToken(teacherId, SECRET)}` },
-    body: JSON.stringify({ pieceCount: 12, groupCount, picture: { builtinKey: 'sea' } }),
+    body: JSON.stringify({ pieceCount: 12, groupCount, picture: { builtinKey: 'neuschwanstein' } }),
   });
   const body = await res.json();
   expect(res.status, JSON.stringify(body)).toBe(200);

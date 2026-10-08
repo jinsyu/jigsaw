@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { TALL, WIDE } from './support/pictures.js';
 
 // Student puzzle screen, solo demo (/play?demo=1): in-memory store, 24 pieces (6 x 4)
 // unless &pieces= asks for 12, 48 or 70. Help settings (spec rule 10) by address too:
@@ -9,7 +10,7 @@ import { expect, test } from '@playwright/test';
 async function openDemo(page, options = {}) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  const params = new URLSearchParams({ demo: '1' });
+  const params = new URLSearchParams({ demo: '1', picture: WIDE });
   for (const [key, value] of Object.entries(options)) params.set(key, String(value));
   await page.goto(`/play?${params}`);
   await expect(page.locator('main[data-ready="true"]')).toBeVisible();
@@ -716,10 +717,10 @@ for (const pieces of [48, 70]) {
   });
 }
 
-test('the demo can use any built-in picture (&picture=giraffe, a portrait one)', async ({ page }, testInfo) => {
-  const errors = await openDemo(page, { picture: 'giraffe' });
+test('the demo can use any built-in picture (&picture=<a portrait one>)', async ({ page }, testInfo) => {
+  const errors = await openDemo(page, { picture: TALL });
   const { picture, layout } = await state(page);
-  expect(picture.src).toBe('/images/builtin/giraffe.webp');
+  expect(picture.src).toBe(`/images/builtin/${TALL}.webp`);
   expect(layout.rows).toBeGreaterThan(layout.cols);
   // The frame (portrait) is centred and on screen.
   const { ox, oy } = await framePlace(page);
@@ -731,7 +732,7 @@ test('the demo can use any built-in picture (&picture=giraffe, a portrait one)',
   await expect(page.locator('.pz-tile')).toHaveCount(23);
   await expectNoHorizontalOverflow(page);
   await page.waitForTimeout(300);
-  await page.screenshot({ path: testInfo.outputPath('play-giraffe.png') });
+  await page.screenshot({ path: testInfo.outputPath('play-portrait.png') });
   expect(errors).toEqual([]);
 });
 
@@ -768,10 +769,6 @@ test('the completed picture shows the source line of an outside picture', async 
   await expectNoHorizontalOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('play-credit.png') });
   await dialog.getByRole('button', { name: '닫기' }).click();
-  // A self-made picture has no source line.
-  await openDemo(page);
-  await page.getByRole('button', { name: '완성 그림 보기' }).click();
-  await expect(page.locator('.pz-credit')).toBeHidden();
   expect(errors).toEqual([]);
 });
 
@@ -849,25 +846,32 @@ test('help settings change the screen: outline, picture button, underlay', async
   const plain = await framePixels(page);
   await expect(page.getByRole('button', { name: '완성 그림 보기' })).toHaveCount(1);
   const { layout, ox, oy } = await framePlace(page);
-  const fillAt = [ox + 0.5 * layout.pw, oy + 0.5 * layout.ph];
-  const plainFill = await canvasRgb(page, ...fillAt);
+  // The middle of every cell: the underlay shows wherever the picture is not plain white.
+  const cells = [];
+  for (let r = 0; r < layout.rows; r++) for (let c = 0; c < layout.cols; c++) cells.push([ox + (c + 0.5) * layout.pw, oy + (r + 0.5) * layout.ph]);
+  const plainFill = [];
+  for (const at of cells) plainFill.push(await canvasRgb(page, ...at));
 
-  // Everything flipped.
-  const errors = await openDemo(page, { outline: 0, button: 0, underlay: 1 });
-  expect((await state(page)).hints).toEqual({ preview: false, outline: false, pictureButton: false, underlay: true });
+  // No outlines, no picture button: border only, the seam spot looks like its surroundings.
+  await openDemo(page, { outline: 0, button: 0 });
   await expect(page.getByRole('button', { name: '완성 그림 보기' })).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.waitForTimeout(100);
   const flipped = await framePixels(page);
-  // Border only: the seam spot looks like its surroundings, the border is still dark.
   expect(plain.fill.max - plain.seam.min).toBeGreaterThanOrEqual(25);
   expect(flipped.fill.max - flipped.seam.min).toBeLessThan(12);
   expect(flipped.edge.min).toBeLessThan(flipped.fill.min - 40);
-  // Underlay: the picture shows faintly (colour shifts) but stays light, unlike a piece.
-  const under = await canvasRgb(page, ...fillAt);
-  const shift = Math.max(...under.map((v, i) => Math.abs(v - plainFill[i])));
+
+  // Everything flipped, with the underlay: the picture shows faintly (colour shifts) but stays
+  // light, unlike a piece.
+  const errors = await openDemo(page, { outline: 0, button: 0, underlay: 1 });
+  expect((await state(page)).hints).toEqual({ preview: false, outline: false, pictureButton: false, underlay: true });
+  await page.waitForTimeout(100);
+  const under = [];
+  for (const at of cells) under.push(await canvasRgb(page, ...at));
+  const shift = Math.max(...under.flatMap((rgb, k) => rgb.map((v, i) => Math.abs(v - plainFill[k][i]))));
   expect(shift).toBeGreaterThan(8);
-  expect(0.299 * under[0] + 0.587 * under[1] + 0.114 * under[2]).toBeGreaterThan(190);
+  for (const rgb of under) expect(0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]).toBeGreaterThan(185);
   await expectNoHorizontalOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('play-hints-flipped.png') });
   expect(errors).toEqual([]);

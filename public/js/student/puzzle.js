@@ -34,15 +34,14 @@ async function imageSize(src) {
 
 // Built-in key -> its file. The teacher's picture is read once through its signed URL into a
 // blob: URL (allowed by the CSP img-src everywhere, and it does not expire mid-class).
-// Outside built-in pictures carry their credit line (none for our own drawings, '자체 제작',
-// and none for teachers' pictures; same rule as play/demo.js).
+// Built-in pictures carry their credit line (teachers' pictures have none).
 export async function loadPictureInfo(setup, fetchImpl = globalThis.fetch) {
   if (setup.builtinKey) {
     const response = await fetchImpl(BUILTIN_INDEX);
     if (!response.ok) throw new Error(`built-in pictures: HTTP ${response.status}`);
     const found = (await response.json()).images.find((image) => image.key === setup.builtinKey);
     if (!found) throw new Error(`unknown built-in picture: ${setup.builtinKey}`);
-    const credit = found.category !== '자체 제작' && found.credit ? found.credit : undefined;
+    const credit = found.credit || undefined;
     return { src: found.src, width: found.width, height: found.height, credit, revoke: () => {} };
   }
   if (!setup.pictureUrl) throw new Error('the class picture has no address');

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { TALL } from './support/pictures.js';
 import { headersFor } from '../../scripts/lib/vercel-routing.mjs';
 import { expectNoHorizontalOverflow } from './support/puzzle.js';
 import { classControl, cleanUpClasses, closeSql, nodeStudent, openClass, signInPage } from './support/teacher.js';
@@ -8,7 +9,7 @@ import { HOSTED_CLIENT_ID, HOSTED_RT, SITE, asHostedSite, fakeGis, rtAnswer } fr
 // Every page under the CSP: no violations, and requests only go to this site, the CDN
 // (Pretendard) and the rt server (the local stack here). No page talks to Supabase itself
 // (a teacher's own picture comes through a signed URL: coop.spec.js, teacher.spec.js).
-const PAGES = ['/', '/privacy', '/play?demo=1', '/play?demo=1&picture=giraffe', '/teacher', '/join'];
+const PAGES = ['/', '/privacy', '/play?demo=1', `/play?demo=1&picture=${TALL}`, '/teacher', '/join'];
 const VERCEL = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url), 'utf8'));
 
 test.afterAll(async () => {

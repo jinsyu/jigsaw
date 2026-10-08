@@ -14,7 +14,7 @@ import { TEACHERS, adminClient, cleanup, sql } from './helpers.js';
 const ORIGIN = 'http://localhost:4173';
 const SECRET = 'teacher-api-test-secret-'.padEnd(48, 'x');
 const NONCE = 'raw-nonce-1';
-const WEBP = readFileSync(new URL('../../../public/images/builtin/sea.webp', import.meta.url));
+const WEBP = readFileSync(new URL('../../../public/images/builtin/neuschwanstein.webp', import.meta.url));
 
 let server;
 let base;
@@ -82,7 +82,7 @@ async function newAccount() {
   return data.user.id;
 }
 
-async function openClass(token, picture = { builtinKey: 'sea' }) {
+async function openClass(token, picture = { builtinKey: 'neuschwanstein' }) {
   const res = await call('POST', '/api/sessions', { token, body: { pieceCount: 12, groupCount: 2, picture } });
   if (res.status === 200) createdSessions.add(res.body.sessionId);
   return res;
@@ -186,7 +186,7 @@ describe('수업 API (D1)', () => {
     const token = tokenOf(TEACHERS.one);
     const opened = await call('POST', '/api/sessions', {
       token,
-      body: { pieceCount: 24, groupCount: 3, picture: { builtinKey: 'sea', aspect: 99 }, hints: { underlay: true } },
+      body: { pieceCount: 24, groupCount: 3, picture: { builtinKey: 'neuschwanstein', aspect: 99 }, hints: { underlay: true } },
     });
     expect(opened.status).toBe(200);
     createdSessions.add(opened.body.sessionId);
@@ -196,7 +196,7 @@ describe('수업 API (D1)', () => {
     const list = await call('GET', '/api/sessions', { token });
     expect(list.body.sessions.find((s) => s.id === opened.body.sessionId)).toMatchObject({
       code: opened.body.code,
-      builtinKey: 'sea',
+      builtinKey: 'neuschwanstein',
       pieceCount: 24,
       groupCount: 3,
       hints: { underlay: true, preview: false },
@@ -209,7 +209,7 @@ describe('수업 API (D1)', () => {
     const token = tokenOf(TEACHERS.one);
     expect((await openClass(token, { builtinKey: 'no-such-picture' })).body.error).toBe('invalid_picture');
     expect((await openClass(token, { imageId: randomUUID() })).body.error).toBe('invalid_picture');
-    const bad = await call('POST', '/api/sessions', { token, body: { pieceCount: 13, groupCount: 2, picture: { builtinKey: 'sea' } } });
+    const bad = await call('POST', '/api/sessions', { token, body: { pieceCount: 13, groupCount: 2, picture: { builtinKey: 'neuschwanstein' } } });
     expect(bad.body.error).toBe('invalid_piece_count');
   });
 });
@@ -346,11 +346,11 @@ describe('교사당 상한 (T20)', () => {
   it('열린 수업이 교사당 상한을 넘으면 429 too_many_sessions', async () => {
     const token = await freshTeacher();
     for (let i = 0; i < 2; i++) {
-      const res = await call('POST', '/api/sessions', { token, body: { pieceCount: 12, groupCount: 1, picture: { builtinKey: 'sea' } }, root });
+      const res = await call('POST', '/api/sessions', { token, body: { pieceCount: 12, groupCount: 1, picture: { builtinKey: 'neuschwanstein' } }, root });
       expect(res.status).toBe(200);
       createdSessions.add(res.body.sessionId);
     }
-    const over = await call('POST', '/api/sessions', { token, body: { pieceCount: 12, groupCount: 1, picture: { builtinKey: 'sea' } }, root });
+    const over = await call('POST', '/api/sessions', { token, body: { pieceCount: 12, groupCount: 1, picture: { builtinKey: 'neuschwanstein' } }, root });
     expect(over).toMatchObject({ status: 429, body: { error: 'too_many_sessions' } });
   });
 

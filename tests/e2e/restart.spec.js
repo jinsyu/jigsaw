@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { expect, test } from '@playwright/test';
+import { WIDE } from './support/pictures.js';
 import { devTeacherToken, LOCAL_TEACHER_ID, teacherAuthInitScript } from '../../scripts/lib/local-teacher.mjs';
 import { dragFromTray, expectNoHorizontalOverflow, finishFrame, frameOrigin, placeAll, puzzleState, showFrame } from './support/puzzle.js';
 import { startRtServer } from './support/rt-server.js';
@@ -68,7 +69,7 @@ test('D17: the rt server is killed during a puzzle; the screens reconnect and th
   const res = await fetch(`${server.url}/api/sessions`, {
     method: 'POST',
     headers: { origin: ORIGIN, authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ pieceCount: 12, groupCount: 1, picture: { builtinKey: 'sea' }, hints: {} }),
+    body: JSON.stringify({ pieceCount: 12, groupCount: 1, picture: { builtinKey: WIDE }, hints: {} }),
   });
   const cls = await res.json();
   expect(res.status, JSON.stringify(cls)).toBe(200);

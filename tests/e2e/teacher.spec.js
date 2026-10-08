@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { OTHER_TEACHER_ID } from '../../scripts/lib/local-teacher.mjs';
+import { EXACT_3_2, FIRST, KINDS, gridOf, ofKind, picture } from './support/pictures.js';
 import { storageAdmin } from './support/storage.js';
 import {
   RT_URL,
@@ -267,12 +268,16 @@ test('D1: a teacher picks a picture, piece count and groups, opens the class, an
 
   // Picture: the first built-in is chosen and previewed with the real 24-piece cut.
   const pictures = page.getByRole('radiogroup', { name: '내장 그림' }).getByRole('radio');
-  await expect(pictures).toHaveCount(20); // the first category (자체 제작) is shown
+  await expect(pictures).toHaveCount(ofKind(KINDS[0]).length); // the first kind is shown
   await expect(pictures.first()).toBeChecked();
   const preview = page.locator('.t-preview svg');
-  await expect(preview).toHaveAttribute('aria-label', /바다 친구들을 24조각\(가로 6, 세로 4\)/);
-  await page.getByText('숲속 마을').click();
-  await expect(page.locator('.t-preview-title')).toHaveText('숲속 마을');
+  const first = gridOf(FIRST, 24);
+  await expect(preview).toHaveAttribute('aria-label', new RegExp(`${FIRST.title.replace(/[()]/g, '\\$&')}을 24조각\\(가로 ${first.cols}, 세로 ${first.rows}\\)`));
+  // A 3:2 picture, found with the search field.
+  const castle = picture(EXACT_3_2);
+  await page.getByRole('searchbox', { name: '내장 그림 찾기' }).fill(castle.title);
+  await page.getByText(castle.title, { exact: true }).click();
+  await expect(page.locator('.t-preview-title')).toHaveText(castle.title);
 
   // Piece count with the keyboard (arrow keys move inside the radio group).
   await page.getByRole('radio', { name: '24', exact: true }).focus();
@@ -313,7 +318,7 @@ test('D1: a teacher picks a picture, piece count and groups, opens the class, an
   await expect(page.locator('.t-join-url')).toHaveText(new URL(baseURL).host);
   await expect(page.getByRole('img', { name: /입장 QR 코드/ })).toBeVisible();
   expect(await readQr(page)).toBe(`${baseURL}/join?code=${digits}`);
-  await expect(page.locator('.t-summary')).toHaveText('숲속 마을 · 48조각 · 4모둠');
+  await expect(page.locator('.t-summary')).toHaveText(`${castle.title} · 48조각 · 4모둠`);
   await expect(page.locator('.t-join-hints')).toHaveText('도움: 조각 윤곽선 · 완성 그림 버튼');
   await expect(page.locator('.t-group')).toHaveCount(4);
   await expectNoHorizontalOverflow(page);
@@ -325,12 +330,12 @@ test('D1: a teacher picks a picture, piece count and groups, opens the class, an
      from jigsaw.sessions s where s.id = $1`,
     [id],
   );
-  expect(rows[0]).toMatchObject({ code: digits, status: 'waiting', builtin_key: 'village', piece_count: 48, cols: 8, rows: 6, aspect: 1.5, groups: 4 });
+  expect(rows[0]).toMatchObject({ code: digits, status: 'waiting', builtin_key: EXACT_3_2, piece_count: 48, cols: 8, rows: 6, aspect: 1.5, groups: 4 });
 
   // 내 수업 lists it; the card opens the lobby again.
   await page.getByRole('link', { name: '내 수업', exact: true }).click();
   const card = page.locator(`a.t-session[data-code="${digits}"]`);
-  await expect(card).toContainText('숲속 마을');
+  await expect(card).toContainText(castle.title);
   await expect(card).toContainText('48조각 · 4모둠');
   await expect(card).toContainText('학생 기다리는 중');
   await expectNoHorizontalOverflow(page);
@@ -348,7 +353,7 @@ test('D1: a teacher picks a picture, piece count and groups, opens the class, an
   await dialog.getByRole('button', { name: '수업 닫기' }).click();
   await expect(page.getByRole('heading', { level: 1, name: '내 수업' })).toBeVisible();
   await expect.poll(async () => (await sql('select status from jigsaw.sessions where id = $1', [id])).rows[0].status).toBe('ended');
-  await expect(page.locator(`.t-past li`, { hasText: '숲속 마을' }).first()).toBeVisible();
+  await expect(page.locator(`.t-past li`, { hasText: castle.title }).first()).toBeVisible();
   await page.goto(`/teacher/sessions/${id}`);
   await expect(page.getByRole('heading', { level: 1, name: '이미 끝난 수업이에요' })).toBeVisible();
   expect(direct).toEqual([]);
@@ -672,7 +677,7 @@ test('empty, loading-failure and offline states use plain Korean guidance', asyn
 
   await page.route(`${RT_URL}/api/sessions`, (route) => (route.request().method() === 'POST' ? route.abort('internetdisconnected') : route.fallback()));
   await page.goto('/teacher/new');
-  await expect(page.getByRole('radio', { name: /바다 친구들/ })).toBeChecked();
+  await expect(page.getByRole('radio', { name: FIRST.title })).toBeChecked();
   const open = page.getByRole('button', { name: '수업 열기' });
   await open.click();
   await expect(page.locator('.t-side .t-error')).toHaveText('인터넷 연결을 확인하고 다시 눌러 주세요.');
@@ -699,7 +704,7 @@ test("another teacher's class is not opened", async ({ page, context }, testInfo
 test('a picture from 내 그림 can be chosen for a class', async ({ page, context }) => {
   const direct = watchSupabase(page);
   await signInPage(context);
-  const file = readFileSync(new URL('../../public/images/builtin/garden-thumb.webp', import.meta.url));
+  const file = readFileSync(new URL(`../../public/images/builtin/${EXACT_3_2}-thumb.webp`, import.meta.url));
   const image = await storeImage(file);
   createdImages.push(image.id);
 

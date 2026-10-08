@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { EXACT_3_2, WIDE } from './support/pictures.js';
 import {
   boardBox,
   cellPoint,
@@ -28,7 +29,7 @@ test.afterAll(async () => {
 
 // ---------- class set-up ----------
 
-async function createClass(pieces, { key = 'sea', groups = 2, imageId = null, hints } = {}) {
+async function createClass(pieces, { key = WIDE, groups = 2, imageId = null, hints } = {}) {
   const cls = await openClass({ pieces, groups, builtinKey: key, imageId, hints });
   return { ...cls, control: await classControl(cls) };
 }
@@ -284,7 +285,7 @@ test('D5~D10: a group of four plays one puzzle together to the end', async ({ br
 test("the teacher's own picture (private bucket, signed URL) and the class's help settings reach the puzzle", async ({ browser }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-1440', 'one size is enough');
   test.setTimeout(90_000);
-  const image = await storeImage(readFileSync(new URL('../../public/images/builtin/sea.webp', import.meta.url)));
+  const image = await storeImage(readFileSync(new URL(`../../public/images/builtin/${EXACT_3_2}.webp`, import.meta.url)));
   createdImages.push(image.id);
   const cls = await createClass(12, {
     groups: 1,
@@ -429,7 +430,6 @@ test('an outside picture shows its credit, on the puzzle and when it is complete
   test.setTimeout(120_000);
   const index = JSON.parse(readFileSync(new URL('../../public/images/builtin/index.json', import.meta.url), 'utf8'));
   const art = index.images.find((image) => image.key === 'starry-night');
-  expect(art.category).not.toBe('자체 제작');
   const cls = await createClass(12, { key: art.key });
   const s = await joinStudent(browser, testInfo, cls, '서아');
   await startInOneGroup(cls.control, [s]);
