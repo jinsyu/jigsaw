@@ -13,6 +13,8 @@
 import { checkBoardRecord, createBoard } from './board.js';
 
 const PUZZLE_ACTIONS = new Set(['takeFromTray', 'grab', 'drop', 'release']);
+// Member colours the screens draw (MEMBER_COLORS in public/js/student/colors.js).
+const MAX_COLORS = 6;
 
 // Ending a class must go through registry.end (it also forgets the class's tokens and code),
 // so end() is reachable only with this key, which registry.js imports.
@@ -181,15 +183,21 @@ export function createClassSession({
     return { result: { ok: true }, events: [{ to: 'session', type: 'groups', members: list }] };
   }
 
-  // Puzzles for every group with students; colours 0.. in joining order.
+  // Puzzles for every group with students. Students keep the colour the waiting screen showed
+  // them (and the teacher's lobby) when the group's colours are all set and different;
+  // otherwise colours 0.. in joining order.
   function start() {
     if (status !== 'waiting') return refuse('session_not_waiting');
     for (const group of groups.values()) {
       const list = groupMembers(group.number);
       if (list.length === 0) continue;
-      list.forEach((m, i) => {
-        m.color = i;
-      });
+      const colors = list.map((m) => m.color);
+      const kept = colors.every((c) => Number.isInteger(c) && c >= 0 && c < MAX_COLORS) && new Set(colors).size === colors.length;
+      if (!kept) {
+        list.forEach((m, i) => {
+          m.color = i;
+        });
+      }
       group.board = newBoard(list);
     }
     status = 'playing';

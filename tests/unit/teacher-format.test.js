@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { RtError } from '../../public/js/rt-client.js';
+import { demoHints, demoPictureKey, demoPieceCount } from '../../public/js/play/demo.js';
 import {
   GROUP_COUNT,
   clampGroupCount,
   createErrorMessage,
+  demoUrl,
   formatCode,
   formatDateTime,
   piecesPerStudentNote,
@@ -68,5 +70,21 @@ describe('createErrorMessage', () => {
     [new RtError('server_error', 500), '수업을 열지 못했어요. 잠시 뒤 다시 눌러 주세요.'],
   ])('%s', (error, text) => {
     expect(createErrorMessage(error)).toBe(text);
+  });
+});
+
+describe('demoUrl', () => {
+  it('opens the solo puzzle with the chosen built-in picture, piece count and help settings', () => {
+    const url = demoUrl({ builtinKey: 'starry-night', pieceCount: 48, hints: { preview: true, outline: false, pictureButton: true, underlay: false } });
+    expect(url).toBe('/play?demo=1&picture=starry-night&pieces=48&preview=1&outline=0&button=1&underlay=0');
+    // play/demo.js reads back the same choices.
+    const search = url.slice(url.indexOf('?'));
+    expect(demoPictureKey(search)).toBe('starry-night');
+    expect(demoPieceCount(search)).toBe(48);
+    expect(demoHints(search)).toEqual({ preview: true, outline: false, pictureButton: true, underlay: false });
+  });
+
+  it('has no demo for a teacher\'s own picture', () => {
+    expect(demoUrl({ builtinKey: null, pieceCount: 24 })).toBeNull();
   });
 });

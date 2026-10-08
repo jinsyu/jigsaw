@@ -247,17 +247,29 @@ describe('모둠 편성·시작 (D4, D5)', () => {
     expect(session.randomize().result).toEqual({ ok: false, error: 'session_not_waiting' });
   });
 
-  it('시작할 때 색은 들어온 순서대로 0부터 다시 매긴다', () => {
+  it('시작할 때 대기 화면에서 받은 색을 그대로 둔다', () => {
     const { registry } = makeRegistry();
     const session = openClass(registry);
     const [a, b, c] = joinMany(registry, session, ['가', '나', '다']);
     session.assign(c.memberId, 1);
     session.assign(a.memberId, 1);
     session.assign(b.memberId, 1);
-    session.assign(c.memberId, null);
-    session.assign(c.memberId, 1);
+    session.assign(a.memberId, null);
+    session.assign(a.memberId, 1);
+    const before = session.roster().map((m) => m.color);
+    expect(before).toEqual([1, 2, 0]);
     session.start();
-    expect(session.roster().map((m) => m.color)).toEqual([0, 1, 2]);
+    expect(session.roster().map((m) => m.color)).toEqual(before);
+  });
+
+  it('시작할 때 모둠 안 색이 겹치거나 없으면 들어온 순서대로 0부터 다시 매긴다', () => {
+    const { registry } = makeRegistry();
+    const session = openClass(registry);
+    const members = joinMany(registry, session, ['가', '나', '다', '라', '마', '바', '사']);
+    for (const m of [...members].reverse()) session.assign(m.memberId, 1); // 사 0 ... 가 6 (no seventh colour)
+    expect(session.roster().map((m) => m.color)).toEqual([6, 5, 4, 3, 2, 1, 0]);
+    session.start();
+    expect(session.roster().map((m) => m.color)).toEqual([0, 1, 2, 3, 4, 5, 6]);
   });
 });
 

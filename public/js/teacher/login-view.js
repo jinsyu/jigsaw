@@ -43,8 +43,51 @@ export function loginErrorMessage(error) {
   return '로그인하지 못했어요. 잠시 뒤 다시 시도해 주세요.';
 }
 
+// Pictures shown on the sign-in page (built-in keys; any that are missing are skipped).
+const INTRO_PICTURES = ['starry-night', 'sea', 'magpie-tiger', 'great-wave', 'dinosaurs', 'ssireum'];
+
+// What 함께 퍼즐 is, beside the sign-in card, for a teacher who comes here first.
+function intro() {
+  const mosaic = h('div', { class: 't-intro-mosaic', 'aria-hidden': 'true' });
+  fetch('/images/builtin/index.json')
+    .then((response) => (response.ok ? response.json() : null))
+    .then((index) => {
+      const images = index?.images ?? [];
+      const picked = INTRO_PICTURES.map((key) => images.find((image) => image.key === key)).filter(Boolean);
+      mosaic.replaceChildren(...picked.map((image) => h('img', { src: image.thumb, alt: '', loading: 'lazy', decoding: 'async' })));
+      count.textContent = images.length ? `내장 그림 ${images.length}장` : '내장 그림';
+    })
+    .catch(() => {});
+  const count = h('li', {}, '내장 그림');
+  const step = (n, title, text) => h('li', {}, h('i', { 'aria-hidden': 'true' }, String(n)), h('div', {}, h('b', {}, title), h('span', {}, text)));
+  return h(
+    'section',
+    { class: 't-intro', 'aria-labelledby': 't-intro-title' },
+    h('p', { class: 't-intro-eyebrow' }, '초등 모둠 협동 직소 퍼즐 · 무료'),
+    h('h2', { id: 't-intro-title' }, '그림 한 장을 모둠이 함께 맞춰요'),
+    h('p', { class: 't-intro-lead' }, '조각을 모둠원에게 나눠 주기 때문에 모두가 참여해야 완성돼요. 학급 세우기와 협동 연습에 좋아요.'),
+    mosaic,
+    h(
+      'ol',
+      { class: 't-intro-steps' },
+      step(1, '수업 열기', '그림, 조각 수(12~70), 모둠 수를 고르면 수업 코드와 QR이 나와요.'),
+      step(2, '학생 입장', '학생은 로그인 없이 코드와 이름만 넣고 들어와요.'),
+      step(3, '함께 맞추기', '모둠마다 조각을 나눠 갖고 맞춰요. 선생님은 모둠별 진행을 한눈에 봐요.'),
+    ),
+    h(
+      'ul',
+      { class: 't-intro-facts' },
+      count,
+      h('li', {}, '우리 반 사진 올리기'),
+      h('li', {}, '광고·채팅 없음'),
+      h('li', {}, '학생 정보 저장 안 함'),
+    ),
+    h('a', { class: 'btn t-intro-try', href: '/play?demo=1&pieces=12' }, '로그인 없이 먼저 맞춰 보기'),
+  );
+}
+
 export function renderLogin(main, ctx, { notice = '' } = {}) {
-  main.className = 'teacher t-center';
+  main.className = 'teacher t-center t-login-page';
   const message = h('p', { class: 't-error', role: 'alert' }, notice);
   const card = h(
     'section',
@@ -125,7 +168,9 @@ export function renderLogin(main, ctx, { notice = '' } = {}) {
       h('a', { href: '/privacy' }, '개인정보 처리방침'),
     ),
   );
-  main.append(card, h('a', { class: 't-back-home', href: '/' }, '← 학생 코드 입력 화면으로'));
+  main.append(
+    h('div', { class: 't-login-wrap' }, h('div', { class: 't-login-side' }, card, h('a', { class: 't-back-home', href: '/' }, '← 학생 코드 입력 화면으로')), intro()),
+  );
   return () => {
     alive = false;
   };

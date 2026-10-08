@@ -88,3 +88,16 @@ export function createErrorMessage(error) {
   if (error?.code === 'no_free_code' || error?.code === 'shutting_down') return '지금은 수업 코드를 만들 수 없어요. 잠시 뒤 다시 눌러 주세요.';
   return '수업을 열지 못했어요. 잠시 뒤 다시 눌러 주세요.';
 }
+
+// The solo practice puzzle (/play?demo=1, play/demo.js) for a built-in picture with the piece
+// count and help settings chosen on the create screen, so a teacher can try it before class.
+// Teachers' own pictures have no demo (null).
+const DEMO_HINT_PARAMS = { preview: 'preview', outline: 'outline', pictureButton: 'button', underlay: 'underlay' };
+export function demoUrl({ builtinKey, pieceCount, hints = {} }) {
+  if (!builtinKey) return null;
+  const params = new URLSearchParams({ demo: '1', picture: builtinKey, pieces: String(pieceCount) });
+  for (const [key, param] of Object.entries(DEMO_HINT_PARAMS)) {
+    if (typeof hints[key] === 'boolean') params.set(param, hints[key] ? '1' : '0');
+  }
+  return `/play?${params}`;
+}

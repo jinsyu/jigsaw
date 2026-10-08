@@ -104,6 +104,34 @@ html.is-teacher .t-bar { word-break: keep-all; }
 .t-login-foot { font-size: 13px; color: var(--muted); }
 .t-login-foot a { display: inline-flex; align-items: center; min-height: 44px; color: var(--sub); }
 .t-back-home { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: var(--sub); font-size: 15px; font-weight: 600; text-decoration: none; }
+/* Sign-in page: the card, then what 함께 퍼즐 is (beside it on wide screens). */
+.t-login-wrap { width: 100%; max-width: 1040px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; justify-items: center; }
+.t-login-side { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.t-intro { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 16px; }
+.t-intro-eyebrow { align-self: flex-start; font-size: 13px; font-weight: 700; color: var(--pri); background: var(--pri-weak); padding: 6px 12px; border-radius: 999px; }
+.t-intro h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.25; }
+.t-intro-lead { color: var(--sub); font-size: 16px; line-height: 1.6; }
+.t-intro-mosaic { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.t-intro-mosaic:empty { display: none; }
+.t-intro-mosaic img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; box-shadow: 0 1px 0 var(--line), 0 6px 16px rgba(30, 36, 51, 0.08); }
+.t-intro-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.t-intro-steps li { display: flex; gap: 12px; align-items: flex-start; }
+.t-intro-steps i {
+  flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: #fff;
+  font-style: normal; font-weight: 800; font-size: 14px; display: grid; place-items: center;
+}
+.t-intro-steps div { display: flex; flex-direction: column; gap: 2px; line-height: 1.5; }
+.t-intro-steps b { font-size: 16px; }
+.t-intro-steps span { color: var(--sub); font-size: 14.5px; }
+.t-intro-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.t-intro-facts li { font-size: 13.5px; font-weight: 600; color: var(--sub); background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); padding: 7px 12px; border-radius: 999px; }
+.t-intro-try { align-self: flex-start; }
+@media (min-width: 960px) {
+  .t-login-page { justify-content: center; }
+  .t-login-wrap { grid-template-columns: minmax(0, 1fr) 440px; align-items: center; gap: 56px; }
+  .t-login-side { grid-column: 2; grid-row: 1; }
+  .t-intro { grid-column: 1; grid-row: 1; justify-self: end; }
+}
 
 /* ---------- 함께 퍼즐 시작하기 ---------- */
 /* The GIS button frame is 44px tall. Before it comes in, GIS draws a pre-render whose inline
@@ -274,6 +302,12 @@ a.t-session:hover { box-shadow: 0 6px 18px rgba(20, 30, 60, .08), inset 0 0 0 1.
 .t-credit { margin-top: 8px; font-size: 12.5px; line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; }
 .t-credit:empty { display: none; }
 .t-credit a { color: var(--sub); white-space: nowrap; }
+.t-preview-wrap { position: relative; }
+.t-try {
+  position: absolute; right: 8px; bottom: 8px; min-height: 36px; padding: 6px 12px; font-size: 13.5px; gap: 6px; border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(30, 36, 51, 0.18);
+}
+.t-try[hidden] { display: none; }
 .t-pic[hidden] { display: none; } /* category filter */
 .t-chips-filter { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: -4px 0 14px; padding: 3px; }
 .t-chips-filter::-webkit-scrollbar { display: none; }

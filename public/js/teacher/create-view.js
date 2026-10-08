@@ -9,6 +9,7 @@ import {
   PIECE_COUNT_INITIAL,
   clampGroupCount,
   createErrorMessage,
+  demoUrl,
   onOffLabel,
   piecesPerStudentNote,
 } from './format.js';
@@ -97,6 +98,14 @@ export function renderCreate(main, ctx) {
   const preview = h('div', { class: 't-preview' });
   // Where the chosen picture comes from (outside pictures must show their source line).
   const credit = h('p', { class: 't-credit', id: 't-credit' });
+  // Try the puzzle alone first (built-in pictures only), in a new tab so the choices stay.
+  const tryLink = h(
+    'a',
+    { class: 'btn t-try', target: '_blank', rel: 'noopener', hidden: true },
+    icon('puzzle', 18),
+    '혼자 맞춰 보기',
+    h('span', { class: 'sr-only' }, ' (새 탭)'),
+  );
 
   const pieceNote = h('p', { class: 't-note', id: 't-piece-note' });
   const pieceSeg = h(
@@ -202,7 +211,7 @@ export function renderCreate(main, ctx) {
   const sideBody = h(
     'div',
     { class: 't-side-body' },
-    h('div', {}, h('div', { class: 't-lbl' }, previewTitle, previewNote), preview, credit),
+    h('div', {}, h('div', { class: 't-lbl' }, previewTitle, previewNote), h('div', { class: 't-preview-wrap' }, preview, tryLink), credit),
     h(
       'fieldset',
       { class: 't-field' },
@@ -293,7 +302,15 @@ export function renderCreate(main, ctx) {
     updateMore(); // the preview and source line change the list height
   }
 
+  function updateTryLink() {
+    const url = state.picture ? demoUrl({ builtinKey: state.picture.builtinKey, pieceCount: state.pieceCount, hints: state.hints }) : null;
+    tryLink.hidden = !url;
+    if (url) tryLink.href = url;
+    else tryLink.removeAttribute('href');
+  }
+
   function updateFrameMini() {
+    updateTryLink();
     frameMini.dataset.outline = String(state.hints.outline);
     frameMini.dataset.underlay = String(state.hints.underlay);
     if (!state.picture) {
