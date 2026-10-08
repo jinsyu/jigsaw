@@ -58,15 +58,28 @@
 }
 .home .hint { margin-top: 12px; }
 .home-foot { margin-top: 32px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.teacher-link { font-size: 15px; color: var(--sub); }
-.teacher-link a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; color: var(--pri); font-weight: 700; text-decoration: none; }
 .policy-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: 13px; color: var(--muted); }
 
 /* Home landing (index.html): top bar, hero (picture puzzle + code entry), three steps, then
    '혼자 맞춰 보기'. The /join code step reuses .home without .home-landing and keeps its look. */
 .home-landing { max-width: 1080px; padding-top: max(12px, env(safe-area-inset-top)); }
 .home-top { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; }
-.home-top .brand { font-size: 21px; }
+.home-top { flex-wrap: wrap; row-gap: 4px; }
+.home-top .brand { font-size: 21px; min-height: 44px; color: inherit; text-decoration: none; }
+/* Menu: its own row on phones, between the brand and the teacher button on wide screens. */
+.home-nav { order: 3; width: 100%; display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--board); }
+.home-nav a {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 8px; border-radius: 10px;
+  font-size: 14.5px; font-weight: 700; color: var(--sub); text-decoration: none; white-space: nowrap;
+}
+.home-nav a:hover { background: #fff; color: var(--ink); }
+@media (min-width: 860px) {
+  .home-top { flex-wrap: nowrap; }
+  .home-nav { order: 0; width: auto; margin-left: auto; background: none; padding: 0; gap: 2px; }
+  .home-nav a { flex: none; min-height: 44px; padding: 0 14px; font-size: 15px; }
+}
+@media (prefers-reduced-motion: no-preference) { html:has(.home-landing) { scroll-behavior: smooth; } }
+.home-landing :is(#how, #practice, #for-teacher) { scroll-margin-top: 16px; }
 .home-top-teacher {
   display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; font-size: 14.5px; font-weight: 700;
   color: var(--pri); background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); text-decoration: none; white-space: nowrap;
@@ -130,6 +143,65 @@
   .home-steps span { font-size: 13.5px; }
 }
 .home-landing .practice { margin-top: 22px; }
+
+/* Home: what the puzzle is (#how), a note for teachers (#for-teacher), footer. */
+.home-section { width: 100%; margin-top: 56px; text-align: left; }
+.home-section h2 { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.35; word-break: keep-all; }
+.home-section-sub { margin-top: 6px; font-size: 15.5px; color: var(--sub); line-height: 1.55; word-break: keep-all; }
+.how-list { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 10px; counter-reset: how; }
+.how-list li {
+  counter-increment: how; display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px; align-items: start; align-content: start;
+  padding: 16px; border-radius: 20px; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.how-list svg { grid-row: span 2; width: 40px; height: 40px; }
+.how-list li:nth-child(1) svg { fill: var(--m1); }
+.how-list li:nth-child(2) svg { fill: var(--m2); rotate: 90deg; }
+.how-list li:nth-child(3) svg { fill: var(--m3); rotate: 180deg; }
+.how-list li:nth-child(4) svg { fill: var(--m5); rotate: 270deg; }
+.how-list b { font-size: 17px; }
+.how-list b::before { content: counter(how) '. '; color: var(--muted); }
+.how-list span { font-size: 14.5px; color: var(--sub); line-height: 1.55; word-break: keep-all; }
+.how-tip {
+  margin-top: 12px; padding: 12px 16px; border-radius: 16px; background: var(--pri-weak); color: var(--pri);
+  font-size: 14.5px; font-weight: 700; text-align: center; word-break: keep-all;
+}
+.teacher-features { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 10px; }
+.teacher-features li {
+  display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 3px; align-items: start;
+  padding: 16px; border-radius: 18px; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.teacher-features svg {
+  grid-row: span 2; width: 40px; height: 40px; padding: 8px; border-radius: 12px; background: var(--pri-weak);
+  fill: none; stroke: var(--pri); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.teacher-features b { font-size: 16px; }
+.teacher-features span { font-size: 14px; color: var(--sub); line-height: 1.5; word-break: keep-all; }
+.teacher-cta { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.teacher-cta .btn { padding: 12px 22px; }
+.teacher-cta span { font-size: 14px; color: var(--muted); }
+@media (min-width: 560px) {
+  .how-list, .teacher-features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 960px) {
+  .home-section { margin-top: 72px; }
+  .home-section h2 { font-size: 27px; }
+  .how-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .how-list li { grid-template-columns: 1fr; padding: 20px 18px; }
+  .how-list svg { grid-row: auto; margin-bottom: 6px; }
+  .teacher-features { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.home-footer {
+  width: 100%; margin-top: 64px; padding: 24px 0 4px; border-top: 1.5px solid var(--line);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; text-align: left;
+}
+.home-footer .brand { font-size: 17px; }
+.home-footer .brand .ic { width: 22px; height: 22px; }
+.home-footer-brand p:last-child { margin-top: 4px; font-size: 13.5px; color: var(--muted); }
+.home-footer-links { display: flex; flex-wrap: wrap; margin: 0 -8px; }
+.home-footer-links a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: 14px; color: var(--sub); text-decoration: none;
+}
+.home-footer-links a:hover { color: var(--ink); text-decoration: underline; }
 
 /* Home: '혼자 맞춰 보기' (js/home-practice.js), alone on /play?demo=1. */
 .practice {
