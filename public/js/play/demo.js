@@ -75,8 +75,9 @@ export function renderDemoDone(board, { durationMs }) {
   const card = document.createElement('div');
   card.className = 'pz-done';
   card.setAttribute('role', 'status');
-  const title = document.createElement('p');
+  const title = document.createElement('h2');
   title.className = 'pz-done-title';
+  title.tabIndex = -1;
   title.textContent = '모든 조각이 맞았어요!';
   const time = document.createElement('p');
   time.className = 'pz-done-time';
@@ -95,6 +96,8 @@ export function renderDemoDone(board, { durationMs }) {
   actions.append(again, other);
   card.append(title, time, actions);
   board.append(card);
+  // Screen readers and keyboards land on the card (a status added with its text is not always read).
+  title.focus({ preventScroll: true });
   return card;
 }
 

@@ -62,6 +62,10 @@ function intro() {
       if (logo && easy.length) {
         const puzzle = pictureHero(easy[Math.floor(Math.random() * easy.length)]);
         puzzle.setAttribute('class', 't-login-hero hero-picture');
+        // Decoration, like the logo it replaces.
+        puzzle.removeAttribute('role');
+        puzzle.removeAttribute('aria-label');
+        puzzle.setAttribute('aria-hidden', 'true');
         logo.replaceWith(puzzle);
       }
       count.textContent = images.length ? `내장 그림 ${images.length}장` : '내장 그림';

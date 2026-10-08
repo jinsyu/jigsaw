@@ -439,9 +439,13 @@ export function renderCreate(main, ctx) {
           ),
           faceWarning(),
         );
-        if (selectId) {
+        // A picture just uploaded, or the one of 다시 열기: show it (focus it only if the teacher
+        // is not busy elsewhere on the page meanwhile).
+        const chosen = panel.querySelector(`input[value="image:${selectId}"]`);
+        if (selectId && chosen) {
+          const idle = document.activeElement === document.body || document.activeElement === null;
           selectTab('mine');
-          panel.querySelector(`input[value="image:${selectId}"]`)?.focus();
+          if (idle || panels.upload.contains(document.activeElement)) chosen.focus();
         }
       })
       .catch((err) => {

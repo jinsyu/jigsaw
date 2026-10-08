@@ -480,6 +480,7 @@ html.is-play, html.is-play body { height: 100%; overflow: hidden; overscroll-beh
   background: #fff; box-shadow: 0 18px 48px rgba(30, 36, 51, 0.22); animation: pz-done-in .35s ease-out both;
 }
 .pz-done-title { font-size: 22px; font-weight: 800; color: #17693C; letter-spacing: -0.02em; }
+.pz-done-title:focus { outline: none; }
 .pz-done-time { margin-top: 6px; color: var(--sub); font-size: 15px; }
 .pz-done-actions { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .pz-done-actions .btn { font-size: 15px; padding: 10px 8px; }
