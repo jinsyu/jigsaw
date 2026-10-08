@@ -217,6 +217,13 @@ class StudentFlow {
       if (this.puzzle !== handle) return;
       console.error(error);
       this.closePuzzle();
+      if (error?.code === 'picture_gone') {
+        renderMessage(this.main, {
+          title: '이 수업의 그림을 찾지 못했어요',
+          text: '선생님께 알려 주세요. 새 수업을 열면 다시 할 수 있어요.',
+        });
+        return;
+      }
       renderMessage(this.main, {
         title: '퍼즐을 열지 못했어요',
         text: '인터넷 연결을 확인하고 다시 눌러 주세요.',

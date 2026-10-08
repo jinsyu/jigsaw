@@ -40,7 +40,12 @@ export async function loadPictureInfo(setup, fetchImpl = globalThis.fetch) {
     const response = await fetchImpl(BUILTIN_INDEX);
     if (!response.ok) throw new Error(`built-in pictures: HTTP ${response.status}`);
     const found = (await response.json()).images.find((image) => image.key === setup.builtinKey);
-    if (!found) throw new Error(`unknown built-in picture: ${setup.builtinKey}`);
+    if (!found) {
+      // A class opened with a picture that has since been taken out of the built-in set.
+      const error = new Error(`unknown built-in picture: ${setup.builtinKey}`);
+      error.code = 'picture_gone';
+      throw error;
+    }
     const credit = found.credit || undefined;
     return { src: found.src, width: found.width, height: found.height, credit, revoke: () => {} };
   }
