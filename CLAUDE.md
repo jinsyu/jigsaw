@@ -23,11 +23,12 @@ pnpm test:db              # DB·서버 통합 시험 (로컬 Supabase 필요)
 pnpm dev                  # 정적 서버 http://localhost:4173
 pnpm rt:dev               # 로컬 rt 서버 http://127.0.0.1:3400 (시험 훅 켬)
 pnpm teacher:open         # 시험용 선생님으로 로그인된 창 열기 (dev·rt:dev 켠 뒤)
+pnpm screens [그림 키]     # 주요 화면을 휴대폰·넓은 화면으로 찍어 test-results/screens/ 에 저장 (dev·rt:dev 켠 뒤)
 pnpm test:e2e             # E2E 4개 너비(360·390·1024·1440). test:db 와 동시에 돌리지 않는다
 pnpm images:builtin       # 내장 그림 다시 만들기 (네트워크 필요, 원본은 OS 임시 폴더)
 ```
 
-rt 서버 코드를 고치면 떠 있는 `rt:dev` 를 다시 켜야 반영된다(자동 재시작 없음).
+화면을 고친 뒤에는 `pnpm screens` 로 찍어 눈으로 확인한다. rt 서버 코드를 고치면 떠 있는 `rt:dev` 를 다시 켜야 반영된다(자동 재시작 없음).
 
 ## 꼭 지킬 것
 

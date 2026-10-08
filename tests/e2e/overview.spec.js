@@ -59,6 +59,8 @@ async function boardsDrawn(page) {
 async function badgeCoversNothing(page, cardLocator) {
   return cardLocator.evaluate((el) => {
     const canvas = el.querySelector('canvas');
+    // The card may be drawn again between two polls (overview update): ask again then.
+    if (!canvas || !el.querySelector('.t-ov-badge')) return false;
     const badge = el.querySelector('.t-ov-badge').getBoundingClientRect();
     const box = canvas.getBoundingClientRect();
     const k = canvas.width / box.width;

@@ -50,26 +50,25 @@ function markPrivate(title) {
   document.head.append(robots);
 }
 
-// Screens are built in later tasks; until then they show a simple placeholder.
-function renderPlaceholder(main, title) {
+// A plain screen with a heading, one line and a way back home (unknown address, load error).
+function renderPlaceholder(main, title, note = '주소를 다시 확인하거나 처음 화면에서 시작해 주세요.') {
   main.className = 'page placeholder';
   main.replaceChildren();
   const heading = document.createElement('h1');
   heading.textContent = title;
-  const note = document.createElement('p');
-  note.className = 'sub';
-  note.textContent = '이 화면은 준비 중이에요.';
+  const line = document.createElement('p');
+  line.className = 'sub';
+  line.textContent = note;
   const back = document.createElement('a');
   back.className = 'btn';
   back.href = '/';
-  back.textContent = '처음으로';
-  main.append(heading, note, back);
+  back.textContent = '처음 화면으로';
+  main.append(heading, line, back);
 }
 
 function showLoadError(main, error) {
   document.documentElement.classList.remove('is-play');
-  renderPlaceholder(main, '화면을 열지 못했어요');
-  main.querySelector('.sub').textContent = '새로고침해 주세요. 계속 안 되면 선생님께 알려 주세요.';
+  renderPlaceholder(main, '화면을 열지 못했어요', '새로고침해 주세요. 계속 안 되면 선생님께 알려 주세요.');
   console.error(error);
 }
 

@@ -14,6 +14,7 @@
     "db:status": "npx --yes supabase@2.120.0 status -o env",
     "images:builtin": "node scripts/builtin-images.mjs",
     "teacher:open": "node scripts/teacher-open.mjs",
+    "screens": "node scripts/screens.mjs",
     "rt:dev": "node scripts/rt-dev.mjs",
     "test:server": "vitest run --config vitest.db.config.js tests/server"
   },
