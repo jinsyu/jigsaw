@@ -13,7 +13,7 @@ export function formatCode(code) {
 }
 
 function setScreen(main, className, title, ...children) {
-  document.title = `${title} | 함께 퍼즐`;
+  document.title = `${title} | 조각조각`;
   main.className = `page st ${className}`;
   main.removeAttribute('aria-busy');
   main.replaceChildren(...nodes(children));
@@ -26,7 +26,7 @@ function focusFirst(main, selector) {
 }
 
 function brand() {
-  return h('p', { class: 'brand' }, h('img', { class: 'ic', src: '/icon.svg', alt: '', width: 26, height: 26 }), '함께 퍼즐');
+  return h('p', { class: 'brand' }, h('img', { class: 'ic', src: '/icon.svg', alt: '', width: 26, height: 26 }), '조각조각');
 }
 
 export function renderLoading(main, text) {
@@ -199,7 +199,7 @@ export function renderWaiting(main, { onRename }) {
 
   return function update(state) {
     const playing = state.status === 'playing';
-    document.title = `${playing ? '퍼즐 시작' : '기다리는 중'} | 함께 퍼즐`;
+    document.title = `${playing ? '퍼즐 시작' : '기다리는 중'} | 조각조각`;
     banner.textContent = state.connected ? '' : '연결이 끊겼어요. 다시 연결하는 중이에요…';
     pill.className = `pill ${playing ? 'ok' : 'pri'} st-pill`;
     pill.replaceChildren(h('i', { class: 'dot' }), playing ? '퍼즐이 시작됐어요' : '선생님이 시작하기를 기다리는 중');

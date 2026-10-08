@@ -21,7 +21,7 @@ describe('built-in pictures index', () => {
     expect(index.version).toBe(1);
     expect(index.images.length).toBeGreaterThanOrEqual(30);
     expect(new Set(index.images.map((i) => i.key)).size).toBe(index.images.length);
-    expect(index.images.filter((i) => i.source.name === '함께 퍼즐 자체 제작')).toEqual([]);
+    expect(index.images.filter((i) => i.source.name === '조각조각 자체 제작')).toEqual([]);
     // Each credit line is its own (the privacy page lists them one by one).
     expect(new Set(index.images.map((i) => i.credit)).size).toBe(index.images.length);
   });
@@ -62,7 +62,7 @@ describe('built-in pictures index', () => {
     expect(image.source.name.length).toBeGreaterThan(0);
     expect(image.source.author.length).toBeGreaterThan(0);
     expect(image.license.name.length).toBeGreaterThan(0);
-    const selfMade = image.source.name === '함께 퍼즐 자체 제작';
+    const selfMade = image.source.name === '조각조각 자체 제작';
     for (const url of [image.source.url, image.license.url]) {
       if (selfMade) expect(url).toBeNull();
       else expect(url).toMatch(/^https:\/\//);

@@ -42,7 +42,7 @@ function showResume(saved) {
 
 // Non-home screens share index.html, so drop the home canonical and keep them out of search.
 function markPrivate(title) {
-  document.title = `${title} | 함께 퍼즐`;
+  document.title = `${title} | 조각조각`;
   document.querySelector('link[rel="canonical"]')?.remove();
   const robots = document.createElement('meta');
   robots.name = 'robots';

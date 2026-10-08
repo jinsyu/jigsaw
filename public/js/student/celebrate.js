@@ -52,7 +52,7 @@ function confetti() {
  */
 export function renderCelebration(main, { groupNumber, names, picture, durationMs, pieceCount }) {
   document.documentElement.classList.remove('is-play');
-  document.title = `${groupNumber}모둠 완성! | 함께 퍼즐`;
+  document.title = `${groupNumber}모둠 완성! | 조각조각`;
   main.className = 'page st st-done';
   main.removeAttribute('aria-busy');
   delete main.dataset.ready;

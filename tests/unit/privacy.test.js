@@ -51,7 +51,7 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
   });
 
   it('teacher withdrawal deletes the jigsaw data only, not the shared gyosil account', () => {
-    expect(text).toContain('함께 퍼즐의 데이터(함께 퍼즐 시작 기록, 올린 그림 파일, 수업 기록)를 모두 지웁니다');
+    expect(text).toContain('조각조각의 데이터(조각조각 시작 기록, 올린 그림 파일, 수업 기록)를 모두 지웁니다');
     expect(text).toContain('다른 교실 앱과 함께 쓰는 구글 로그인 계정과 교사 이름은 그대로 두며');
   });
 

@@ -1,4 +1,4 @@
-// T20 (D1, D2, D12): teacher sign-in and 함께 퍼즐 시작하기, classes and pictures over HTTP,
+// T20 (D1, D2, D12): teacher sign-in and 조각조각 시작하기, classes and pictures over HTTP,
 // on an in-process rt server with a fake Google check (the real one is tried in T25).
 import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
@@ -127,7 +127,7 @@ afterAll(async () => {
   await cleanup();
 });
 
-describe('교사 로그인·함께 퍼즐 시작하기 (D1)', () => {
+describe('교사 로그인·조각조각 시작하기 (D1)', () => {
   it('처음 온 계정은 시작하기를 거쳐 teachers 행과 공용 프로필을 만들고 교사 토큰을 받는다', async () => {
     const uid = await newAccount();
     const first = await call('POST', '/api/teacher/login', { body: { idToken: `google:${uid}`, nonce: NONCE } });

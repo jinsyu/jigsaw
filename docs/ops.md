@@ -1,4 +1,4 @@
-# 함께 퍼즐 운영 문서 (rt 서버·DB 백업·탈퇴 처리)
+# 조각조각 운영 문서 (rt 서버·DB 백업·탈퇴 처리)
 
 실시간·판정 서버 `rt.gyosil.app` 의 설치·배포·로그·백업·복원과 교사 탈퇴 처리 절차를 적는다. 구조는 `docs/spec.md` '시스템 구조'를 따른다. rt 서버(Lightsail)는 여러 앱이 함께 쓰는 구조다. 서버 공통 설정과 앱별 규칙은 '12. 새 앱 추가', 이전 구조에서 옮기는 절차는 '13. 여러 앱 구조로 옮기기'에 있다.
 
@@ -230,7 +230,7 @@ where o.bucket_id = 'jigsaw-images' and not exists (select 1 from jigsaw.images 
 
 ## 8. 교사 탈퇴·계정 삭제
 
-탈퇴는 처리방침의 문의 메일로 요청받아 운영자가 처리한다(spec, privacy.html 2번). **함께 퍼즐 데이터(`jigsaw` 스키마의 행)와 Storage `jigsaw-images/<uid>/` 파일만 지운다. `auth.users`·`core.profiles` 는 건드리지 않는다**(gyosil 공용 계정. 계정까지 지워 달라는 요청이면 gyosil 공용 절차로 따로 처리).
+탈퇴는 처리방침의 문의 메일로 요청받아 운영자가 처리한다(spec, privacy.html 2번). **조각조각 데이터(`jigsaw` 스키마의 행)와 Storage `jigsaw-images/<uid>/` 파일만 지운다. `auth.users`·`core.profiles` 는 건드리지 않는다**(gyosil 공용 계정. 계정까지 지워 달라는 요청이면 gyosil 공용 절차로 따로 처리).
 
 ### 1) 확인 (Supabase SQL 편집기, 읽기만)
 
@@ -238,7 +238,7 @@ where o.bucket_id = 'jigsaw-images' and not exists (select 1 from jigsaw.images 
 -- 요청한 메일 주소로 uid 찾기
 select id, email from auth.users where email = '<요청 메일 주소>';
 
--- 함께 퍼즐 교사인지, 지울 것이 얼마나 있는지
+-- 조각조각 교사인지, 지울 것이 얼마나 있는지
 select
   (select count(*) from jigsaw.teachers where id = '<uid>') as teacher,
   (select count(*) from jigsaw.images where teacher_id = '<uid>') as images,

@@ -1,6 +1,6 @@
 // Signed tokens of the rt server (HMAC-SHA256 with SESSION_SECRET). payload = { uid, exp, p }.
 // - teacher token (p 'teacher', TEACHER_TOKEN_TTL_MS): sent with every teacher request.
-// - start ticket (p 'start', START_TICKET_TTL_MS): from sign-in to '함께 퍼즐 시작하기' for a
+// - start ticket (p 'start', START_TICKET_TTL_MS): from sign-in to '조각조각 시작하기' for a
 //   gyosil account that is not a jigsaw teacher yet. It never works as a teacher token.
 import { createHmac, timingSafeEqual } from 'node:crypto';
 

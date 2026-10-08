@@ -1,4 +1,4 @@
-// 함께 퍼즐 시작하기: once, for a gyosil account that is not a jigsaw teacher yet (spec F1).
+// 조각조각 시작하기: once, for a gyosil account that is not a jigsaw teacher yet (spec F1).
 // The name shown on the teacher screens and the consent; POST /api/teacher/start saves them in
 // the shared gyosil profile (core.profiles) and makes the jigsaw.teachers row.
 // The name field starts with the name the teacher already uses in other gyosil apps.
@@ -15,7 +15,7 @@ export function startErrorMessage(error) {
 }
 
 export function renderStart(main, ctx, { startTicket, displayName }) {
-  setTitle('함께 퍼즐 시작하기');
+  setTitle('조각조각 시작하기');
   main.className = 'teacher t-center';
   let alive = true;
   const known = (displayName ?? '').trim();
@@ -57,8 +57,8 @@ export function renderStart(main, ctx, { startTicket, displayName }) {
   const card = h(
     'section',
     { class: 'card t-login-card t-start-card', 'aria-labelledby': 't-start-title' },
-    h('span', { class: 'brand t-login-brand' }, pieceIcon(), '함께 퍼즐'),
-    h('h1', { id: 't-start-title', tabindex: '-1' }, '함께 퍼즐 시작하기'),
+    h('span', { class: 'brand t-login-brand' }, pieceIcon(), '조각조각'),
+    h('h1', { id: 't-start-title', tabindex: '-1' }, '조각조각 시작하기'),
     h('p', { class: 'sub' }, '처음 한 번만 하면 돼요. 학생 이름이나 사진은 받지 않아요.'),
     form,
   );

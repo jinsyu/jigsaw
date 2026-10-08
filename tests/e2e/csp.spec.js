@@ -167,7 +167,7 @@ test('the production CSP: every page loads without a violation, with the rt serv
   // Teacher: the GIS script from Google, then sign-in through the rt server.
   await visit('/teacher');
   await page.getByRole('button', { name: 'Google 계정으로 계속' }).click();
-  await expect(page.getByRole('heading', { level: 1, name: '함께 퍼즐 시작하기' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: '조각조각 시작하기' })).toBeVisible();
   expect(await page.evaluate(() => window.__gis.client_id)).toBe(HOSTED_CLIENT_ID);
   expect(await violations(page), '/teacher').toEqual([]);
   await expectNoHorizontalOverflow(page);

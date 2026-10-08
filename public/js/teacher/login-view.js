@@ -4,7 +4,7 @@
 // Google sign-in (spec "교사 인증"): GIS gets the SHA-256 of a fresh nonce and gives back an ID
 // token; the rt server gets the ID token and the raw nonce (POST /api/teacher/login), checks
 // both through Supabase, and answers with a teacher token, or with a start ticket for an
-// account that has not started 함께 퍼즐 yet (start-view.js).
+// account that has not started 조각조각 yet (start-view.js).
 import { RtError } from '../rt-client.js';
 import { makeNonce } from './auth.js';
 import { h, pieceIcon, setTitle } from './dom.js';
@@ -12,7 +12,7 @@ import { h, pieceIcon, setTitle } from './dom.js';
 const GIS_SCRIPT = 'https://accounts.google.com/gsi/client';
 
 function brandLink() {
-  return h('a', { class: 'brand t-login-brand', href: '/' }, pieceIcon(), '함께 퍼즐');
+  return h('a', { class: 'brand t-login-brand', href: '/' }, pieceIcon(), '조각조각');
 }
 
 function hero() {
@@ -46,7 +46,7 @@ export function loginErrorMessage(error) {
 // Pictures shown on the sign-in page (built-in keys; any that are missing are skipped).
 const INTRO_PICTURES = ['giant-panda', 'starry-night', 'magpie-tiger', 'corgi-puppy', 'great-wave', 'macaws'];
 
-// What 함께 퍼즐 is, beside the sign-in card, for a teacher who comes here first.
+// What 조각조각 is, beside the sign-in card, for a teacher who comes here first.
 function intro() {
   const mosaic = h('div', { class: 't-intro-mosaic', 'aria-hidden': 'true' });
   fetch('/images/builtin/index.json')

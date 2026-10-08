@@ -181,7 +181,7 @@ test('an expired or refused teacher token goes back to sign-in', async ({ browse
   await forged.context.close();
 });
 
-test('Google sign-in of a new teacher: 함께 퍼즐 시작하기 with the gyosil name filled in, then 내 수업', async ({ browser, baseURL }, testInfo) => {
+test('Google sign-in of a new teacher: 조각조각 시작하기 with the gyosil name filled in, then 내 수업', async ({ browser, baseURL }, testInfo) => {
   test.skip(!['desktop-1440', 'phone-360'].includes(testInfo.project.name), 'one wide and one phone screen');
   // The local stack has no Google client ID (the hosted one: last test of this file). Here the
   // page gets a client ID, a stand-in for the GIS script (served at the real GIS address, which
@@ -231,7 +231,7 @@ test('Google sign-in of a new teacher: 함께 퍼즐 시작하기 with the gyosi
   const { createHash } = await import('node:crypto');
   expect(gisNonce).toBe(createHash('sha256').update(sent.login.nonce).digest('hex'));
 
-  await expect(page.getByRole('heading', { level: 1, name: '함께 퍼즐 시작하기' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: '조각조각 시작하기' })).toBeVisible();
   const name = page.getByLabel('선생님 이름');
   await expect(name).toHaveValue('김교실');
   await expect(page.locator('#t-start-name-note')).toHaveText('다른 교실 앱에서 쓰는 이름을 넣어 두었어요. 바꿔도 돼요.');
@@ -743,7 +743,7 @@ test('on the hosted site, the teacher signs in through GIS with the gyosil clien
   await expect(page.getByRole('heading', { level: 1, name: '선생님 로그인' })).toBeVisible();
   await expect(page.locator('.t-dev-note')).toHaveCount(0);
   await page.getByRole('button', { name: 'Google 계정으로 계속' }).click();
-  await expect(page.getByRole('heading', { level: 1, name: '함께 퍼즐 시작하기' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: '조각조각 시작하기' })).toBeVisible();
   expect(await page.evaluate(() => window.__gis.client_id)).toBe(HOSTED_CLIENT_ID);
   expect(login).toHaveLength(1);
   expect(login[0].origin).toBe(SITE);

@@ -15,7 +15,7 @@ export function createTeachers(db) {
     return data ? { displayName: data.display_name, termsAgreedAt: data.terms_agreed_at } : null;
   }
 
-  // 함께 퍼즐 시작하기: the shared profile (name, terms agreed now) and the jigsaw.teachers row.
+  // 조각조각 시작하기: the shared profile (name, terms agreed now) and the jigsaw.teachers row.
   async function start(uid, displayName) {
     const saved = await profiles().upsert(
       { id: uid, display_name: displayName, terms_agreed_at: new Date().toISOString() },

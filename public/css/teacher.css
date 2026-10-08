@@ -104,7 +104,7 @@ html.is-teacher .t-bar { word-break: keep-all; }
 .t-login-foot { font-size: 13px; color: var(--muted); }
 .t-login-foot a { display: inline-flex; align-items: center; min-height: 44px; color: var(--sub); }
 .t-back-home { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: var(--sub); font-size: 15px; font-weight: 600; text-decoration: none; }
-/* Sign-in page: the card, then what 함께 퍼즐 is (beside it on wide screens). */
+/* Sign-in page: the card, then what 조각조각 is (beside it on wide screens). */
 .t-login-wrap { width: 100%; max-width: 1040px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; justify-items: center; }
 .t-login-side { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .t-intro { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 16px; }
@@ -133,7 +133,7 @@ html.is-teacher .t-bar { word-break: keep-all; }
   .t-intro { grid-column: 1; grid-row: 1; justify-self: end; }
 }
 
-/* ---------- 함께 퍼즐 시작하기 ---------- */
+/* ---------- 조각조각 시작하기 ---------- */
 /* The GIS button frame is 44px tall. Before it comes in, GIS draws a pre-render whose inline
    styles the CSP blocks (no 'unsafe-inline'), so its Google logo SVG has no size: hold the slot
    at the button height and the logo at its own size, so the card does not jump. */

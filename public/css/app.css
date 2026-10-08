@@ -62,11 +62,74 @@
 .teacher-link a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; color: var(--pri); font-weight: 700; text-decoration: none; }
 .policy-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: 13px; color: var(--muted); }
 
-/* Home: wider on big screens for the practice pictures; the code part keeps its width. */
-.page.home { max-width: 1040px; }
-.home > :not(.practice) { max-width: 392px; }
-.home > .brand, .home > .home-foot, .home > .spacer { max-width: none; }
-.home .code-form, .home .resume { width: 100%; }
+/* Home landing (index.html): top bar, hero (picture puzzle + code entry), three steps, then
+   '혼자 맞춰 보기'. The /join code step reuses .home without .home-landing and keeps its look. */
+.home-landing { max-width: 1080px; padding-top: max(12px, env(safe-area-inset-top)); }
+.home-top { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; }
+.home-top .brand { font-size: 21px; }
+.home-top-teacher {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; font-size: 14.5px; font-weight: 700;
+  color: var(--pri); background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); text-decoration: none; white-space: nowrap;
+}
+.home-top-teacher:hover { box-shadow: inset 0 0 0 1.5px var(--pri); }
+.home-hero {
+  position: relative; width: 100%; margin-top: 12px; padding: 28px 20px 26px; border-radius: 28px; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background:
+    radial-gradient(120% 90% at 0% 0%, #FFE3D3 0%, rgba(255, 227, 211, 0) 60%),
+    radial-gradient(110% 90% at 100% 100%, #DCE6FF 0%, rgba(220, 230, 255, 0) 60%),
+    #FFF8EE;
+  box-shadow: inset 0 0 0 1.5px rgba(232, 226, 215, .8);
+}
+.home-art { position: relative; width: 190px; height: 190px; display: grid; place-items: center; }
+.home-landing .hero { width: 170px; height: 170px; margin: 0; }
+.home-art .float { position: absolute; width: 34px; height: 34px; animation: home-float 6s ease-in-out infinite; }
+.home-art .f1 { fill: var(--m1); left: -14px; top: 12px; transform: rotate(-18deg); }
+.home-art .f2 { fill: var(--m2); right: -18px; top: -4px; width: 28px; height: 28px; animation-delay: -1.5s; }
+.home-art .f3 { fill: var(--m3); right: -22px; bottom: 18px; width: 40px; height: 40px; animation-delay: -3s; }
+.home-art .f4 { fill: var(--m5); left: -20px; bottom: -6px; width: 30px; height: 30px; animation-delay: -4.5s; }
+.home-art .f5 { fill: var(--m4); left: 46%; top: -26px; width: 24px; height: 24px; animation-delay: -2.2s; }
+@keyframes home-float { 50% { translate: 0 -8px; rotate: 8deg; } }
+@media (prefers-reduced-motion: reduce) { .home-art .float { animation: none; } }
+.home-main { width: 100%; max-width: 392px; display: flex; flex-direction: column; align-items: center; }
+.home-eyebrow { font-size: 13.5px; font-weight: 700; color: var(--pri); background: rgba(255, 255, 255, .8); padding: 6px 12px; border-radius: 999px; margin: 8px 0 12px; }
+.home-landing h1 { margin-bottom: 20px; }
+.home-landing .code-cells span { background: #fff; }
+.home-steps {
+  list-style: none; margin: 18px 0 0; padding: 0; width: 100%;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; counter-reset: step;
+}
+.home-steps li {
+  counter-increment: step; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+  padding: 14px 8px 12px; border-radius: 18px; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.home-steps svg { width: 30px; height: 30px; }
+.home-steps li:nth-child(1) svg { fill: var(--m1); }
+.home-steps li:nth-child(2) svg { fill: var(--m2); }
+.home-steps li:nth-child(3) svg { fill: var(--m3); }
+.home-steps b { font-size: 15px; }
+.home-steps b::before { content: counter(step) '. '; color: var(--muted); font-weight: 700; }
+.home-steps span { font-size: 12.5px; color: var(--sub); line-height: 1.4; word-break: keep-all; }
+@media (min-width: 860px) {
+  .home-hero { flex-direction: row; justify-content: center; gap: 72px; padding: 52px 56px; }
+  .home-art { width: 320px; height: 320px; }
+  .home-landing .hero { width: 290px; height: 290px; }
+  .home-art .float { width: 48px; height: 48px; }
+  .home-art .f2 { width: 38px; height: 38px; }
+  .home-art .f3 { width: 56px; height: 56px; }
+  .home-art .f5 { width: 32px; height: 32px; }
+  .home-main { align-items: flex-start; text-align: left; }
+  .home-landing h1 { font-size: 34px; text-align: left; }
+  .home-landing .hint { text-align: left; }
+  .home-landing .code-field.is-enhanced .code-cells { justify-content: flex-start; }
+  .home-steps { gap: 14px; margin-top: 22px; }
+  .home-steps li { flex-direction: row; justify-content: center; gap: 10px; padding: 16px; text-align: left; }
+  .home-steps li > :is(b, span) { display: block; }
+  .home-steps li { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; }
+  .home-steps svg { grid-row: span 2; width: 36px; height: 36px; }
+  .home-steps span { font-size: 13.5px; }
+}
+.home-landing .practice { margin-top: 22px; }
 
 /* Home: '혼자 맞춰 보기' (js/home-practice.js), alone on /play?demo=1. */
 .practice {

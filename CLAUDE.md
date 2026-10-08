@@ -1,4 +1,4 @@
-# 함께 퍼즐 (jigsaw)
+# 조각조각 (jigsaw)
 
 초등 교실 모둠(4~6명)이 각자 태블릿·휴대폰으로 같은 직소 퍼즐 하나를 실시간으로 함께 맞추는 무료 수업 도구.
 기준 문서: `docs/spec.md`(무엇을·왜), `docs/plan.md`(태스크 기록), `docs/ops.md`(rt 서버 운영), `docs/image-candidates.md`(내장 그림 출처 조사).

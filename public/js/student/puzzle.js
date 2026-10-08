@@ -144,7 +144,7 @@ export function openPuzzle({ main, live, setup, memberId, groupNumber, mates, bo
     else {
       screen = await mountPlayScreen(main, store, { onComplete: celebrate });
       if (disposed) return null;
-      document.title = `${groupNumber}모둠 퍼즐 | 함께 퍼즐`;
+      document.title = `${groupNumber}모둠 퍼즐 | 조각조각`;
       (main.querySelector('.pz-board') ?? main).append(band);
       band.hidden = connected;
     }

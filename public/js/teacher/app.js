@@ -1,4 +1,4 @@
-// Teacher screens under /teacher: sign-in, 함께 퍼즐 시작하기, 내 수업, 새 수업, 내 그림, and the
+// Teacher screens under /teacher: sign-in, 조각조각 시작하기, 내 수업, 새 수업, 내 그림, and the
 // class lobby. Loaded on demand by js/app.js. Everything goes through the rt server
 // (rt-client.js) with the teacher token from sign-in; nothing here talks to Supabase.
 import { hasRtServer, pickConfig } from '../config.js';
@@ -52,7 +52,7 @@ export async function startTeacher(main) {
   const band = h('p', { class: 't-band', role: 'status', hidden: true }, h('i', { class: 'dot is-lost' }), '서버와 연결이 끊겼어요. 다시 연결하는 중이에요…');
   main.before(bar, band);
   let auth = readTeacherAuth(localStorage);
-  let start = null; // { startTicket, displayName } between Google sign-in and 함께 퍼즐 시작하기
+  let start = null; // { startTicket, displayName } between Google sign-in and 조각조각 시작하기
   let notice = ''; // shown once on the sign-in screen
   let cleanup = null;
   let firstRender = true;
@@ -134,7 +134,7 @@ export async function startTeacher(main) {
     setBar(mode, { active, nodes = [] } = {}) {
       bar.hidden = mode === 'none';
       bar.className = `t-bar t-bar-${mode}`;
-      const brand = h('a', { class: 'brand', href: '/teacher', 'aria-label': '함께 퍼즐 내 수업' }, pieceIcon(), '함께 퍼즐');
+      const brand = h('a', { class: 'brand', href: '/teacher', 'aria-label': '조각조각 내 수업' }, pieceIcon(), '조각조각');
       if (mode !== 'nav') {
         bar.replaceChildren(brand, ...present(nodes));
         return;
