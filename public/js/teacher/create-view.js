@@ -337,6 +337,7 @@ export function renderCreate(main, ctx) {
           value: `builtin:${b.key}`,
           title: b.title,
           category: b.category,
+          level: b.level,
           detail: cardDetail(b),
           thumb: b.thumb,
           picture: {
@@ -362,6 +363,7 @@ export function renderCreate(main, ctx) {
             src: p.thumb,
             title: p.title,
             detail: p.detail,
+            level: p.level,
             radio: choiceRadio(p.value, p.picture, p === first && !state.picture),
           }),
         }));
@@ -497,9 +499,9 @@ export function cardDetail(builtin) {
   return [builtin.source?.author, builtin.year].filter(Boolean).join(', ') || builtin.topic || builtin.category;
 }
 
-// Words a built-in picture can be found by: title, theme, kind, maker, year.
+// Words a built-in picture can be found by: title, theme, kind, level, maker, year.
 export function pictureSearchText(builtin) {
-  return normalizeSearch([builtin.title, builtin.topic, builtin.category, builtin.source?.author, builtin.year].filter(Boolean).join(' '));
+  return normalizeSearch([builtin.title, builtin.topic, builtin.category, builtin.level, builtin.source?.author, builtin.year].filter(Boolean).join(' '));
 }
 // Lower case, no spaces: '반 고흐' and '반고흐' find the same pictures.
 export function normalizeSearch(text) {

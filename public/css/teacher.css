@@ -224,6 +224,13 @@ a.t-session:hover { box-shadow: 0 6px 18px rgba(20, 30, 60, .08), inset 0 0 0 1.
 .t-pic.is-choice:hover { box-shadow: inset 0 0 0 1px var(--line), 0 4px 14px rgba(20, 30, 60, .08); }
 .t-pic-img { display: block; aspect-ratio: 3 / 2; overflow: hidden; background: var(--board); } /* portrait pictures too */
 .t-pic-img img { width: 100%; height: 100%; object-fit: cover; }
+.t-pic-img { position: relative; }
+.t-level {
+  position: absolute; left: 8px; top: 8px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  background: rgba(255, 255, 255, .92); color: var(--sub); box-shadow: 0 1px 3px rgba(30, 36, 51, .15);
+}
+.t-level[data-level="쉬움"] { color: #17693C; }
+.t-level[data-level="어려움"] { color: #B8322D; }
 .t-pic-cap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; column-gap: 8px; row-gap: 2px; padding: 9px 12px; min-height: 40px; font-size: 14px; }
 .t-pic-cap b { max-width: 100%; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* A long note (artist, year) moves under the title instead of squeezing it, up to two lines. */
