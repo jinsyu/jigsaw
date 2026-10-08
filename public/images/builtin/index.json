@@ -422,6 +422,9 @@
       "category": "사진",
       "topic": "동물",
       "level": "쉬움",
+      "tags": [
+        "공룡"
+      ],
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/triceratops-park.webp",
@@ -437,10 +440,7 @@
       },
       "credit": "숲속의 트리케라톱스, 크리스티안 비트만, 2020 — 덴켄도르프 공룡 공원(독일) / 이미지: Wikimedia Commons (Christian-wittmann-1964), CC0 1.0",
       "year": "2020",
-      "holder": "덴켄도르프 공룡 공원(독일)",
-      "tags": [
-        "공룡"
-      ]
+      "holder": "덴켄도르프 공룡 공원(독일)"
     },
     {
       "key": "clownfish-trio",
@@ -1162,6 +1162,9 @@
       "category": "사진",
       "topic": "동물",
       "level": "보통",
+      "tags": [
+        "공룡"
+      ],
       "width": 1800,
       "height": 1196,
       "src": "/images/builtin/trex-skeleton-smithsonian.webp",
@@ -1177,10 +1180,7 @@
       },
       "credit": "입을 쩍 벌린 티라노사우루스 화석, 미국 농무부(USDA), 2013 — 스미스소니언 국립자연사박물관 / 이미지: Wikimedia Commons (미국 농무부), 퍼블릭 도메인",
       "year": "2013",
-      "holder": "스미스소니언 국립자연사박물관",
-      "tags": [
-        "공룡"
-      ]
+      "holder": "스미스소니언 국립자연사박물관"
     },
     {
       "key": "trex-skeleton-kids",
@@ -1188,6 +1188,9 @@
       "category": "사진",
       "topic": "동물",
       "level": "보통",
+      "tags": [
+        "공룡"
+      ],
       "width": 1200,
       "height": 1800,
       "src": "/images/builtin/trex-skeleton-kids.webp",
@@ -1203,10 +1206,7 @@
       },
       "credit": "아이들을 내려다보는 티라노사우루스, 게리 토드, 2015 — 정저우 박물관(중국) / 이미지: Wikimedia Commons (Gary Todd), CC0 1.0",
       "year": "2015",
-      "holder": "정저우 박물관(중국)",
-      "tags": [
-        "공룡"
-      ]
+      "holder": "정저우 박물관(중국)"
     },
     {
       "key": "stegosaurus-skeleton",
@@ -1214,6 +1214,9 @@
       "category": "사진",
       "topic": "동물",
       "level": "보통",
+      "tags": [
+        "공룡"
+      ],
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/stegosaurus-skeleton.webp",
@@ -1229,10 +1232,7 @@
       },
       "credit": "등판이 뾰족한 스테고사우루스 화석, 게리 토드, 2017 — 런던 자연사박물관 / 이미지: Wikimedia Commons (Gary Todd), CC0 1.0",
       "year": "2017",
-      "holder": "런던 자연사박물관",
-      "tags": [
-        "공룡"
-      ]
+      "holder": "런던 자연사박물관"
     },
     {
       "key": "allosaurus-quarry",
@@ -1240,6 +1240,9 @@
       "category": "사진",
       "topic": "동물",
       "level": "보통",
+      "tags": [
+        "공룡"
+      ],
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/allosaurus-quarry.webp",
@@ -1255,10 +1258,7 @@
       },
       "credit": "알로사우루스 뼈와 그림, 미국 국립공원관리청(NPS), 2015 — 다이너소어 국립기념물 채석장 전시관 / 이미지: Wikimedia Commons (NPS), 퍼블릭 도메인",
       "year": "2015",
-      "holder": "다이너소어 국립기념물 채석장 전시관",
-      "tags": [
-        "공룡"
-      ]
+      "holder": "다이너소어 국립기념물 채석장 전시관"
     },
     {
       "key": "sea-otter",
@@ -1865,6 +1865,9 @@
       "category": "사진",
       "topic": "우주·과학",
       "level": "보통",
+      "tags": [
+        "로봇"
+      ],
       "width": 1306,
       "height": 1800,
       "src": "/images/builtin/curiosity-selfie.webp",
@@ -1880,10 +1883,7 @@
       },
       "credit": "화성 탐사차 큐리오시티의 셀카, 미국 항공우주국(NASA)·JPL, 2015 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA/JPL-Caltech/MSSS), 퍼블릭 도메인",
       "year": "2015",
-      "holder": "미국 항공우주국(NASA)",
-      "tags": [
-        "로봇"
-      ]
+      "holder": "미국 항공우주국(NASA)"
     },
     {
       "key": "iss-over-earth",
@@ -1984,6 +1984,9 @@
       "category": "사진",
       "topic": "우주·과학",
       "level": "보통",
+      "tags": [
+        "로봇"
+      ],
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/robonaut.webp",
@@ -1999,10 +2002,7 @@
       },
       "credit": "우주정거장에서 일한 로봇 로보넛 2, 키건 바버(NASA), 2024 — 미국 국립항공우주박물관 / 이미지: Wikimedia Commons (NASA Headquarters), 퍼블릭 도메인",
       "year": "2024",
-      "holder": "미국 국립항공우주박물관",
-      "tags": [
-        "로봇"
-      ]
+      "holder": "미국 국립항공우주박물관"
     },
     {
       "key": "valkyrie-robot",
@@ -2010,6 +2010,9 @@
       "category": "사진",
       "topic": "우주·과학",
       "level": "보통",
+      "tags": [
+        "로봇"
+      ],
       "width": 1680,
       "height": 1800,
       "src": "/images/builtin/valkyrie-robot.webp",
@@ -2026,10 +2029,7 @@
       "credit": "NASA 로봇 발키리, 미국 항공우주국(NASA), 2013 — 미국 항공우주국(NASA) 존슨 우주센터 / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인",
       "year": "2013",
       "holder": "미국 항공우주국(NASA) 존슨 우주센터",
-      "note": "왼쪽 빈 배경을 잘라 냄",
-      "tags": [
-        "로봇"
-      ]
+      "note": "왼쪽 빈 배경을 잘라 냄"
     },
     {
       "key": "canadarm-spacewalk",
@@ -2037,6 +2037,9 @@
       "category": "사진",
       "topic": "우주·과학",
       "level": "보통",
+      "tags": [
+        "로봇"
+      ],
       "width": 1800,
       "height": 1200,
       "src": "/images/builtin/canadarm-spacewalk.webp",
@@ -2052,10 +2055,7 @@
       },
       "credit": "로봇 팔에 매달린 우주인, 호시데 아키히코(NASA), 2021 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인",
       "year": "2021",
-      "holder": "미국 항공우주국(NASA)",
-      "tags": [
-        "로봇"
-      ]
+      "holder": "미국 항공우주국(NASA)"
     },
     {
       "key": "neuschwanstein",
@@ -2546,6 +2546,9 @@
       "category": "사진",
       "topic": "우주·과학",
       "level": "어려움",
+      "tags": [
+        "로봇"
+      ],
       "width": 1800,
       "height": 1324,
       "src": "/images/builtin/perseverance-ingenuity.webp",
@@ -2561,10 +2564,7 @@
       },
       "credit": "퍼서비어런스와 작은 헬리콥터 인저뉴어티, 미국 항공우주국(NASA)·JPL, 2021 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA/JPL-Caltech/MSSS), 퍼블릭 도메인",
       "year": "2021",
-      "holder": "미국 항공우주국(NASA)",
-      "tags": [
-        "로봇"
-      ]
+      "holder": "미국 항공우주국(NASA)"
     },
     {
       "key": "jupiter-south-pole",
@@ -2779,6 +2779,172 @@
       "note": "색 보정표와 위아래 글자를 잘라 냄"
     },
     {
+      "key": "kuniyoshi-cat-poses",
+      "title": "여러 가지 자세의 고양이",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1228,
+      "height": 1800,
+      "src": "/images/builtin/kuniyoshi-cat-poses.webp",
+      "thumb": "/images/builtin/kuniyoshi-cat-poses-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "우타가와 구니요시",
+        "url": "https://commons.wikimedia.org/wiki/File:Kuniyoshi_Utagawa,_For_cats_in_different_poses.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "여러 가지 자세의 고양이 (「たとへ尽の内」 중), 우타가와 구니요시, 1852 — 소장처 미상(목판화) / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1852",
+      "holder": "소장처 미상(목판화)"
+    },
+    {
+      "key": "gedeon-rabbit-hen",
+      "title": "토끼와 암탉의 수다",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1610,
+      "height": 1800,
+      "src": "/images/builtin/gedeon-rabbit-hen.webp",
+      "thumb": "/images/builtin/gedeon-rabbit-hen-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (프랑스 국립도서관 Gallica)",
+        "author": "뱅자맹 라비에",
+        "url": "https://commons.wikimedia.org/wiki/File:La_ferme_de_G%C3%A9d%C3%A9on_-_album_%C3%A0_colorier_-_Benjamin_Rabier_-_btv1b105092539_(10_of_16).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "가데옹의 농장 (색칠 그림책) 중 「토끼와 암탉의 수다」, 뱅자맹 라비에, 1952년 출간 — 프랑스 국립도서관 / 이미지: Wikimedia Commons (프랑스 국립도서관 Gallica), 퍼블릭 도메인",
+      "year": "1952년 출간",
+      "holder": "프랑스 국립도서관",
+      "note": "테두리·글자 부분을 잘라 냄; 1952년 출간 색칠 그림책의 컬러 면(작가 1939년 사망)"
+    },
+    {
+      "key": "gedeon-concert",
+      "title": "동물 음악회",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 939,
+      "src": "/images/builtin/gedeon-concert.webp",
+      "thumb": "/images/builtin/gedeon-concert-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (프랑스 국립도서관 Gallica)",
+        "author": "뱅자맹 라비에",
+        "url": "https://commons.wikimedia.org/wiki/File:La_ferme_de_G%C3%A9d%C3%A9on_-_album_%C3%A0_colorier_-_Benjamin_Rabier_-_btv1b105092539_(06_of_16).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "가데옹의 농장 (색칠 그림책) 중 「동물 음악회」, 뱅자맹 라비에, 1952년 출간 — 프랑스 국립도서관 / 이미지: Wikimedia Commons (프랑스 국립도서관 Gallica), 퍼블릭 도메인",
+      "year": "1952년 출간",
+      "holder": "프랑스 국립도서관",
+      "note": "테두리·글자 부분을 잘라 냄; 1952년 출간 색칠 그림책의 컬러 면(작가 1939년 사망)"
+    },
+    {
+      "key": "gedeon-doghouse",
+      "title": "오리네 집에 놀러 온 친구들",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1009,
+      "src": "/images/builtin/gedeon-doghouse.webp",
+      "thumb": "/images/builtin/gedeon-doghouse-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (프랑스 국립도서관 Gallica)",
+        "author": "뱅자맹 라비에",
+        "url": "https://commons.wikimedia.org/wiki/File:La_ferme_de_G%C3%A9d%C3%A9on_-_album_%C3%A0_colorier_-_Benjamin_Rabier_-_btv1b105092539_(04_of_16).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "가데옹의 농장 (색칠 그림책) 중 「오리네 집에 놀러 온 친구들」, 뱅자맹 라비에, 1952년 출간 — 프랑스 국립도서관 / 이미지: Wikimedia Commons (프랑스 국립도서관 Gallica), 퍼블릭 도메인",
+      "year": "1952년 출간",
+      "holder": "프랑스 국립도서관",
+      "note": "테두리·글자 부분을 잘라 냄; 1952년 출간 색칠 그림책의 컬러 면(작가 1939년 사망)"
+    },
+    {
+      "key": "wain-rainbow-cat",
+      "title": "무지갯빛 고양이",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1388,
+      "height": 1800,
+      "src": "/images/builtin/wain-rainbow-cat.webp",
+      "thumb": "/images/builtin/wain-rainbow-cat-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "루이스 웨인",
+        "url": "https://commons.wikimedia.org/wiki/File:L._Wain's_psychedelic_cat.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "무지갯빛 고양이, 루이스 웨인, 연도 미상 — 베들렘 마음 박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "연도 미상",
+      "holder": "베들렘 마음 박물관",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "football-dogs-poster",
+      "title": "공놀이하는 서커스 강아지",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1553,
+      "height": 1800,
+      "src": "/images/builtin/football-dogs-poster.webp",
+      "thumb": "/images/builtin/football-dogs-poster-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (미국 의회도서관)",
+        "author": "스트로브리지 석판인쇄소",
+        "url": "https://commons.wikimedia.org/wiki/File:The_marvelous_foot-ball_dogs,_poster_for_Barnum_%26_Bailey,_1900.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "놀라운 축구 강아지 (바넘 앤드 베일리 서커스 포스터), 스트로브리지 석판인쇄소, 1900 — 미국 의회도서관 / 이미지: Wikimedia Commons (미국 의회도서관), 퍼블릭 도메인",
+      "year": "1900",
+      "holder": "미국 의회도서관",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "nystrom-easter-boy",
+      "title": "달걀 나르는 아이와 닭 가족",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 1070,
+      "src": "/images/builtin/nystrom-easter-boy.webp",
+      "thumb": "/images/builtin/nystrom-easter-boy-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "예니 뉘스트룀",
+        "url": "https://commons.wikimedia.org/wiki/File:Den_lilla_P%C3%A5skgossen_x_Jenny_Nystr%C3%B6m-Stoopendal.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "작은 부활절 소년, 예니 뉘스트룀, 연도 미상 — 개인 소장(경매 도록) / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "연도 미상",
+      "holder": "개인 소장(경매 도록)"
+    },
+    {
       "key": "nursery-alice",
       "title": "너서리 앨리스",
       "category": "삽화",
@@ -2896,6 +3062,78 @@
       "note": "그림 둘레의 테두리 선과 아래 도장을 잘라 냄"
     },
     {
+      "key": "gedeon-balloons",
+      "title": "풍선 타는 병아리들",
+      "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "쉬움",
+      "width": 1654,
+      "height": 1800,
+      "src": "/images/builtin/gedeon-balloons.webp",
+      "thumb": "/images/builtin/gedeon-balloons-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (프랑스 국립도서관 Gallica)",
+        "author": "뱅자맹 라비에",
+        "url": "https://commons.wikimedia.org/wiki/File:La_ferme_de_G%C3%A9d%C3%A9on_-_album_%C3%A0_colorier_-_Benjamin_Rabier_-_btv1b105092539_(14_of_16).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "가데옹의 농장 (색칠 그림책) 중 「풍선 타는 병아리들」, 뱅자맹 라비에, 1952년 출간 — 프랑스 국립도서관 / 이미지: Wikimedia Commons (프랑스 국립도서관 Gallica), 퍼블릭 도메인",
+      "year": "1952년 출간",
+      "holder": "프랑스 국립도서관",
+      "note": "테두리·글자 부분을 잘라 냄; 1952년 출간 색칠 그림책의 컬러 면(작가 1939년 사망)"
+    },
+    {
+      "key": "gedeon-costumes",
+      "title": "옷 입은 동물들",
+      "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "쉬움",
+      "width": 1800,
+      "height": 885,
+      "src": "/images/builtin/gedeon-costumes.webp",
+      "thumb": "/images/builtin/gedeon-costumes-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (프랑스 국립도서관 Gallica)",
+        "author": "뱅자맹 라비에",
+        "url": "https://commons.wikimedia.org/wiki/File:La_ferme_de_G%C3%A9d%C3%A9on_-_album_%C3%A0_colorier_-_Benjamin_Rabier_-_btv1b105092539_(12_of_16).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "가데옹의 농장 (색칠 그림책) 중 「옷 입은 동물들」, 뱅자맹 라비에, 1952년 출간 — 프랑스 국립도서관 / 이미지: Wikimedia Commons (프랑스 국립도서관 Gallica), 퍼블릭 도메인",
+      "year": "1952년 출간",
+      "holder": "프랑스 국립도서관",
+      "note": "테두리·글자 부분을 잘라 냄; 1952년 출간 색칠 그림책의 컬러 면(작가 1939년 사망)"
+    },
+    {
+      "key": "ozma-oz-friends",
+      "title": "양철 나무꾼과 허수아비와 도로시",
+      "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "쉬움",
+      "width": 1262,
+      "height": 1800,
+      "src": "/images/builtin/ozma-oz-friends.webp",
+      "thumb": "/images/builtin/ozma-oz-friends-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "존 R. 닐",
+        "url": "https://commons.wikimedia.org/wiki/File:Ozma_of_Oz_(1907)_p136.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "『오즈의 오즈마』 삽화, 존 R. 닐, 1907 — 인터넷 아카이브 소장본 스캔 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1907",
+      "holder": "인터넷 아카이브 소장본 스캔",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
       "key": "roseate-spoonbill",
       "title": "저어새",
       "category": "삽화",
@@ -2973,6 +3211,9 @@
       "category": "삽화",
       "topic": "동물",
       "level": "보통",
+      "tags": [
+        "공룡"
+      ],
       "width": 1800,
       "height": 1216,
       "src": "/images/builtin/morrison-mural.webp",
@@ -2988,10 +3229,7 @@
       },
       "credit": "강가의 쥐라기 공룡들, 밥 월터스·테스 키신저, 2011 — 다이너소어 국립기념물(미국 국립공원관리청) / 이미지: Wikimedia Commons (NPS), 퍼블릭 도메인",
       "year": "2011",
-      "holder": "다이너소어 국립기념물(미국 국립공원관리청)",
-      "tags": [
-        "공룡"
-      ]
+      "holder": "다이너소어 국립기념물(미국 국립공원관리청)"
     },
     {
       "key": "knight-brontosaurus",
@@ -2999,6 +3237,9 @@
       "category": "삽화",
       "topic": "동물",
       "level": "보통",
+      "tags": [
+        "공룡"
+      ],
       "width": 1800,
       "height": 1182,
       "src": "/images/builtin/knight-brontosaurus.webp",
@@ -3014,10 +3255,7 @@
       },
       "credit": "늪에 사는 브론토사우루스, 찰스 R. 나이트, 1897 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
       "year": "1897",
-      "holder": "미국 자연사박물관",
-      "tags": [
-        "공룡"
-      ]
+      "holder": "미국 자연사박물관"
     },
     {
       "key": "knight-laelaps",
@@ -3025,6 +3263,9 @@
       "category": "삽화",
       "topic": "동물",
       "level": "보통",
+      "tags": [
+        "공룡"
+      ],
       "width": 1800,
       "height": 1222,
       "src": "/images/builtin/knight-laelaps.webp",
@@ -3040,10 +3281,7 @@
       },
       "credit": "뛰어오르는 공룡 라엘랍스, 찰스 R. 나이트, 1897 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
       "year": "1897",
-      "holder": "미국 자연사박물관",
-      "tags": [
-        "공룡"
-      ]
+      "holder": "미국 자연사박물관"
     },
     {
       "key": "knight-protoceratops",
@@ -3051,6 +3289,9 @@
       "category": "삽화",
       "topic": "동물",
       "level": "보통",
+      "tags": [
+        "공룡"
+      ],
       "width": 1800,
       "height": 1435,
       "src": "/images/builtin/knight-protoceratops.webp",
@@ -3066,10 +3307,7 @@
       },
       "credit": "알을 지키는 프로토케라톱스, 찰스 R. 나이트, 1927 — 필드 자연사박물관 / 이미지: Wikimedia Commons (필드 자연사박물관), 퍼블릭 도메인",
       "year": "1927",
-      "holder": "필드 자연사박물관",
-      "tags": [
-        "공룡"
-      ]
+      "holder": "필드 자연사박물관"
     },
     {
       "key": "knight-hadrosaurs",
@@ -3100,6 +3338,9 @@
       "category": "삽화",
       "topic": "동물",
       "level": "보통",
+      "tags": [
+        "공룡"
+      ],
       "width": 1800,
       "height": 1210,
       "src": "/images/builtin/knight-stegosaurus.webp",
@@ -3115,10 +3356,126 @@
       },
       "credit": "숲속의 스테고사우루스, 찰스 R. 나이트, 1901 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
       "year": "1901",
-      "holder": "미국 자연사박물관",
-      "tags": [
-        "공룡"
-      ]
+      "holder": "미국 자연사박물관"
+    },
+    {
+      "key": "cats-catfish-letters",
+      "title": "고양이로 만든 글자",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1230,
+      "height": 1800,
+      "src": "/images/builtin/cats-catfish-letters.webp",
+      "thumb": "/images/builtin/cats-catfish-letters-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "우타가와 구니요시",
+        "url": "https://commons.wikimedia.org/wiki/File:Cats_forming_the_caracters_for_catfish.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "고양이로 쓴 '메기(나마즈)' 글자 (猫の当字), 우타가와 구니요시, 1841~1843년경 — 소장처 미상(목판화) / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1841~1843년경",
+      "holder": "소장처 미상(목판화)"
+    },
+    {
+      "key": "wain-cats-theatre",
+      "title": "연극 보는 고양이들",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1800,
+      "height": 1033,
+      "src": "/images/builtin/wain-cats-theatre.webp",
+      "thumb": "/images/builtin/wain-cats-theatre-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "루이스 웨인",
+        "url": "https://commons.wikimedia.org/wiki/File:Louis_Wain_Cats_At_the_play_Tucks.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "연극 구경 (Tuck 그림엽서), 루이스 웨인, 1906 — 개인 소장 엽서 스캔 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1906",
+      "holder": "개인 소장 엽서 스캔",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "animals-omochae",
+      "title": "동물 모음",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1279,
+      "height": 1800,
+      "src": "/images/builtin/animals-omochae.webp",
+      "thumb": "/images/builtin/animals-omochae-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "우타가와 구니토라",
+        "url": "https://commons.wikimedia.org/wiki/File:Shin-ban_Kemono-zukushi_Kunitora_Utagawa.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "새판 동물 모음 (新板けものづくし), 우타가와 구니토라, 19세기 — 담배와 소금 박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "19세기",
+      "holder": "담배와 소금 박물관",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "geese-donkey-poster",
+      "title": "시소 타는 거위들",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1781,
+      "height": 1800,
+      "src": "/images/builtin/geese-donkey-poster.webp",
+      "thumb": "/images/builtin/geese-donkey-poster-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (미국 의회도서관)",
+        "author": "스트로브리지 석판인쇄소",
+        "url": "https://commons.wikimedia.org/wiki/File:The_Barnum_%26_Bailey_greatest_show_on_earth._Wonderful_performing_geese,_roosters_and_musical_donkey_-_Strobridge_Litho._Co.,_Cincinnati_%26_New_York._LCCN2002695266.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "재주 부리는 거위·수탉·당나귀 (바넘 앤드 베일리 서커스 포스터), 스트로브리지 석판인쇄소, 1900 — 미국 의회도서관 / 이미지: Wikimedia Commons (미국 의회도서관), 퍼블릭 도메인",
+      "year": "1900",
+      "holder": "미국 의회도서관",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "sea-lion-band-poster",
+      "title": "물개 음악대",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "보통",
+      "width": 1800,
+      "height": 959,
+      "src": "/images/builtin/sea-lion-band-poster.webp",
+      "thumb": "/images/builtin/sea-lion-band-poster-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (미국 의회도서관)",
+        "author": "스트로브리지 석판인쇄소",
+        "url": "https://commons.wikimedia.org/wiki/File:Forepaugh_%26_Sells_Brothers_shows_combined_The_great_and_only_troupe_of_marvelously_educated_sea_lions_%26_seals_-_-_The_Strobridge_Litho._Co.,_Cincinnati_%26_New_York._LCCN2002695268.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "똑똑한 바다사자와 물개 (포포 앤드 셀스 서커스 포스터), 스트로브리지 석판인쇄소, 1899 — 미국 의회도서관 / 이미지: Wikimedia Commons (미국 의회도서관), 퍼블릭 도메인",
+      "year": "1899",
+      "holder": "미국 의회도서관",
+      "note": "테두리·글자 부분을 잘라 냄"
     },
     {
       "key": "banana-flower",
@@ -3306,11 +3663,157 @@
       "holder": "미국 의회도서관"
     },
     {
+      "key": "nemo-giant-berries",
+      "title": "엄청 큰 산딸기 숲",
+      "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "보통",
+      "width": 1440,
+      "height": 1241,
+      "src": "/images/builtin/nemo-giant-berries.webp",
+      "thumb": "/images/builtin/nemo-giant-berries-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "윈저 맥케이",
+        "url": "https://commons.wikimedia.org/wiki/File:Little_Nemo_1908-07-19b.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "리틀 니모 인 슬럼버랜드 (1908년 7월 19일), 윈저 맥케이, 1908 — 뉴욕 헤럴드 신문 지면(스캔) / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1908",
+      "holder": "뉴욕 헤럴드 신문 지면(스캔)",
+      "note": "테두리·글자 부분을 잘라 냄; 신문 만화 한 면 가운데 아래 칸 넷만 씀"
+    },
+    {
+      "key": "rabier-ostrich",
+      "title": "장난꾸러기 타조",
+      "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "보통",
+      "width": 1800,
+      "height": 1322,
+      "src": "/images/builtin/rabier-ostrich.webp",
+      "thumb": "/images/builtin/rabier-ostrich-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "뱅자맹 라비에",
+        "url": "https://commons.wikimedia.org/wiki/File:Sc%C3%A8nes_de_la_vie_priv%C3%A9e_des_animaux_(1900)_p.48.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "동물들의 사생활 장면 중 '장난꾸러기 타조', 뱅자맹 라비에, 1900 — 인터넷 아카이브 소장본 스캔 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1900",
+      "holder": "인터넷 아카이브 소장본 스캔",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "beskow-boy-bear",
+      "title": "곰에게 열매를 주는 아이",
+      "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "보통",
+      "width": 1263,
+      "height": 1800,
+      "src": "/images/builtin/beskow-boy-bear.webp",
+      "thumb": "/images/builtin/beskow-boy-bear-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "엘사 베스코브",
+        "url": "https://commons.wikimedia.org/wiki/File:Mors_lilla_Olle,_illustration_av_Elsa_Beskow,_1903.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "엄마의 꼬마 올레, 엘사 베스코브, 1903 — 개인 소장 엽서 스캔 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1903",
+      "holder": "개인 소장 엽서 스캔",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "beskow-owls-rabbits",
+      "title": "부엉이와 토끼와 숲속 아이들",
+      "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "보통",
+      "width": 1800,
+      "height": 1271,
+      "src": "/images/builtin/beskow-owls-rabbits.webp",
+      "thumb": "/images/builtin/beskow-owls-rabbits-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "엘사 베스코브",
+        "url": "https://commons.wikimedia.org/wiki/File:Tomtebobarnen,_Elsa_Beskow.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "숲속 아이들 (톰테보 아이들), 엘사 베스코브, 1910 — 개인 소장 엽서 스캔 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1910",
+      "holder": "개인 소장 엽서 스캔",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "bilibin-firebird",
+      "title": "불새의 깃털을 잡은 왕자",
+      "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "보통",
+      "width": 1624,
+      "height": 1800,
+      "src": "/images/builtin/bilibin-firebird.webp",
+      "thumb": "/images/builtin/bilibin-firebird-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "이반 빌리빈",
+        "url": "https://commons.wikimedia.org/wiki/File:Firebird_(big).jpeg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "이반 왕자와 불새와 회색 늑대, 이반 빌리빈, 1899 — 소장처 미상(책 삽화 스캔) / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1899",
+      "holder": "소장처 미상(책 삽화 스캔)"
+    },
+    {
+      "key": "caldecott-gilpin-ride",
+      "title": "말 타고 달려라, 존 길핀",
+      "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "보통",
+      "width": 1800,
+      "height": 1002,
+      "src": "/images/builtin/caldecott-gilpin-ride.webp",
+      "thumb": "/images/builtin/caldecott-gilpin-ride-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "랜돌프 콜더컷",
+        "url": "https://commons.wikimedia.org/wiki/File:Randolph_Caldecott_collection-page_0066_crop-balance-cenhance.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "존 길핀의 우스운 이야기 (콜더컷 그림책 모음), 랜돌프 콜더컷, 1878 — 소장처 미상(그림책 스캔) / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1878",
+      "holder": "소장처 미상(그림책 스캔)",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
       "key": "curiosity-skycrane",
       "title": "줄에 매달려 화성에 내리는 큐리오시티",
       "category": "삽화",
       "topic": "탈것",
       "level": "보통",
+      "tags": [
+        "로봇"
+      ],
       "width": 1800,
       "height": 1012,
       "src": "/images/builtin/curiosity-skycrane.webp",
@@ -3326,10 +3829,31 @@
       },
       "credit": "줄에 매달려 화성에 내리는 큐리오시티, 미국 항공우주국(NASA)·JPL, 2012 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL-Caltech), 퍼블릭 도메인",
       "year": "2012",
-      "holder": "미국 항공우주국(NASA) 제트추진연구소",
-      "tags": [
-        "로봇"
-      ]
+      "holder": "미국 항공우주국(NASA) 제트추진연구소"
+    },
+    {
+      "key": "vehicles-omochae",
+      "title": "옛날 탈것 모음",
+      "category": "삽화",
+      "topic": "탈것",
+      "level": "보통",
+      "width": 1144,
+      "height": 1800,
+      "src": "/images/builtin/vehicles-omochae.webp",
+      "thumb": "/images/builtin/vehicles-omochae-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (미국 의회도서관)",
+        "author": "작가 미상(일본 장난감 그림)",
+        "url": "https://commons.wikimedia.org/wiki/File:Kuruma_zukushi_LCCN2002700125.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "탈것 모음 (車づくし), 작가 미상(일본 장난감 그림), 1870 — 미국 의회도서관 / 이미지: Wikimedia Commons (미국 의회도서관), 퍼블릭 도메인",
+      "year": "1870",
+      "holder": "미국 의회도서관",
+      "note": "테두리·글자 부분을 잘라 냄"
     },
     {
       "key": "grand-canyon-poster",
@@ -3426,6 +3950,53 @@
       "year": "1938",
       "holder": "미국 의회도서관",
       "note": "위아래 안내 글자를 잘라 냄"
+    },
+    {
+      "key": "nystrom-tomte-presents",
+      "title": "선물 꾸리는 산타 요정들",
+      "category": "삽화",
+      "topic": "계절",
+      "level": "보통",
+      "width": 1206,
+      "height": 1800,
+      "src": "/images/builtin/nystrom-tomte-presents.webp",
+      "thumb": "/images/builtin/nystrom-tomte-presents-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (노르웨이 국립도서관)",
+        "author": "예니 뉘스트룀",
+        "url": "https://commons.wikimedia.org/wiki/File:Julemotiv_tegnet_av_Jenny_Nystr%C3%B8m_(24207693358).jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "크리스마스 그림, 예니 뉘스트룀, 1899년경 — 노르웨이 국립도서관 / 이미지: Wikimedia Commons (노르웨이 국립도서관), 퍼블릭 도메인",
+      "year": "1899년경",
+      "holder": "노르웨이 국립도서관",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "nystrom-snow-fence",
+      "title": "눈 오는 날 울타리의 아이들",
+      "category": "삽화",
+      "topic": "계절",
+      "level": "보통",
+      "width": 1241,
+      "height": 1800,
+      "src": "/images/builtin/nystrom-snow-fence.webp",
+      "thumb": "/images/builtin/nystrom-snow-fence-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "예니 뉘스트룀",
+        "url": "https://commons.wikimedia.org/wiki/File:Jenny_Nystr%C3%B6m_-_2.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "울타리 곁의 아이들과 새, 예니 뉘스트룀, 1920 — 개인 소장(경매 도록) / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1920",
+      "holder": "개인 소장(경매 도록)"
     },
     {
       "key": "grand-tour-poster",
@@ -3805,6 +4376,29 @@
       "holder": "「자연의 예술적 형상」 인쇄본"
     },
     {
+      "key": "cats-53-stations",
+      "title": "고양이 쉰세 마리",
+      "category": "삽화",
+      "topic": "동물",
+      "level": "어려움",
+      "width": 1800,
+      "height": 894,
+      "src": "/images/builtin/cats-53-stations.webp",
+      "thumb": "/images/builtin/cats-53-stations-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons",
+        "author": "우타가와 구니요시",
+        "url": "https://commons.wikimedia.org/wiki/File:Cats_suggested_as_the_fifty-three_stations_of_the_Tokaido.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "도카이도 53역참을 빗댄 고양이들, 우타가와 구니요시, 1850 — 소장처 미상(목판화) / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+      "year": "1850",
+      "holder": "소장처 미상(목판화)"
+    },
+    {
       "key": "sea-anemones",
       "title": "말미잘",
       "category": "삽화",
@@ -3967,6 +4561,102 @@
       "credit": "요정의 버섯 고리, 케이트 그리너웨이, 1901년 이전 — 「케이트 그리너웨이」(1905) 수록 인쇄본 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
       "year": "1901년 이전",
       "holder": "「케이트 그리너웨이」(1905) 수록 인쇄본"
+    },
+    {
+      "key": "beskow-bat-ride",
+      "title": "박쥐 타고 나는 숲속 아이",
+      "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "어려움",
+      "width": 1800,
+      "height": 1351,
+      "src": "/images/builtin/beskow-bat-ride.webp",
+      "thumb": "/images/builtin/beskow-bat-ride-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Google Arts & Culture)",
+        "author": "엘사 베스코브",
+        "url": "https://commons.wikimedia.org/wiki/File:Elsa_Beskow_-_Tomtebobarnen,_f%C3%A4rgplansch_till_3-e_uppslaget_-_Google_Art_Project.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "숲속 아이들 (톰테보 아이들) 컬러 삽화, 엘사 베스코브, 1910 — 구글 아트 앤 컬처 제공 이미지 / 이미지: Wikimedia Commons (Google Arts & Culture), 퍼블릭 도메인",
+      "year": "1910",
+      "holder": "구글 아트 앤 컬처 제공 이미지",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "yoshifuji-cat-theatre",
+      "title": "고양이들의 극장 뒤",
+      "category": "삽화",
+      "topic": "상상·이야기",
+      "level": "어려움",
+      "width": 1236,
+      "height": 1800,
+      "src": "/images/builtin/yoshifuji-cat-theatre.webp",
+      "thumb": "/images/builtin/yoshifuji-cat-theatre-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (Google Arts & Culture)",
+        "author": "우타가와 요시후지",
+        "url": "https://commons.wikimedia.org/wiki/File:Utagawa_Yoshifuji_-_Cats_in_backstage_at_Kabuki_theater.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "가부키 극장 분장실의 고양이들, 우타가와 요시후지, 19세기 — 구글 아트 앤 컬처 제공 이미지 / 이미지: Wikimedia Commons (Google Arts & Culture), 퍼블릭 도메인",
+      "year": "19세기",
+      "holder": "구글 아트 앤 컬처 제공 이미지",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "circus-omochae",
+      "title": "서커스 구경",
+      "category": "삽화",
+      "topic": "사람·생활",
+      "level": "어려움",
+      "width": 1210,
+      "height": 1800,
+      "src": "/images/builtin/circus-omochae.webp",
+      "thumb": "/images/builtin/circus-omochae-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (미국 의회도서관)",
+        "author": "작가 미상(일본 장난감 그림)",
+        "url": "https://commons.wikimedia.org/wiki/File:Daikyokuba_LCCN2002700128.jpg"
+      },
+      "license": {
+        "name": "퍼블릭 도메인",
+        "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+      },
+      "credit": "대곡마 (大曲馬), 작가 미상(일본 장난감 그림), 1871 — 미국 의회도서관 / 이미지: Wikimedia Commons (미국 의회도서관), 퍼블릭 도메인",
+      "year": "1871",
+      "holder": "미국 의회도서관",
+      "note": "테두리·글자 부분을 잘라 냄"
+    },
+    {
+      "key": "household-omochae",
+      "title": "옛날 살림살이 모음",
+      "category": "삽화",
+      "topic": "사람·생활",
+      "level": "어려움",
+      "width": 1168,
+      "height": 1800,
+      "src": "/images/builtin/household-omochae.webp",
+      "thumb": "/images/builtin/household-omochae-thumb.webp",
+      "source": {
+        "name": "Wikimedia Commons (레이크스 미술관)",
+        "author": "작가 미상(일본 장난감 그림)",
+        "url": "https://commons.wikimedia.org/wiki/File:Diverse_huishoudbenodigdheden,_RP-P-1902-A-22875.jpg"
+      },
+      "license": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "credit": "여러 가지 살림 도구, 작가 미상(일본 장난감 그림), 1853 — 레이크스 미술관 / 이미지: Wikimedia Commons (레이크스 미술관), CC0 1.0",
+      "year": "1853",
+      "holder": "레이크스 미술관",
+      "note": "테두리·글자 부분을 잘라 냄"
     },
     {
       "key": "cellarius-cosmos",

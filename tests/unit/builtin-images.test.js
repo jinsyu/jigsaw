@@ -22,6 +22,8 @@ describe('built-in pictures index', () => {
     expect(index.images.length).toBeGreaterThanOrEqual(30);
     expect(new Set(index.images.map((i) => i.key)).size).toBe(index.images.length);
     expect(index.images.filter((i) => i.source.name === '함께 퍼즐 자체 제작')).toEqual([]);
+    // Each credit line is its own (the privacy page lists them one by one).
+    expect(new Set(index.images.map((i) => i.credit)).size).toBe(index.images.length);
   });
 
   it('sorts every picture into a kind, a theme and a level', () => {
