@@ -32,7 +32,8 @@ const USER_AGENT = 'JigsawClassroomBot/0.1 (educational puzzle; contact jinsyu.c
 //     credit,                           one line to show: 작품명, 작가, 연도 — 소장처 / 이미지, 라이선스
 //     year, holder, note? }             when, who keeps it, what was changed
 // category: 사진 | 삽화 | 명화 | 우리 그림. topic: what it shows (동물, 자연, ...).
-// level: 쉬움 | 보통 | 어려움 (how hard it is to put together).
+// level: 쉬움 | 보통 | 어려움 (how hard it is to put together). tags?: more words the
+// search on 새 수업 finds it by (공룡, 로봇).
 mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
 try {
@@ -141,6 +142,7 @@ async function renderExternal(page, picture) {
     category: meta.category,
     topic: meta.topic,
     level: meta.level,
+    ...(meta.tags ? { tags: meta.tags } : {}),
     width: result.full.width,
     height: result.full.height,
     src: `/images/builtin/${meta.key}.webp`,

@@ -30,6 +30,9 @@ describe('built-in picture search', () => {
     expect(find('동물')).toEqual(expect.arrayContaining(['magpie-tiger', 'monarch-butterfly']));
     expect(find('우리 그림')).toContain('ssireum');
     expect(find('1889')).toContain('starry-night');
+    // tags: words that are not in the title
+    expect(find('공룡')).toEqual(expect.arrayContaining(['triceratops-park', 'knight-stegosaurus']));
+    expect(find('로봇')).toContain('robonaut');
   });
 
   it('finds nothing for words no picture has', () => {

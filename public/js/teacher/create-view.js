@@ -507,7 +507,9 @@ const THEME_SHORTCUTS = [
   { word: '동물', label: '동물' },
   { word: '탈것', label: '탈것' },
   { word: '바다', label: '바다' },
+  { word: '공룡', label: '공룡' },
   { word: '우주', label: '우주' },
+  { word: '로봇', label: '로봇' },
   { word: '꽃', label: '꽃·식물' },
   { word: '상상', label: '이야기' },
   { word: '명소', label: '명소' },
@@ -516,7 +518,7 @@ const THEME_SHORTCUTS = [
 
 // Words a built-in picture can be found by: title, theme, kind, level, maker, year.
 export function pictureSearchText(builtin) {
-  return normalizeSearch([builtin.title, builtin.topic, builtin.category, builtin.level, builtin.source?.author, builtin.year].filter(Boolean).join(' '));
+  return normalizeSearch([builtin.title, builtin.topic, builtin.category, builtin.level, ...(builtin.tags ?? []), builtin.source?.author, builtin.year].filter(Boolean).join(' '));
 }
 // Lower case, no spaces: '반 고흐' and '반고흐' find the same pictures.
 export function normalizeSearch(text) {

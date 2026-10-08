@@ -441,7 +441,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Triceratops_Dinopark_Denkendorf.jpg/3840px-Triceratops_Dinopark_Denkendorf.jpg"
     ],
-    "credit": "숲속의 트리케라톱스, 크리스티안 비트만, 2020 — 덴켄도르프 공룡 공원(독일) / 이미지: Wikimedia Commons (Christian-wittmann-1964), CC0 1.0"
+    "credit": "숲속의 트리케라톱스, 크리스티안 비트만, 2020 — 덴켄도르프 공룡 공원(독일) / 이미지: Wikimedia Commons (Christian-wittmann-1964), CC0 1.0",
+    "tags": [
+      "공룡"
+    ]
   },
   {
     "key": "clownfish-trio",
@@ -1184,7 +1187,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/e/e2/Tyrannosaurus_Rex_skeleton_is_on_display_in_the_Dinosaurs_hall_at_the_Smithsonian%27s_National_Museum_of_Natural_History_in_Washington%2C_D.C..jpg"
     ],
-    "credit": "입을 쩍 벌린 티라노사우루스 화석, 미국 농무부(USDA), 2013 — 스미스소니언 국립자연사박물관 / 이미지: Wikimedia Commons (미국 농무부), 퍼블릭 도메인"
+    "credit": "입을 쩍 벌린 티라노사우루스 화석, 미국 농무부(USDA), 2013 — 스미스소니언 국립자연사박물관 / 이미지: Wikimedia Commons (미국 농무부), 퍼블릭 도메인",
+    "tags": [
+      "공룡"
+    ]
   },
   {
     "key": "trex-skeleton-kids",
@@ -1207,7 +1213,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/4/4b/Tyrannosaurus_Rex_%28Zhengzhou%29.jpg"
     ],
-    "credit": "아이들을 내려다보는 티라노사우루스, 게리 토드, 2015 — 정저우 박물관(중국) / 이미지: Wikimedia Commons (Gary Todd), CC0 1.0"
+    "credit": "아이들을 내려다보는 티라노사우루스, 게리 토드, 2015 — 정저우 박물관(중국) / 이미지: Wikimedia Commons (Gary Todd), CC0 1.0",
+    "tags": [
+      "공룡"
+    ]
   },
   {
     "key": "stegosaurus-skeleton",
@@ -1230,7 +1239,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Stegosaurus_Skeleton_%2836329568742%29.jpg/3840px-Stegosaurus_Skeleton_%2836329568742%29.jpg"
     ],
-    "credit": "등판이 뾰족한 스테고사우루스 화석, 게리 토드, 2017 — 런던 자연사박물관 / 이미지: Wikimedia Commons (Gary Todd), CC0 1.0"
+    "credit": "등판이 뾰족한 스테고사우루스 화석, 게리 토드, 2017 — 런던 자연사박물관 / 이미지: Wikimedia Commons (Gary Todd), CC0 1.0",
+    "tags": [
+      "공룡"
+    ]
   },
   {
     "key": "allosaurus-quarry",
@@ -1253,7 +1265,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Allosaurus_Exhibit_-_Quarry_Exhibit_Hall_Lower_Floor_%2854f8df4d-301f-4f70-9f06-aa96c5c9d65c%29.JPG/3840px-Allosaurus_Exhibit_-_Quarry_Exhibit_Hall_Lower_Floor_%2854f8df4d-301f-4f70-9f06-aa96c5c9d65c%29.JPG"
     ],
-    "credit": "알로사우루스 뼈와 그림, 미국 국립공원관리청(NPS), 2015 — 다이너소어 국립기념물 채석장 전시관 / 이미지: Wikimedia Commons (NPS), 퍼블릭 도메인"
+    "credit": "알로사우루스 뼈와 그림, 미국 국립공원관리청(NPS), 2015 — 다이너소어 국립기념물 채석장 전시관 / 이미지: Wikimedia Commons (NPS), 퍼블릭 도메인",
+    "tags": [
+      "공룡"
+    ]
   },
   {
     "key": "sea-otter",
@@ -1881,7 +1896,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg/3840px-Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg"
     ],
-    "credit": "화성 탐사차 큐리오시티의 셀카, 미국 항공우주국(NASA)·JPL, 2015 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA/JPL-Caltech/MSSS), 퍼블릭 도메인"
+    "credit": "화성 탐사차 큐리오시티의 셀카, 미국 항공우주국(NASA)·JPL, 2015 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA/JPL-Caltech/MSSS), 퍼블릭 도메인",
+    "tags": [
+      "로봇"
+    ]
   },
   {
     "key": "iss-over-earth",
@@ -2003,7 +2021,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Robonaut_2_on_display_at_NASM_%28NHQ202410240003%29.jpg/3840px-Robonaut_2_on_display_at_NASM_%28NHQ202410240003%29.jpg"
     ],
-    "credit": "우주정거장에서 일한 로봇 로보넛 2, 키건 바버(NASA), 2024 — 미국 국립항공우주박물관 / 이미지: Wikimedia Commons (NASA Headquarters), 퍼블릭 도메인"
+    "credit": "우주정거장에서 일한 로봇 로보넛 2, 키건 바버(NASA), 2024 — 미국 국립항공우주박물관 / 이미지: Wikimedia Commons (NASA Headquarters), 퍼블릭 도메인",
+    "tags": [
+      "로봇"
+    ]
   },
   {
     "key": "valkyrie-robot",
@@ -2033,7 +2054,10 @@
       1.0
     ],
     "note": "왼쪽 빈 배경을 잘라 냄",
-    "credit": "NASA 로봇 발키리, 미국 항공우주국(NASA), 2013 — 미국 항공우주국(NASA) 존슨 우주센터 / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인"
+    "credit": "NASA 로봇 발키리, 미국 항공우주국(NASA), 2013 — 미국 항공우주국(NASA) 존슨 우주센터 / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인",
+    "tags": [
+      "로봇"
+    ]
   },
   {
     "key": "canadarm-spacewalk",
@@ -2056,7 +2080,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/ISS-65_Pesquet_on_the_end_of_the_Canadarm2.jpg/3840px-ISS-65_Pesquet_on_the_end_of_the_Canadarm2.jpg"
     ],
-    "credit": "로봇 팔에 매달린 우주인, 호시데 아키히코(NASA), 2021 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인"
+    "credit": "로봇 팔에 매달린 우주인, 호시데 아키히코(NASA), 2021 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA), 퍼블릭 도메인",
+    "tags": [
+      "로봇"
+    ]
   },
   {
     "key": "neuschwanstein",
@@ -2562,7 +2589,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Perseverance_selfie%2C_looking_at_WATSON_%28PIA24542%29.jpg/3840px-Perseverance_selfie%2C_looking_at_WATSON_%28PIA24542%29.jpg"
     ],
-    "credit": "퍼서비어런스와 작은 헬리콥터 인저뉴어티, 미국 항공우주국(NASA)·JPL, 2021 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA/JPL-Caltech/MSSS), 퍼블릭 도메인"
+    "credit": "퍼서비어런스와 작은 헬리콥터 인저뉴어티, 미국 항공우주국(NASA)·JPL, 2021 — 미국 항공우주국(NASA) / 이미지: Wikimedia Commons (NASA/JPL-Caltech/MSSS), 퍼블릭 도메인",
+    "tags": [
+      "로봇"
+    ]
   },
   {
     "key": "jupiter-south-pole",
@@ -3046,7 +3076,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/A_second_section_of_the_Morrison_Mural._%289d9b83eb-1dd8-b71b-0bae-bb53b61b3c4b%29.jpg/3840px-A_second_section_of_the_Morrison_Mural._%289d9b83eb-1dd8-b71b-0bae-bb53b61b3c4b%29.jpg"
     ],
-    "credit": "강가의 쥐라기 공룡들, 밥 월터스·테스 키신저, 2011 — 다이너소어 국립기념물(미국 국립공원관리청) / 이미지: Wikimedia Commons (NPS), 퍼블릭 도메인"
+    "credit": "강가의 쥐라기 공룡들, 밥 월터스·테스 키신저, 2011 — 다이너소어 국립기념물(미국 국립공원관리청) / 이미지: Wikimedia Commons (NPS), 퍼블릭 도메인",
+    "tags": [
+      "공룡"
+    ]
   },
   {
     "key": "knight-brontosaurus",
@@ -3069,7 +3102,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Pasta-Brontosaurus.jpg/3840px-Pasta-Brontosaurus.jpg"
     ],
-    "credit": "늪에 사는 브론토사우루스, 찰스 R. 나이트, 1897 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+    "credit": "늪에 사는 브론토사우루스, 찰스 R. 나이트, 1897 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+    "tags": [
+      "공룡"
+    ]
   },
   {
     "key": "knight-laelaps",
@@ -3092,7 +3128,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/8/8f/Laelaps-Charles_Knight-1897.jpg"
     ],
-    "credit": "뛰어오르는 공룡 라엘랍스, 찰스 R. 나이트, 1897 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+    "credit": "뛰어오르는 공룡 라엘랍스, 찰스 R. 나이트, 1897 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+    "tags": [
+      "공룡"
+    ]
   },
   {
     "key": "knight-protoceratops",
@@ -3115,7 +3154,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/4/49/Nesting_Protoceratops.jpg"
     ],
-    "credit": "알을 지키는 프로토케라톱스, 찰스 R. 나이트, 1927 — 필드 자연사박물관 / 이미지: Wikimedia Commons (필드 자연사박물관), 퍼블릭 도메인"
+    "credit": "알을 지키는 프로토케라톱스, 찰스 R. 나이트, 1927 — 필드 자연사박물관 / 이미지: Wikimedia Commons (필드 자연사박물관), 퍼블릭 도메인",
+    "tags": [
+      "공룡"
+    ]
   },
   {
     "key": "knight-hadrosaurs",
@@ -3161,7 +3203,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/a/a1/Stego.jpg"
     ],
-    "credit": "숲속의 스테고사우루스, 찰스 R. 나이트, 1901 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인"
+    "credit": "숲속의 스테고사우루스, 찰스 R. 나이트, 1901 — 미국 자연사박물관 / 이미지: Wikimedia Commons, 퍼블릭 도메인",
+    "tags": [
+      "공룡"
+    ]
   },
   {
     "key": "banana-flower",
@@ -3375,7 +3420,10 @@
     "images": [
       "https://upload.wikimedia.org/wikipedia/commons/1/1b/Curiosity_Touching_Down%2C_Artist%27s_Concept.jpg"
     ],
-    "credit": "줄에 매달려 화성에 내리는 큐리오시티, 미국 항공우주국(NASA)·JPL, 2012 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL-Caltech), 퍼블릭 도메인"
+    "credit": "줄에 매달려 화성에 내리는 큐리오시티, 미국 항공우주국(NASA)·JPL, 2012 — 미국 항공우주국(NASA) 제트추진연구소 / 이미지: Wikimedia Commons (NASA/JPL-Caltech), 퍼블릭 도메인",
+    "tags": [
+      "로봇"
+    ]
   },
   {
     "key": "grand-canyon-poster",
