@@ -16,8 +16,8 @@ const directives = Object.fromEntries(
 );
 
 // The only outside hosts the site may load from or talk to (spec D15).
-// accounts.google.com: Google sign-in (GIS). Loaded only once the hosted Google client ID is
-// set (T25). rt.gyosil.app: written in config.js at T25 too. Teachers' pictures come from the
+// accounts.google.com: Google sign-in (GIS), loaded on the hosted site, where config.js has the
+// Google client ID. rt.gyosil.app: the hosted rt server (config.js). Teachers' pictures come from the
 // Supabase Storage of the gyosil project through signed URLs the rt server hands out, so that
 // host is never written in public/.
 const ALLOWED_HOSTS = ['cdn.jsdelivr.net', 'accounts.google.com', 'rt.gyosil.app'];

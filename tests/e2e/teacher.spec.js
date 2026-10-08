@@ -18,6 +18,7 @@ import {
   teacherToken,
   trackClass,
 } from './support/teacher.js';
+import { HOSTED_CLIENT_ID, HOSTED_RT, SITE, asHostedSite, fakeGis, rtAnswer } from './support/production.js';
 
 // Teacher screens against the local rt server and Supabase stack (pnpm db:start; Playwright
 // starts pnpm rt:dev). Google sign-in is replaced by the seeded test teacher's dev token
@@ -181,9 +182,9 @@ test('an expired or refused teacher token goes back to sign-in', async ({ browse
 
 test('Google sign-in of a new teacher: 함께 퍼즐 시작하기 with the gyosil name filled in, then 내 수업', async ({ browser, baseURL }, testInfo) => {
   test.skip(!['desktop-1440', 'phone-360'].includes(testInfo.project.name), 'one wide and one phone screen');
-  // GIS and the hosted Google client ID exist only on the deployed site (T25). Here the page
-  // gets a client ID, a stand-in for the GIS script (served at the real GIS address, which the
-  // CSP allows since T23) and stand-in sign-in answers.
+  // The local stack has no Google client ID (the hosted one: last test of this file). Here the
+  // page gets a client ID, a stand-in for the GIS script (served at the real GIS address, which
+  // the CSP allows since T23) and stand-in sign-in answers.
   const context = await browser.newContext({ ...testInfo.project.use });
   await context.addInitScript(() => {
     window.__cspViolations = [];
@@ -722,20 +723,28 @@ test('a picture from 내 그림 can be chosen for a class', async ({ page, conte
   expect(direct).toEqual([]);
 });
 
-test('on a host without an rt server address, teacher screens say 준비 중 and load nothing remote', async ({ page, baseURL }, testInfo) => {
-  const host = 'http://jigsaw-preview.example.test';
-  const requested = [];
-  page.on('request', (r) => requested.push(r.url()));
-  await page.route(`${host}/**`, async (route) => {
-    const response = await route.fetch({ url: route.request().url().replace(host, baseURL) });
-    await route.fulfill({ response });
+test('on the hosted site, the teacher signs in through GIS with the gyosil client ID and the rt server at rt.gyosil.app', async ({ page, baseURL }, testInfo) => {
+  test.skip(!['desktop-1440', 'phone-360'].includes(testInfo.project.name), 'one wide and one phone screen');
+  // Nothing reaches the hosted rt server or Google: their answers are stand-ins (support/production.js).
+  const { unexpected } = await asHostedSite(page, baseURL);
+  await fakeGis(page);
+  const login = [];
+  await page.route(`${HOSTED_RT}/api/teacher/login`, (route) => {
+    login.push({ origin: route.request().headers().origin, body: route.request().postDataJSON() });
+    return route.fulfill(rtAnswer({ ok: true, needsStart: true, startTicket: 'ticket-1', profile: { displayName: '김교실' } }));
   });
   const errors = trackErrors(page);
-  await page.goto(`${host}/teacher/new`);
-  await expect(page.getByRole('heading', { level: 1, name: '선생님 화면은 준비 중이에요' })).toBeVisible();
-  await expect(page.getByRole('link', { name: '처음 화면으로' })).toHaveAttribute('href', '/');
-  expect(requested.filter((u) => u.includes('supabase-js@') || u.includes(':56321') || u.includes(':3400') || u.includes('socket.io') || u.includes('accounts.google.com'))).toEqual([]);
+  await page.goto(`${SITE}/teacher/new`);
+  await expect(page.getByRole('heading', { level: 1, name: '선생님 로그인' })).toBeVisible();
+  await expect(page.locator('.t-dev-note')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Google 계정으로 계속' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: '함께 퍼즐 시작하기' })).toBeVisible();
+  expect(await page.evaluate(() => window.__gis.client_id)).toBe(HOSTED_CLIENT_ID);
+  expect(login).toHaveLength(1);
+  expect(login[0].origin).toBe(SITE);
+  expect(login[0].body.idToken).toBe('google-id-token');
   await expectNoHorizontalOverflow(page);
-  await page.screenshot({ path: testInfo.outputPath('teacher-not-ready.png'), fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath('teacher-hosted-start.png'), fullPage: true });
+  expect(unexpected).toEqual([]);
   expect(errors).toEqual([]);
 });

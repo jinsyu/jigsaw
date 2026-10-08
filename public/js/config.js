@@ -3,8 +3,9 @@
 // - localhost, 127.0.0.1, private LAN addresses and *.local: the local rt server (pnpm rt:dev,
 //   port 3400) on the same host, so a tablet on the same Wi-Fi reaches it through the address
 //   it opened the page with.
-// - Any other host: the hosted servers. The rt address and the Google client ID are filled
-//   in at T25, once rt.gyosil.app runs; until then the teacher and student screens show "준비 중".
+// - Any other host: the hosted servers, the rt server at rt.gyosil.app and the gyosil Google
+//   sign-in. A config without an rt address (hasRtServer false) makes the teacher and student
+//   screens show "준비 중" instead; kept as the fallback for taking the hosted screens offline.
 //
 // Teacher and student screens talk only to the rt server (pictures of teachers come as signed
 // URLs from it), never to Supabase itself.
@@ -13,10 +14,10 @@ const LOCAL_RT_PORT = 3400;
 
 const REMOTE = {
   env: 'remote',
-  // T25: the rt.gyosil.app address, only after that server is up (a push here is a deploy).
-  rtUrl: '',
-  // T25: the public OAuth client ID of the gyosil Google sign-in.
-  googleClientId: '',
+  // A push to main deploys this: emptying it puts the hosted screens back to "준비 중".
+  rtUrl: 'https://rt.gyosil.app',
+  // The public OAuth client ID of the gyosil Google sign-in (the rt server checks the same ID).
+  googleClientId: '682345745807-r0ood3p29qp5jvfpfh4mfunpajqvaf7j.apps.googleusercontent.com',
 };
 
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);

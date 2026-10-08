@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import { headersFor } from '../../scripts/lib/vercel-routing.mjs';
 import { expectNoHorizontalOverflow } from './support/puzzle.js';
 import { classControl, cleanUpClasses, closeSql, nodeStudent, openClass, signInPage } from './support/teacher.js';
+import { HOSTED_CLIENT_ID, HOSTED_RT, SITE, asHostedSite, fakeGis, rtAnswer } from './support/production.js';
 
 // Every page under the CSP: no violations, and requests only go to this site, the CDN
 // (Pretendard) and the rt server (the local stack here). No page talks to Supabase itself
@@ -130,28 +131,28 @@ test('teacher screens under the CSP: 새 수업, the lobby with a student, the o
   expect([...hosts].filter((h) => ![self, 'cdn.jsdelivr.net', '127.0.0.1:3400'].includes(h))).toEqual([]);
 });
 
-// The deployed site until T25: no rt server address yet, so the teacher and student screens say
-// 준비 중. Served under the production header of vercel.json exactly (no local additions), at
-// the production address, so 'self' and every allowed host are the real ones.
-test('the production CSP: every page loads without a violation and the screens say 준비 중', async ({ page, baseURL }, testInfo) => {
+// The hosted site: the screens use the rt server at rt.gyosil.app and Google sign-in (GIS).
+// Served under the production header of vercel.json exactly (no local additions), at the
+// production address, so 'self' and every allowed host are the real ones. The rt server and
+// GIS answers are stand-ins (support/production.js): nothing reaches the hosted servers.
+test('the production CSP: every page loads without a violation, with the rt server and GIS of the hosted site', async ({ page, baseURL }, testInfo) => {
   test.skip(!['desktop-1440', 'phone-360'].includes(testInfo.project.name), 'one wide and one phone screen');
-  const site = 'https://jigsaw.gyosil.app';
   const productionCsp = headersFor('/', VERCEL)['Content-Security-Policy'];
   const hosts = new Set();
   page.on('request', (request) => hosts.add(new URL(request.url()).host));
   page.on('websocket', (ws) => hosts.add(new URL(ws.url()).host));
-  await page.route(`${site}/**`, async (route) => {
-    const response = await route.fetch({ url: route.request().url().replace(site, baseURL) });
-    const headers = { ...response.headers() };
-    if (headers['content-security-policy']) headers['content-security-policy'] = productionCsp;
-    await route.fulfill({ response, headers });
-  });
+  const { unexpected } = await asHostedSite(page, baseURL, { csp: productionCsp });
+  await fakeGis(page);
+  await page.route(`${HOSTED_RT}/api/teacher/login`, (route) =>
+    route.fulfill(rtAnswer({ ok: true, needsStart: true, startTicket: 'ticket-1', profile: { displayName: '김교실' } })),
+  );
+  await page.route(`${HOSTED_RT}/api/join`, (route) => route.fulfill(rtAnswer({ ok: false, error: 'invalid_code' }, 404)));
   await watchCsp(page.context());
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
 
   const visit = async (path) => {
-    const response = await page.goto(`${site}${path}`);
+    const response = await page.goto(`${SITE}${path}`);
     expect(response.headers()['content-security-policy'], path).toBe(productionCsp);
     await page.waitForLoadState('networkidle');
   };
@@ -162,22 +163,31 @@ test('the production CSP: every page loads without a violation and the screens s
   // The demo puzzle draws under the production CSP too.
   await expect(page.locator('main[data-ready="true"]')).toBeVisible();
 
-  for (const path of ['/teacher', '/teacher/new']) {
-    await visit(path);
-    await expect(page.getByRole('heading', { level: 1, name: '선생님 화면은 준비 중이에요' })).toBeVisible();
-    expect(await violations(page), path).toEqual([]);
-    await expectNoHorizontalOverflow(page);
-  }
-  for (const path of ['/join', '/join?code=123456', '/play']) {
-    await visit(path);
-    await expect(page.getByRole('heading', { level: 1, name: '아직 들어갈 수 없어요' })).toBeVisible();
-    await expect(page.getByText('학생 입장은 준비 중이에요. 선생님께 알려 주세요.')).toBeVisible();
-    expect(await violations(page), path).toEqual([]);
-    await expectNoHorizontalOverflow(page);
-  }
-  await page.screenshot({ path: testInfo.outputPath('production-not-ready.png'), fullPage: true });
+  // Teacher: the GIS script from Google, then sign-in through the rt server.
+  await visit('/teacher');
+  await page.getByRole('button', { name: 'Google 계정으로 계속' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: '함께 퍼즐 시작하기' })).toBeVisible();
+  expect(await page.evaluate(() => window.__gis.client_id)).toBe(HOSTED_CLIENT_ID);
+  expect(await violations(page), '/teacher').toEqual([]);
+  await expectNoHorizontalOverflow(page);
+
+  // Student: joining asks the rt server (this class code is closed in the stand-in answer).
+  await visit('/join?code=123456');
+  await page.getByLabel('내 이름').fill('운영반');
+  await page.getByRole('button', { name: '다음' }).click();
+  await expect(page.getByRole('alert')).toHaveText('코드를 다시 확인해 주세요');
+  expect(await violations(page), '/join').toEqual([]);
+  await expectNoHorizontalOverflow(page);
+  await visit('/play');
+  await expect(page.getByRole('heading', { level: 1, name: '들어간 수업이 없어요' })).toBeVisible();
+  expect(await violations(page), '/play').toEqual([]);
+
+  await page.screenshot({ path: testInfo.outputPath('production-play.png'), fullPage: true });
   testInfo.annotations.push({ type: 'hosts', description: [...hosts].join(', ') });
-  // Only the site and the font CDN: no rt server, Supabase or Google before T25.
-  expect([...hosts].filter((h) => !['jigsaw.gyosil.app', 'cdn.jsdelivr.net'].includes(h))).toEqual([]);
+  // The site, the font CDN, the hosted rt server and Google sign-in: no Supabase.
+  expect([...hosts].filter((h) => !['jigsaw.gyosil.app', 'cdn.jsdelivr.net', 'rt.gyosil.app', 'accounts.google.com'].includes(h))).toEqual([]);
+  expect(hosts).toContain('rt.gyosil.app');
+  expect(hosts).toContain('accounts.google.com');
+  expect(unexpected).toEqual([]);
   expect(errors).toEqual([]);
 });

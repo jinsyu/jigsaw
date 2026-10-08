@@ -4,6 +4,7 @@ import { expectNoHorizontalOverflow } from './support/puzzle.js';
 import { RT_LOG_FILE } from './support/rt-log.js';
 import { savedEntry, savedKeyOf, studentContext, supabaseHosts } from './support/student.js';
 import { ORIGIN, classControl, cleanUpClasses, closeSql, openClass, sql } from './support/teacher.js';
+import { HOSTED_RT, SITE, asHostedSite, rtAnswer } from './support/production.js';
 
 // T9 → T22: students join with a code and a name through the rt server (POST /api/join, then
 // the class socket), wait, get their group and start (D3, D4, D14). Several browser contexts
@@ -230,23 +231,26 @@ test('too many wrong codes from this address: the student is asked to wait', asy
   await s.context.close();
 });
 
-test('on a host without an rt server address, student screens say 준비 중 and load nothing remote', async ({ page, baseURL }, testInfo) => {
-  const host = 'http://jigsaw-preview.example.test';
-  const requested = [];
-  page.on('request', (r) => requested.push(r.url()));
-  await page.route(`${host}/**`, async (route) => {
-    const response = await route.fetch({ url: route.request().url().replace(host, baseURL) });
-    await route.fulfill({ response });
+test('on the hosted site, students join through the rt server at rt.gyosil.app', async ({ page, baseURL }, testInfo) => {
+  test.skip(!['desktop-1440', 'phone-360'].includes(testInfo.project.name), 'one wide and one phone screen');
+  // Nothing reaches the hosted rt server: its answer is a stand-in (support/production.js).
+  const { unexpected } = await asHostedSite(page, baseURL);
+  const joins = [];
+  await page.route(`${HOSTED_RT}/api/join`, (route) => {
+    joins.push({ origin: route.request().headers().origin, body: route.request().postDataJSON() });
+    return route.fulfill(rtAnswer({ ok: false, error: 'invalid_code' }, 404));
   });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  for (const path of ['/join?code=123456', '/play']) {
-    await page.goto(`${host}${path}`);
-    await expect(page.getByRole('heading', { level: 1, name: '아직 들어갈 수 없어요' })).toBeVisible();
-    await expect(page.getByText('학생 입장은 준비 중이에요. 선생님께 알려 주세요.')).toBeVisible();
-  }
-  expect(requested.filter((u) => u.includes(':56321') || u.includes(':3400') || u.includes('socket.io') || u.includes('supabase'))).toEqual([]);
+  await page.goto(`${SITE}/play`);
+  await expect(page.getByRole('heading', { level: 1, name: '들어간 수업이 없어요' })).toBeVisible();
+  await page.goto(`${SITE}/join?code=123456`);
+  await page.getByLabel('내 이름').fill('운영반');
+  await page.getByRole('button', { name: '다음' }).click();
+  await expect(page.getByRole('alert')).toHaveText('코드를 다시 확인해 주세요');
+  expect(joins).toEqual([{ origin: SITE, body: { code: '123456', name: '운영반' } }]);
   await expectNoHorizontalOverflow(page);
-  await page.screenshot({ path: testInfo.outputPath('student-not-ready.png'), fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath('student-hosted-join.png'), fullPage: true });
+  expect(unexpected).toEqual([]);
   expect(errors).toEqual([]);
 });

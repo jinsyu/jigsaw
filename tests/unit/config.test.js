@@ -18,11 +18,20 @@ describe('pickConfig', () => {
     },
   );
 
-  it('any other host uses the hosted servers, whose rt address stays empty until T25 (준비 중)', () => {
-    const config = pickConfig('jigsaw.gyosil.app');
-    expect(config.env).toBe('remote');
-    expect(config.rtUrl).toBe('');
-    expect(hasRtServer(config)).toBe(false);
+  it.each(['jigsaw.gyosil.app', 'jigsaw-git-main.vercel.app'])('%s uses the hosted rt server and the gyosil Google sign-in', (host) => {
+    const config = pickConfig(host);
+    expect(config).toEqual({
+      env: 'remote',
+      rtUrl: 'https://rt.gyosil.app',
+      googleClientId: '682345745807-r0ood3p29qp5jvfpfh4mfunpajqvaf7j.apps.googleusercontent.com',
+    });
+    expect(hasRtServer(config)).toBe(true);
+  });
+
+  it('a config without an rt address has no rt server, so the screens show 준비 중 (fallback)', () => {
+    // teacher/app.js and student/app.js render 준비 중 when hasRtServer is false.
+    expect(hasRtServer({ ...pickConfig('jigsaw.gyosil.app'), rtUrl: '' })).toBe(false);
+    expect(hasRtServer({ ...pickConfig('localhost'), rtUrl: '' })).toBe(false);
   });
 
   it('never ships a secret or service key', () => {
