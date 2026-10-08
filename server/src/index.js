@@ -9,7 +9,7 @@ import { createClock } from './clock.js';
 import { readConfig } from './config.js';
 import { createDbClient } from './db.js';
 import { createRegistry } from './engine/registry.js';
-import { loadBuiltins } from './builtin.js';
+import { createBuiltins } from './builtin.js';
 import { createHttpHandler } from './http.js';
 import { createGoogleVerifier } from './teacher/google.js';
 import { createImages, imagePath } from './teacher/images.js';
@@ -21,6 +21,9 @@ import { restoreOpenSessions } from './store/restore.js';
 
 const TICK_MS = 1000;
 const PRUNE_MS = 60_000;
+
+// The screens' deployed copy of the built-in list: the first allowed origin is the screens.
+const builtinIndexUrl = (config) => (config.allowedOrigins[0] ? new URL('/images/builtin/index.json', config.allowedOrigins[0]).href : null);
 
 // verifyIdToken: tests pass a fake; otherwise Supabase checks the Google ID token.
 export async function startServer({ env = process.env, log = console, proc = process, verifyIdToken } = {}) {
@@ -57,7 +60,7 @@ export async function startServer({ env = process.env, log = console, proc = pro
     db,
     teachers,
     images,
-    builtins: loadBuiltins(),
+    builtins: createBuiltins({ indexUrl: builtinIndexUrl(config), log }),
     verifyIdToken: verifyIdToken ?? createGoogleVerifier({ supabaseUrl: config.supabaseUrl, anonKey: config.anonKey }),
     now,
     startedAt: Date.now(),

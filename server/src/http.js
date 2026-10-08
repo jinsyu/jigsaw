@@ -95,7 +95,7 @@ export function teacherName(value) {
  * @param {(input: { idToken: string, nonce: string }) => Promise<{ uid: string, email: string|null }>} deps.verifyIdToken
  * @param {ReturnType<import('./teacher/teachers.js').createTeachers>} deps.teachers
  * @param {ReturnType<import('./teacher/images.js').createImages>} deps.images
- * @param {Map<string, { width: number, height: number }>} deps.builtins
+ * @param {ReturnType<import('./builtin.js').createBuiltins>} deps.builtins
  */
 export function createHttpHandler({
   config,
@@ -239,7 +239,7 @@ export function createHttpHandler({
     const requested = typeof body.picture === 'object' && body.picture !== null ? body.picture : {};
     let picture = null;
     if (typeof requested.builtinKey === 'string' && requested.imageId == null) {
-      const size = builtins.get(requested.builtinKey);
+      const size = await builtins.get(requested.builtinKey);
       if (size) picture = { builtinKey: requested.builtinKey, aspect: size.width / size.height };
     } else if (typeof requested.imageId === 'string' && requested.builtinKey == null && UUID.test(requested.imageId)) {
       const image = await images.own(uid, requested.imageId);

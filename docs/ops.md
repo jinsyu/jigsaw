@@ -103,6 +103,8 @@ sudo bash /opt/jigsaw/scripts/rt/deploy.sh
 
 화면(Vercel)은 main 푸시로 따로 배포된다. 서버와 화면을 함께 바꾼 커밋은 rt 서버를 먼저 배포한다.
 
+**내장 그림만 더한 커밋은 rt 서버 배포가 필요 없다.** 서버는 시작할 때 `public/images/builtin/index.json` 을 읽고, 모르는 그림 키로 수업을 만들려 하면 화면 쪽 사본(`ALLOWED_ORIGINS` 첫 주소 + `/images/builtin/index.json`)을 받아 목록에 더한다(1분에 한 번까지, 실패하면 `[builtin]` 오류 로그). 그래서 Vercel 배포가 끝나면 새 그림으로 바로 수업을 열 수 있다. 서버 코드·`public/js/puzzle/`·`scripts/rt/` 가 바뀐 커밋은 지금처럼 배포한다.
+
 `scripts/rt/` 의 유닛·Caddy 파일(`scripts/rt/caddy/`)·journald 설정이나 `setup.sh` 가 바뀐 커밋은 `deploy.sh` 뒤에 `sudo bash /opt/jigsaw/scripts/rt/setup.sh` 를 한 번 더 실행해 서버에 반영한다(바뀐 것만 설치하고, 유닛이 바뀌면 서비스를 다시 시작한다).
 
 ### 되돌리기
