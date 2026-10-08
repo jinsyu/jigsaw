@@ -1,7 +1,10 @@
 // Home page '혼자 맞춰 보기': a few built-in pictures anyone (a student without a code, a
 // teacher before signing in) can put together alone on /play?demo=1, nothing saved.
+import { PIECE_COUNTS } from './puzzle/geometry.js';
+
 const BUILTIN_INDEX = '/images/builtin/index.json';
-export const PRACTICE_PIECES = [12, 24, 48];
+// Same piece counts as a class.
+export const PRACTICE_PIECES = PIECE_COUNTS;
 const SHOWN = 8;
 // Easy pictures first: the youngest children open this page too.
 const LEVEL_ORDER = { 쉬움: 0, 보통: 1, 어려움: 2 };

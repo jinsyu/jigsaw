@@ -4,8 +4,8 @@ import { createDemoStore, demoPieceCount } from '../../public/js/play/demo.js';
 const WIDE = { src: '/images/builtin/wide.webp', width: 1800, height: 1200 };
 
 describe('demo piece count (/play?demo=1&pieces=...)', () => {
-  it('takes 12, 24, 48 or 70 from the address', () => {
-    for (const n of [12, 24, 48, 70]) expect(demoPieceCount(`?demo=1&pieces=${n}`)).toBe(n);
+  it('takes 12, 24, 48, 70 or 96 from the address', () => {
+    for (const n of [12, 24, 48, 70, 96]) expect(demoPieceCount(`?demo=1&pieces=${n}`)).toBe(n);
   });
 
   it('falls back to 24 for anything else', () => {
@@ -15,7 +15,7 @@ describe('demo piece count (/play?demo=1&pieces=...)', () => {
   });
 
   it('deals every piece into the tray', () => {
-    for (const n of [12, 24, 48, 70]) {
+    for (const n of [12, 24, 48, 70, 96]) {
       const state = createDemoStore(n, {}, WIDE).getState();
       expect(state.tray).toHaveLength(n);
       expect(new Set(state.tray).size).toBe(n);

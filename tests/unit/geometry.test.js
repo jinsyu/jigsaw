@@ -29,6 +29,7 @@ describe('gridFor', () => {
     [24, 6, 4],
     [48, 8, 6],
     [70, 10, 7],
+    [96, 12, 8],
   ])('%i pieces on a landscape picture -> %ix%i', (count, cols, rows) => {
     expect(gridFor(count, 1.5)).toEqual({ cols, rows });
   });
@@ -43,7 +44,7 @@ describe('gridFor', () => {
   });
 
   it('rejects unsupported piece counts and bad aspects', () => {
-    expect(PIECE_COUNTS).toEqual([12, 24, 48, 70]);
+    expect(PIECE_COUNTS).toEqual([12, 24, 48, 70, 96]);
     expect(() => gridFor(13, 1.5)).toThrow();
     expect(() => gridFor(12, 0)).toThrow();
   });

@@ -1,7 +1,7 @@
 // /play?demo=1 — solo puzzle on a built-in picture, kept in memory.
 // &picture=<key> picks the built-in picture (public/images/builtin/index.json, default: the
 // first one there);
-// &pieces=12|24|48|70 picks the piece count (default 24); help settings (spec rule 10):
+// &pieces=12|24|48|70|96 picks the piece count (default 24); help settings (spec rule 10):
 // &preview=1 &outline=0 &button=0 &underlay=1 (1 = on, 0 = off, missing = default;
 // button = the completed picture button).
 // For development and demonstrations only: no server, nothing is saved.

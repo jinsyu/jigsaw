@@ -8,7 +8,7 @@ const PAD = 5;
 const SEAM_COLOR = 'rgba(30, 25, 20, 0.3)';
 const SEAM_WIDTH = 1.1;
 const SHADOW_COLOR = '#3c2814';
-// Keep all sprites together under ~48 MB so 70-piece puzzles fit low-end tablets.
+// Keep all sprites together under ~48 MB so 96-piece puzzles fit low-end tablets.
 const SPRITE_BUDGET_BYTES = 48e6;
 const MAX_PIXELS_PER_UNIT = 4;
 const MIN_PIXELS_PER_UNIT = 0.125;
