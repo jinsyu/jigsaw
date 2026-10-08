@@ -26,6 +26,7 @@ pnpm teacher:open         # 시험용 선생님으로 로그인된 창 열기 (d
 pnpm screens [그림 키]     # 주요 화면을 휴대폰·넓은 화면으로 찍어 test-results/screens/ 에 저장 (dev·rt:dev 켠 뒤)
 pnpm test:e2e             # E2E 4개 너비(360·390·1024·1440). test:db 와 동시에 돌리지 않는다
 pnpm images:builtin       # 내장 그림 다시 만들기 (네트워크 필요, 원본은 OS 임시 폴더)
+pnpm images:sheet [낱말]   # 내장 그림 썸네일 대조표를 test-results/sheets/ 에 (검수용)
 ```
 
 화면을 고친 뒤에는 `pnpm screens` 로 찍어 눈으로 확인한다. rt 서버 코드를 고치면 떠 있는 `rt:dev` 를 다시 켜야 반영된다(자동 재시작 없음).
@@ -36,6 +37,7 @@ pnpm images:builtin       # 내장 그림 다시 만들기 (네트워크 필요,
 - 브라우저는 Supabase 에 직접 접속하지 않는다(그림 서명 URL 읽기만 예외). supabase-js 를 화면에서 쓰지 않는다.
 - CSP: 인라인 스크립트·인라인 `style` 속성 금지(스타일은 CSSOM `setProperty`). 허용 외부 주소는 `vercel.json` 과 `tests/unit/csp.test.js` 가 같이 지킨다.
 - 내장 그림은 퍼블릭 도메인·CC0·공공누리 제1유형만. 새 외부 그림은 `scripts/builtin-external.json` 에 출처·라이선스·credit 과 함께 넣고 `pnpm images:builtin` 으로 만든다(처리방침 출처 목록도 자동 갱신). 아이에게 알맞지 않은 그림(나체·폭력 등)은 넣지 않는다.
+- 내장 그림 추가 절차: 후보를 `scripts/builtin-external.json` 형식(key·title·category·topic·level·author·year·holder·source·license·images·crop·note·credit, 필요하면 tags)으로 만든다 → 커먼즈 API 로 라이선스 확인 → `pnpm images:builtin` → `pnpm images:sheet` 로 눈으로 검수(어둡거나 한 색이 절반 넘는 그림, 아이에게 알맞지 않은 그림은 뺀다) → `pnpm test`. 기준과 뺀 사례는 `docs/image-candidates.md`. 순서는 사진 → 삽화 → 명화 → 우리 그림, 저학년용 쉬운 그림이 앞. 카드 설명이 두 줄을 넘지 않게 author 는 짧게, credit 은 그림마다 달라야 한다.
 - 화면 문구는 초등학생도 읽을 수 있는 쉬운 해요체 한국어. 코드 주석은 영어, 문서는 한국어.
 - 퍼즐 규칙(spec '퍼즐 규칙')을 바꾸지 않는다. 판정 로직은 `public/js/puzzle/` 한 곳에만 둔다(복사 금지).
 - 커밋 전 사용자 확인, 커밋 메시지는 한국어로 짧게.

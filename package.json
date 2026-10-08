@@ -13,6 +13,7 @@
     "db:reset": "npx --yes supabase@2.120.0 db reset",
     "db:status": "npx --yes supabase@2.120.0 status -o env",
     "images:builtin": "node scripts/builtin-images.mjs",
+    "images:sheet": "node scripts/builtin-sheet.mjs",
     "teacher:open": "node scripts/teacher-open.mjs",
     "screens": "node scripts/screens.mjs",
     "rt:dev": "node scripts/rt-dev.mjs",
