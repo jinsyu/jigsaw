@@ -27,12 +27,13 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/app.css">
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 <main class="page doc">
   <a class="brand" href="/"><img class="ic" src="/icon.svg" alt="" width="26" height="26">조각조각</a>
   <h1>개인정보 처리방침</h1>
-  <p class="doc-lead">조각조각은 모둠이 함께 맞추는 교실용 직소 퍼즐입니다. 수업에 꼭 필요한 정보만 다루고, <strong>학생 이름은 서버에 저장하지 않습니다.</strong> 광고와 외부 분석 도구는 쓰지 않습니다.</p>
+  <p class="doc-lead">조각조각은 모둠이 함께 맞추는 교실용 직소 퍼즐입니다. 수업에 꼭 필요한 정보만 다루고, <strong>학생 이름은 서버에 저장하지 않습니다.</strong> 광고는 없고, 방문 수는 쿠키 없는 Vercel 웹 분석으로만 셉니다.</p>
 
   <section aria-labelledby="summary">
     <h2 id="summary">한눈에 보기</h2>
@@ -45,7 +46,7 @@
           <tr><th scope="row">학생 회원 가입</th><td data-label="조각조각">없습니다. 학생 계정(익명 계정 포함)을 만들지 않습니다. 수업 동안만 쓰는 무작위 학생 번호를 서버가 만들고, 수업이 끝나면 지웁니다.</td></tr>
           <tr><th scope="row">교사 개인정보 수집</th><td data-label="조각조각">교실 앱 공용 구글 로그인 계정(이메일)과 교사 이름, 교사가 올린 그림, 수업 정보만 다룹니다.</td></tr>
           <tr><th scope="row">보관 기간</th><td data-label="조각조각">수업 기록은 수업이 끝나고 30일 뒤, 학생 번호와 모둠 배정은 수업이 끝나면(늦어도 시작 24시간 뒤) 지웁니다. 아래 표를 보세요.</td></tr>
-          <tr><th scope="row">광고·외부 분석</th><td data-label="조각조각">없습니다. 화면에 광고가 없고, 방문 기록을 모으는 외부 분석 도구를 쓰지 않습니다.</td></tr>
+          <tr><th scope="row">광고·외부 분석</th><td data-label="조각조각">화면에 광고가 없습니다. 방문 수를 세는 데는 호스팅 업체 Vercel의 웹 분석(Web Analytics)만 씁니다. 쿠키를 쓰지 않고 이름·IP 주소를 저장하지 않습니다.</td></tr>
           <tr><th scope="row">제3자 제공</th><td data-label="조각조각">하지 않습니다. 서비스 운영을 위해 서버·호스팅 업체에 처리를 맡깁니다(아래 '처리 위탁').</td></tr>
           <tr><th scope="row">채팅·외부 연결</th><td data-label="조각조각">화면 안 채팅, 다른 사이트로 가는 광고나 게임 링크가 없습니다.</td></tr>
         </tbody>
@@ -77,6 +78,7 @@
       <li>IP 주소는 실시간 서버가 지나친 요청을 막는 데(요청 수 제한)만 메모리에서 쓰고, 저장하거나 서버 기록에 남기지 않습니다.</li>
       <li>실시간 서버는 시작·오류·요청 수 같은 운영 기록만 14일 동안 남기고, 서버 스냅숏(7일 보관)에 담긴 사본까지 합하면 최대 21일 뒤에 지워집니다. 학생 이름, 접속 열쇠, IP 주소는 남기지 않습니다.</li>
       <li>웹사이트 파일을 전달하는 호스팅 업체(Vercel)는 접속 기록(IP 주소, 접속 시각 등)을 짧은 기간 자동으로 남길 수 있습니다.</li>
+      <li>방문 통계: Vercel 웹 분석(Web Analytics)으로 페이지 주소, 들어온 경로(이전 페이지), 나라, 기기·운영체제·브라우저 종류를 셉니다. 쿠키를 쓰지 않고, 이름·IP 주소를 저장하지 않으며, 같은 방문자인지는 하루가 지나면 버려지는 익명 값으로만 구분합니다. 광고나 다른 사이트 추적에 쓰지 않습니다.</li>
     </ul>
   </section>
 
@@ -101,7 +103,7 @@
         <tbody>
           <tr><th scope="row">Amazon Web Services(AWS Lightsail)</th><td data-label="맡기는 일">실시간 서버(퍼즐 판정·동기화, 수업 진행)</td><td data-label="다루는 정보">퍼즐 진행, 수업 중 학생 이름과 접속 상태(메모리에서만, 저장하지 않음), 요청 수 제한용 IP 주소(메모리에서만), 운영 기록(14일)</td><td data-label="처리 장소">AWS Lightsail 서울</td></tr>
           <tr><th scope="row">Supabase Inc.</th><td data-label="맡기는 일">데이터베이스, 교사 로그인 확인, 그림 저장소</td><td data-label="다루는 정보">교사 계정·이름, 올린 그림, 수업 정보, 학생 번호·모둠 배정(이름 없음)</td><td data-label="처리 장소">Supabase 서울(AWS 서울 지역)</td></tr>
-          <tr><th scope="row">Vercel Inc.</th><td data-label="맡기는 일">웹사이트 파일 전달(호스팅)</td><td data-label="다루는 정보">접속 기록(IP 주소 등)</td><td data-label="처리 장소">Vercel(전 세계 전송망)</td></tr>
+          <tr><th scope="row">Vercel Inc.</th><td data-label="맡기는 일">웹사이트 파일 전달(호스팅), 방문 통계(Web Analytics)</td><td data-label="다루는 정보">접속 기록(IP 주소 등), 방문 통계(페이지 주소·나라·기기 종류, 이름·IP 주소 저장 없음)</td><td data-label="처리 장소">Vercel(전 세계 전송망)</td></tr>
           <tr><th scope="row">jsDelivr</th><td data-label="맡기는 일">글꼴(Pretendard) 파일 전달</td><td data-label="다루는 정보">글꼴을 받을 때의 접속 기록(IP 주소 등)</td><td data-label="처리 장소">전 세계 전송망</td></tr>
           <tr><th scope="row">Google LLC</th><td data-label="맡기는 일">교사 구글 로그인</td><td data-label="다루는 정보">교사가 로그인할 때의 구글 계정 정보</td><td data-label="처리 장소">구글 서버</td></tr>
         </tbody>
@@ -514,6 +516,7 @@
     <h2 id="contact">7. 문의</h2>
     <p>개인정보 관련 문의, 교사 탈퇴 요청은 이메일로 보내 주세요: <a href="mailto:jinsyu@gyosil.app">jinsyu@gyosil.app</a></p>
     <p class="doc-note">이 방침은 2026년 10월 8일부터 적용합니다. 내용이 바뀌면 이 페이지에 바뀐 날짜와 내용을 알립니다.</p>
+    <p class="doc-note">2026년 10월 11일 바뀐 내용: 쿠키 없는 방문 통계(Vercel Web Analytics)를 더했습니다.</p>
   </section>
 </main>
 </body>

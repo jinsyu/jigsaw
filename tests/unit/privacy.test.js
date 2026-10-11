@@ -34,10 +34,11 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
     expect(text).toContain('탈퇴할 때까지');
   });
 
-  it('explains how to delete, who processes the data, and that there are no ads or analytics', () => {
+  it('explains how to delete, who processes the data, no ads, and cookieless Vercel analytics only', () => {
     for (const phrase of ['내 그림 지우기', '수업 끝내기', '자동 정리', '교사 탈퇴']) expect(text).toContain(phrase);
     for (const company of ['Supabase', 'Vercel', 'AWS Lightsail', 'jsDelivr', 'Google']) expect(text).toContain(company);
-    expect(text).toContain('광고와 외부 분석 도구는 쓰지 않습니다');
+    expect(text).toContain('광고는 없고, 방문 수는 쿠키 없는 Vercel 웹 분석으로만 셉니다');
+    expect(text).toContain('방문 통계(Web Analytics)');
     expect(text).toContain('학습지원 소프트웨어');
   });
 

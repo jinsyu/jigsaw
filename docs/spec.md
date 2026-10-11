@@ -72,7 +72,7 @@
 - [ ] D12: 학생은 자기 수업·자기 모둠에만 작용한다 — 다른 모둠·다른 수업을 대상으로 한 소켓 메시지·HTTP 요청은 서버가 거부한다. 교사는 자기 수업·자기 그림만 다룬다. 브라우저는 Supabase DB·Storage에 직접 접속하지 않고, 공개(anon)·로그인(authenticated) 키로는 `jigsaw` 스키마와 `jigsaw-images` 버킷에 접근할 수 없다(로컬 Supabase 시험)
 - [ ] D13: 휴대폰(360px·390px), 태블릿(1024px), 데스크톱(1440px)에서 가로 넘침 없이 레이아웃이 깨지지 않고, 터치로 조각 꺼내기·옮기기·판 확대가 된다
 - [ ] D14: 학생 개인정보를 저장하지 않는다 — 학생 이름은 DB·Storage·서버 로그에 쓰이지 않는다(rt 서버 메모리와 학생 기기에만 존재). 학생은 Supabase 계정을 만들지 않는다. 수업이 끝나면(늦어도 시작 24시간 뒤 자동) 모둠 배정 행이 삭제되고 학생 토큰은 무효가 된다
-- [ ] D15: 개인정보 처리방침 페이지가 있고 수집 항목·보관 기간·삭제 방법·처리 장소(Vercel, AWS Lightsail 서울, Supabase 서울)가 적혀 있다. 광고·외부 분석 스크립트가 없고, CSP가 허용하는 외부 주소는 rt 서버·구글 로그인(GIS)·그림 서명 URL 주소(Supabase Storage)·Pretendard 글꼴 CSS·글꼴 파일 주소(`https://cdn.jsdelivr.net`, `style-src`·`font-src` 만)뿐이다
+- [ ] D15: 개인정보 처리방침 페이지가 있고 수집 항목·보관 기간·삭제 방법·처리 장소(Vercel, AWS Lightsail 서울, Supabase 서울)가 적혀 있다. 광고 스크립트가 없고 방문 통계는 같은 주소의 Vercel Web Analytics(`/_vercel/insights`, 쿠키 없음)뿐이며, CSP가 허용하는 외부 주소는 rt 서버·구글 로그인(GIS)·그림 서명 URL 주소(Supabase Storage)·Pretendard 글꼴 CSS·글꼴 파일 주소(`https://cdn.jsdelivr.net`, `style-src`·`font-src` 만)뿐이다
 - [ ] D16: rt 서버는 허용된 출처(`https://jigsaw.gyosil.app`, 로컬 개발 주소)가 아닌 HTTP·소켓 요청을 거부하고, 요청·소켓 메시지 빈도와 열린 수업·연결 수가 상한을 넘으면 거부한다. service_role 키는 화면 파일·서버 응답·저장소 어디에도 없다
 - [ ] D17: `https://rt.gyosil.app/health` 가 응답하고, 서버 프로세스가 죽으면 systemd가 다시 띄운다. 다시 뜬 뒤 진행 중이던 수업은 마지막 저장 상태(최대 수 초 전)로 이어지고 학생·교사 화면은 같은 기기로 자동 재접속한다(잡기는 모두 놓인 상태, 학생 이름은 재접속한 화면이 다시 보내 복구)
 
