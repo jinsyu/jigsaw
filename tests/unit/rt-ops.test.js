@@ -105,8 +105,8 @@ describe('Caddy: shared Caddyfile and per-app site files', () => {
     }
   });
 
-  it('proxies rt.gyosil.app to the local jigsaw server only, on the port of the unit and env template', () => {
-    expect(site).toMatch(/^rt\.gyosil\.app \{$/m);
+  it('proxies rt.gyosil.app and jigsaw-rt.gyosil.app to the local jigsaw server only, on the port of the unit and env template', () => {
+    expect(site).toMatch(/^rt\.gyosil\.app, jigsaw-rt\.gyosil\.app \{$/m);
     expect(site).toMatch(/^\s*reverse_proxy 127\.0\.0\.1:3400 \{$/m);
     expect(read('scripts/rt/jigsaw-rt.service')).toMatch(/^Environment=PORT=3400$/m);
     expect(read('scripts/rt/setup.sh')).toMatch(/^\s*set_default PORT '3400'$/m);

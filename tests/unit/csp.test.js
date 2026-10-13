@@ -17,10 +17,10 @@ const directives = Object.fromEntries(
 
 // The only outside hosts the site may load from or talk to (spec D15).
 // accounts.google.com: Google sign-in (GIS), loaded on the hosted site, where config.js has the
-// Google client ID. rt.gyosil.app: the hosted rt server (config.js). Teachers' pictures come from the
+// Google client ID. jigsaw-rt.gyosil.app: the hosted rt server (config.js). Teachers' pictures come from the
 // Supabase Storage of the gyosil project through signed URLs the rt server hands out, so that
 // host is never written in public/.
-const ALLOWED_HOSTS = ['cdn.jsdelivr.net', 'accounts.google.com', 'rt.gyosil.app'];
+const ALLOWED_HOSTS = ['cdn.jsdelivr.net', 'accounts.google.com', 'jigsaw-rt.gyosil.app'];
 const STORAGE = 'https://ozfzpyumnaaggrlevygz.supabase.co/storage/v1/object/sign/jigsaw-images/';
 
 function filesUnder(dir) {
@@ -47,7 +47,7 @@ describe('Content-Security-Policy (vercel.json)', () => {
     expect(directives['style-src']).toEqual(["'self'", 'https://cdn.jsdelivr.net', 'https://accounts.google.com/gsi/style']);
     expect(directives['font-src']).toEqual(["'self'", 'https://cdn.jsdelivr.net']);
     // The WebP encoder and its .wasm are served from this site (js/vendor), not a CDN.
-    expect(directives['connect-src']).toEqual(["'self'", 'https://rt.gyosil.app', 'wss://rt.gyosil.app', STORAGE, 'https://accounts.google.com/gsi/']);
+    expect(directives['connect-src']).toEqual(["'self'", 'https://jigsaw-rt.gyosil.app', 'wss://jigsaw-rt.gyosil.app', STORAGE, 'https://accounts.google.com/gsi/']);
     // Teachers' pictures: <img> / SVG <image> of a signed URL, and fetch() into a blob: URL.
     expect(directives['img-src']).toEqual(["'self'", 'data:', 'blob:', STORAGE]);
     expect(directives['frame-src']).toEqual(['https://accounts.google.com/gsi/']);
@@ -69,7 +69,7 @@ describe('Content-Security-Policy (vercel.json)', () => {
         .filter((v) => /^(https?|wss?):\/\//.test(v))
         .map((v) => new URL(v.replace(/^wss:/, 'https:')).hostname),
     );
-    expect([...hosts].sort()).toEqual(['accounts.google.com', 'cdn.jsdelivr.net', 'ozfzpyumnaaggrlevygz.supabase.co', 'rt.gyosil.app']);
+    expect([...hosts].sort()).toEqual(['accounts.google.com', 'cdn.jsdelivr.net', 'jigsaw-rt.gyosil.app', 'ozfzpyumnaaggrlevygz.supabase.co']);
     expect(csp).not.toMatch(/localhost|127\.0\.0\.1|http:|ws:/);
   });
 
@@ -81,7 +81,7 @@ describe('Content-Security-Policy (vercel.json)', () => {
     const local = withLocalServers(csp, 'localhost:4173');
     const pictures = 'http://127.0.0.1:56321/storage/v1/object/sign/jigsaw-images/';
     expect(local).toContain(
-      `connect-src 'self' https://rt.gyosil.app wss://rt.gyosil.app ${STORAGE} https://accounts.google.com/gsi/ http://127.0.0.1:3400 ws://127.0.0.1:3400 ${pictures};`,
+      `connect-src 'self' https://jigsaw-rt.gyosil.app wss://jigsaw-rt.gyosil.app ${STORAGE} https://accounts.google.com/gsi/ http://127.0.0.1:3400 ws://127.0.0.1:3400 ${pictures};`,
     );
     expect(local).toContain(`img-src 'self' data: blob: ${STORAGE} ${pictures};`);
     expect(local.replace(/ (http|ws):\/\/127\.0\.0\.1:(56321|3400)[^ ;]*/g, '')).toBe(csp);

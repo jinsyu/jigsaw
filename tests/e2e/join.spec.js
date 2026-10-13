@@ -231,7 +231,7 @@ test('too many wrong codes from this address: the student is asked to wait', asy
   await s.context.close();
 });
 
-test('on the hosted site, students join through the rt server at rt.gyosil.app', async ({ page, baseURL }, testInfo) => {
+test('on the hosted site, students join through the rt server at jigsaw-rt.gyosil.app', async ({ page, baseURL }, testInfo) => {
   test.skip(!['desktop-1440', 'phone-360'].includes(testInfo.project.name), 'one wide and one phone screen');
   // Nothing reaches the hosted rt server: its answer is a stand-in (support/production.js).
   const { unexpected } = await asHostedSite(page, baseURL);

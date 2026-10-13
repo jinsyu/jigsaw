@@ -1,13 +1,13 @@
 # 조각조각 운영 문서 (rt 서버·DB 백업·탈퇴 처리)
 
-실시간·판정 서버 `rt.gyosil.app` 의 설치·배포·로그·백업·복원과 교사 탈퇴 처리 절차를 적는다. 구조는 `docs/spec.md` '시스템 구조'를 따른다. rt 서버(Lightsail)는 여러 앱이 함께 쓰는 구조다. 서버 공통 설정과 앱별 규칙은 '12. 새 앱 추가', 이전 구조에서 옮기는 절차는 '13. 여러 앱 구조로 옮기기'에 있다.
+실시간·판정 서버 `jigsaw-rt.gyosil.app`(예전 주소 `rt.gyosil.app`)의 설치·배포·로그·백업·복원과 교사 탈퇴 처리 절차를 적는다. 구조는 `docs/spec.md` '시스템 구조'를 따른다. rt 서버(Lightsail)는 여러 앱이 함께 쓰는 구조다. 서버 공통 설정과 앱별 규칙은 '12. 새 앱 추가', 이전 구조에서 옮기는 절차는 '13. 여러 앱 구조로 옮기기'에 있다.
 
 ## 1. 한눈에 보기
 
 | 항목 | 값 |
 |---|---|
 | 서버 | AWS Lightsail 서울, Ubuntu 24.04, 1GB, 고정 IP `13.124.90.119`, 방화벽 22·80·443 |
-| 주소 | `rt.gyosil.app` A 레코드 → 고정 IP. Caddy 가 HTTPS 인증서를 자동으로 받는다 |
+| 주소 | `jigsaw-rt.gyosil.app`, `rt.gyosil.app` A 레코드 → 고정 IP. Caddy 가 HTTPS 인증서를 자동으로 받는다. 화면(`public/js/config.js`, CSP)은 2026-10-13 부터 `jigsaw-rt` 를 쓴다. 앱 이름이 드러나 헷갈리지 않게 하려고 바꿨고, `rt` 는 예전 화면용으로 남긴다(지우지 않는다) |
 | 흐름 | 브라우저 → Caddy(443) → `127.0.0.1:3400` Node 24 (`server/src/index.js`) → Supabase gyosil |
 | 코드 | `/opt/jigsaw` (공개 저장소 `https://github.com/jinsyu/jigsaw.git` 의 main, root 소유). 서버는 `server/` 만 실행하고, 퍼즐 규칙은 `public/js/puzzle/` 를 그대로 읽는다 |
 | 실행 사용자 | `jigsaw-rt` (시스템 사용자, 로그인 셸 없음, 코드는 읽기만) |
@@ -16,7 +16,7 @@
 | 백업 | `jigsaw-backup.timer` → `scripts/db/backup.sh`, 파일은 `/var/backups/jigsaw` (600), 접속 주소는 `/etc/jigsaw-backup.env` (root, 600) |
 | 로그 | journald, 14일 보관 (`/etc/systemd/journald.conf.d/zz-retention.conf`, 서버 전체) |
 | Caddy (서버 공통) | `/etc/caddy/Caddyfile` (`scripts/rt/caddy/Caddyfile`): 전역 옵션(기본 로그(오류·tls·admin.api)에서 접속자 주소·포트·요청 헤더 제거)과 마지막 줄 `import /etc/caddy/sites/*.caddy` 만 |
-| Caddy (jigsaw 사이트) | `/etc/caddy/sites/jigsaw.caddy` (`scripts/rt/caddy/sites/jigsaw.caddy`): `rt.gyosil.app` → `127.0.0.1:3400`. 접근 로그 없음, `trusted_proxies` 없음 |
+| Caddy (jigsaw 사이트) | `/etc/caddy/sites/jigsaw.caddy` (`scripts/rt/caddy/sites/jigsaw.caddy`): `rt.gyosil.app`·`jigsaw-rt.gyosil.app` → `127.0.0.1:3400`. 접근 로그 없음, `trusted_proxies` 없음 |
 
 - 저장소가 공개라 서버는 https 로 clone·pull 한다. **deploy key·GitHub 토큰은 쓰지 않는다.** 저장소를 비공개로 바꾸면 그때 읽기 전용 deploy key 를 만든다.
 - 배포(다시 시작)는 모든 수업을 몇 초 끊는다. 학생·교사 화면은 자동으로 다시 연결되고 판은 이어진다(spec D17). 그래도 **배포는 수업 시간 밖에** 한다.

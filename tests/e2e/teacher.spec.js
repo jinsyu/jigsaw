@@ -728,7 +728,7 @@ test('a picture from 내 그림 can be chosen for a class', async ({ page, conte
   expect(direct).toEqual([]);
 });
 
-test('on the hosted site, the teacher signs in through GIS with the gyosil client ID and the rt server at rt.gyosil.app', async ({ page, baseURL }, testInfo) => {
+test('on the hosted site, the teacher signs in through GIS with the gyosil client ID and the rt server at jigsaw-rt.gyosil.app', async ({ page, baseURL }, testInfo) => {
   test.skip(!['desktop-1440', 'phone-360'].includes(testInfo.project.name), 'one wide and one phone screen');
   // Nothing reaches the hosted rt server or Google: their answers are stand-ins (support/production.js).
   const { unexpected } = await asHostedSite(page, baseURL);

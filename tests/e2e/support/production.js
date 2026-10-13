@@ -1,11 +1,11 @@
 // The hosted site in a browser test without touching the hosted servers: this checkout is
 // served at https://jigsaw.gyosil.app (so config.js picks the hosted rt server and Google
-// client ID), and every request to rt.gyosil.app or Google stays inside the test. A test
+// client ID), and every request to jigsaw-rt.gyosil.app or Google stays inside the test. A test
 // answers the requests it expects with page.route (later routes win); anything else is
 // refused and recorded in `unexpected`.
 
 export const SITE = 'https://jigsaw.gyosil.app';
-export const HOSTED_RT = 'https://rt.gyosil.app';
+export const HOSTED_RT = 'https://jigsaw-rt.gyosil.app';
 export const HOSTED_CLIENT_ID = '682345745807-r0ood3p29qp5jvfpfh4mfunpajqvaf7j.apps.googleusercontent.com';
 
 /**

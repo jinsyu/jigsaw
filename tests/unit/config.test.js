@@ -22,7 +22,7 @@ describe('pickConfig', () => {
     const config = pickConfig(host);
     expect(config).toEqual({
       env: 'remote',
-      rtUrl: 'https://rt.gyosil.app',
+      rtUrl: 'https://jigsaw-rt.gyosil.app',
       googleClientId: '682345745807-r0ood3p29qp5jvfpfh4mfunpajqvaf7j.apps.googleusercontent.com',
     });
     expect(hasRtServer(config)).toBe(true);

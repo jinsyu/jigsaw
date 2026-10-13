@@ -3,7 +3,7 @@
 // - localhost, 127.0.0.1, private LAN addresses and *.local: the local rt server (pnpm rt:dev,
 //   port 3400) on the same host, so a tablet on the same Wi-Fi reaches it through the address
 //   it opened the page with.
-// - Any other host: the hosted servers, the rt server at rt.gyosil.app and the gyosil Google
+// - Any other host: the hosted servers, the rt server at jigsaw-rt.gyosil.app and the gyosil Google
 //   sign-in. A config without an rt address (hasRtServer false) makes the teacher and student
 //   screens show "준비 중" instead; kept as the fallback for taking the hosted screens offline.
 //
@@ -15,7 +15,7 @@ const LOCAL_RT_PORT = 3400;
 const REMOTE = {
   env: 'remote',
   // A push to main deploys this: emptying it puts the hosted screens back to "준비 중".
-  rtUrl: 'https://rt.gyosil.app',
+  rtUrl: 'https://jigsaw-rt.gyosil.app',
   // The public OAuth client ID of the gyosil Google sign-in (the rt server checks the same ID).
   googleClientId: '682345745807-r0ood3p29qp5jvfpfh4mfunpajqvaf7j.apps.googleusercontent.com',
 };

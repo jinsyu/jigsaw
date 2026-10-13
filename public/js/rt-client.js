@@ -1,4 +1,4 @@
-// The screens' way to the rt server (rt.gyosil.app, locally pnpm rt:dev): JSON requests over
+// The screens' way to the rt server (jigsaw-rt.gyosil.app, locally pnpm rt:dev): JSON requests over
 // fetch and socket.io connections. The address comes from config.js (rtUrl); when it is empty
 // the screens show "준비 중" and never get here.
 //

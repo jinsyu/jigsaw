@@ -132,7 +132,7 @@ test('teacher screens under the CSP: 새 수업, the lobby with a student, the o
   expect([...hosts].filter((h) => ![self, 'cdn.jsdelivr.net', '127.0.0.1:3400'].includes(h))).toEqual([]);
 });
 
-// The hosted site: the screens use the rt server at rt.gyosil.app and Google sign-in (GIS).
+// The hosted site: the screens use the rt server at jigsaw-rt.gyosil.app and Google sign-in (GIS).
 // Served under the production header of vercel.json exactly (no local additions), at the
 // production address, so 'self' and every allowed host are the real ones. The rt server and
 // GIS answers are stand-ins (support/production.js): nothing reaches the hosted servers.
@@ -186,8 +186,8 @@ test('the production CSP: every page loads without a violation, with the rt serv
   await page.screenshot({ path: testInfo.outputPath('production-play.png'), fullPage: true });
   testInfo.annotations.push({ type: 'hosts', description: [...hosts].join(', ') });
   // The site, the font CDN, the hosted rt server and Google sign-in: no Supabase.
-  expect([...hosts].filter((h) => !['jigsaw.gyosil.app', 'cdn.jsdelivr.net', 'rt.gyosil.app', 'accounts.google.com'].includes(h))).toEqual([]);
-  expect(hosts).toContain('rt.gyosil.app');
+  expect([...hosts].filter((h) => !['jigsaw.gyosil.app', 'cdn.jsdelivr.net', 'jigsaw-rt.gyosil.app', 'accounts.google.com'].includes(h))).toEqual([]);
+  expect(hosts).toContain('jigsaw-rt.gyosil.app');
   expect(hosts).toContain('accounts.google.com');
   expect(unexpected).toEqual([]);
   expect(errors).toEqual([]);

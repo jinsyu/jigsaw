@@ -1,4 +1,4 @@
-// rt.gyosil.app: the jigsaw real-time and judging server (node:http + socket.io).
+// jigsaw-rt.gyosil.app: the jigsaw real-time and judging server (node:http + socket.io).
 //   node server/src/index.js     (settings: see config.js; locally `pnpm rt:dev`)
 // Start: restore open classes from the database, then listen. Every second the board timers
 // run (holds, one-minute rule); every 10 minutes the clean-up job. SIGTERM: stop taking

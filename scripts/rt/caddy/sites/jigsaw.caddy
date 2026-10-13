@@ -5,7 +5,8 @@
 # stream_close_delay: a Caddy reload (for example when another app's site file is added) closes
 # open WebSockets at once by default; with the delay they stay open up to 5 minutes, so classes
 # are not cut by a reload. A restart of jigsaw-rt or Caddy itself still disconnects (D17).
-rt.gyosil.app {
+# jigsaw-rt.gyosil.app is the address the screens use (2026-10-13); rt.gyosil.app stays for old pages.
+rt.gyosil.app, jigsaw-rt.gyosil.app {
 	reverse_proxy 127.0.0.1:3400 {
 		stream_close_delay 5m
 	}
