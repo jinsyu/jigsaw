@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { PIECE_COUNTS } from '../../public/js/puzzle/geometry.js';
 import { PRACTICE_THEMES, practicePicks, practiceUrl } from '../../public/js/home-practice.js';
 import { demoPictureKey, demoPieceCount } from '../../public/js/play/demo.js';
 
@@ -30,5 +32,12 @@ describe('home 혼자 맞춰 보기 themes', () => {
     expect(theme('동물')(dino)).toBe(false);
     expect(theme('동물')(puppy)).toBe(true);
     expect(theme('전체')(puppy)).toBe(true);
+  });
+});
+
+describe('home 선생님께', () => {
+  it('names every piece count a class can have', () => {
+    const html = readFileSync(new URL('../../public/index.html', import.meta.url), 'utf8');
+    expect(html).toContain(`${PIECE_COUNTS.join('·')}조각`);
   });
 });
