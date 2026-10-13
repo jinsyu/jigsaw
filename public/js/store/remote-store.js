@@ -7,8 +7,10 @@
 // - Board: the group part of the server's 'state' (on every connect, after a move to another
 //   group, and on request) replaces everything with applyBoard().
 // - Events: the group's batched 'events' (take / grab / drop / release / tray / complete) go
-//   through applyEvents(). My own take / grab / drop events are skipped: the answer to my
-//   message is applied already, and a late echo of my grab would hold a cluster I dropped.
+//   through applyEvents(). Echoes of my own take / grab / drop answered here are skipped: the
+//   answer is applied already, and a late echo of my grab would hold a cluster I dropped. The
+//   server answers before it sends the echo, so each answer marks one echo to skip. My events
+//   with no answer here (the same student in another tab) are applied like a friend's.
 //   The server sends every earlier event of the group before a 'state' or an answer
 //   (broadcaster.flushGroupOf), so events and answers arrive in server order; an event that
 //   still does not fit the board here asks for a fresh state (onMismatch).
@@ -108,6 +110,7 @@ export function createRemoteStore({
   let disposed = false;
   const takes = new Map(); // cluster id -> { result, timer } for taken pieces awaiting drop()
   const taking = new Set(); // tray pieces whose take is on its way
+  const echoes = new Map(); // 'take:<piece>' | 'grab:<id>' | 'drop:<id>' -> answered here, echo to skip
   const listeners = new Set();
   let snapshot = null;
 
@@ -184,6 +187,8 @@ export function createRemoteStore({
 
   function loadBoard(next, serverMs) {
     setClock(serverMs);
+    // The server sends every echo before a state, so none still awaited is coming.
+    echoes.clear();
     clusters = clustersFromBoard(next, toLocal);
     tray = sortTray((next?.tray ?? []).filter((piece) => isPiece(piece) && piece < total && !taking.has(piece)));
     completedAt = Number.isFinite(next?.completedAt) ? next.completedAt : null;
@@ -305,7 +310,7 @@ export function createRemoteStore({
     for (const event of Array.isArray(list) ? list : []) {
       const type = event?.type;
       if (!GROUP_EVENTS.has(type)) continue;
-      if ((type === 'take' || type === 'grab' || type === 'drop') && event.by === me) continue;
+      if ((type === 'take' || type === 'grab' || type === 'drop') && event.by === me && skipEcho(type, event)) continue;
       if (!APPLY[type](event)) fits = false;
       emit({
         type,
@@ -316,6 +321,24 @@ export function createRemoteStore({
       });
     }
     if (!fits) onMismatch();
+  }
+
+  // ---------- echoes of my answered actions ----------
+
+  const echoKey = (type, event) => `${type}:${type === 'take' ? event.piece : event.clusterId}`;
+
+  function expectEcho(type, event) {
+    const key = echoKey(type, event);
+    echoes.set(key, (echoes.get(key) ?? 0) + 1);
+  }
+
+  function skipEcho(type, event) {
+    const key = echoKey(type, event);
+    const left = echoes.get(key) ?? 0;
+    if (left === 0) return false;
+    if (left === 1) echoes.delete(key);
+    else echoes.set(key, left - 1);
+    return true;
   }
 
   // ---------- actions ----------
@@ -358,6 +381,7 @@ export function createRemoteStore({
       return { ok: false, reason };
     }
     taking.delete(piece);
+    expectEcho('take', { piece });
     // Like local-store: the piece appears held by me at the clamped spot; drop() settles it.
     const cell = cellOfPiece(piece, layout.cols);
     const pos = clampPosition(layout, [cell], x, y);
@@ -411,6 +435,7 @@ export function createRemoteStore({
       }
       return { ok: false, reason };
     }
+    expectEcho('grab', { clusterId });
     if (Number.isFinite(answer.heldAt)) setClock(answer.heldAt, (sentAt + receivedAt) / 2);
     if (applyGrab({ clusterId, by: me, heldAt: answer.heldAt, z: answer.z })) emit({ type: 'grab', clusterId, by: me });
     else onMismatch();
@@ -431,6 +456,7 @@ export function createRemoteStore({
       answer = await call('drop', api.drop(clusterId, x, y));
     }
     if (!answer?.ok) return { ok: false, reason: refusal(answer) };
+    expectEcho('drop', { clusterId });
     const fits = applySettle(answer);
     const absorbed = [...(answer.absorbed ?? [])];
     emit({ type: 'drop', clusterId, id: answer.id, x: answer.x, y: answer.y, absorbed, by: me, completed: Number.isFinite(answer.completedAt) });

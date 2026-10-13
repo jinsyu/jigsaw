@@ -232,11 +232,39 @@ describe('createRemoteStore', () => {
     store.applyEvents([
       { type: 'release', by: 'b', clusterId: 20, reason: 'idle' },
       { type: 'grab', by: ME, clusterId: 20, z: 50, heldAt: SERVER_NOW },
-      { type: 'drop', by: ME, clusterId: 20, id: 20, x: 0, y: 0, absorbed: [] },
     ]);
     expect(clusterOf(store, 20)).toMatchObject({ heldBy: ME, x: 300, y: 200 });
+    api.answers.drop.push({ ok: true, id: 20, x: 310, y: 210, z: 50, locked: false, absorbed: [] });
+    await store.drop(20, 310, 210);
+    // A late echo of my drop must not undo a newer grab of mine.
+    api.answers.grab.push({ ok: true, z: 51, heldAt: SERVER_NOW + 100 });
+    await store.grab(20);
+    store.applyEvents([{ type: 'drop', by: ME, clusterId: 20, id: 20, x: 310, y: 210, absorbed: [] }]);
+    expect(clusterOf(store, 20)).toMatchObject({ heldBy: ME, x: 310, y: 210 });
     store.applyEvents([{ type: 'release', by: ME, clusterId: 20, reason: 'limit' }]);
     expect(clusterOf(store, 20).heldBy).toBeNull();
+  });
+
+  it('take/grab/drop of mine from another tab (no answer here) are applied like a friend’s', () => {
+    const { store, onMismatch } = makeStore();
+    store.applyEvents([
+      { type: 'take', by: ME, piece: 1, clusterId: 32, id: 32, x: 0, y: 0, z: 9, locked: true, absorbed: [] },
+      { type: 'grab', by: ME, clusterId: 20, z: 40, heldAt: SERVER_NOW },
+      { type: 'drop', by: ME, clusterId: 20, id: 20, x: 100, y: 100, absorbed: [] },
+    ]);
+    expect(store.getState().tray).not.toContain(1);
+    expect(clusterOf(store, 32)).toMatchObject({ x: 0, y: 0, locked: true });
+    expect(clusterOf(store, 20)).toMatchObject({ x: 100, y: 100, heldBy: null });
+    expect(onMismatch).not.toHaveBeenCalled();
+  });
+
+  it('a fresh state forgets echoes still awaited', async () => {
+    const { store, api } = makeStore();
+    api.answers.grab.push({ ok: true, z: 50, heldAt: SERVER_NOW });
+    await store.grab(20);
+    store.applyBoard(startBoard(), SERVER_NOW);
+    store.applyEvents([{ type: 'grab', by: ME, clusterId: 20, z: 60, heldAt: SERVER_NOW + 10 }]);
+    expect(clusterOf(store, 20)).toMatchObject({ heldBy: ME, z: 60 });
   });
 
   it('an event that does not fit the board asks for a fresh state, which replaces everything', () => {
