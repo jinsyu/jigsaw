@@ -381,7 +381,8 @@ rt 서버(`13.124.90.119`)는 여러 앱이 함께 쓴다. 서버 공통 설정�
 | 3400 | jigsaw | `jigsaw-rt.gyosil.app` (예전 `rt.gyosil.app`) |
 | 3500 | ecosystem (우리 반 생태계) | `eco-rt.gyosil.app` |
 | 3600 | boardgames (보드게임 놀이터) | `madang-rt.gyosil.app` (예전 `boardgames-rt.gyosil.app`) |
-| 3700 | (다음 앱) | |
+| 3700 | goldenbell (골든벨) | `goldenbell-rt.gyosil.app` |
+| 3800 | (다음 앱) | |
 
 - 100 단위로 띄워 쓴다. 새 앱은 **먼저 이 표에 적어 커밋한** 뒤 쓴다.
 - 서버에서 확인: `sudo ss -ltnp | grep 127.0.0.1` (같은 포트가 이미 쓰이면 서비스가 시작하지 못한다).
