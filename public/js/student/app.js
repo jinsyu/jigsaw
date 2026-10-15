@@ -7,7 +7,7 @@ import { hasRtServer, pickConfig } from '../config.js';
 import { normalizeCode } from '../routes.js';
 import { RtError, rtRequest } from '../rt-client.js';
 import { connectClass } from './live.js';
-import { normalizeName } from './names.js';
+import { nameProblem, normalizeName } from './names.js';
 import { openPuzzle } from './puzzle.js';
 import { clearSaved, latestSaved, readSaved, writeSaved } from './saved.js';
 import { renderCodeStep, renderLoading, renderMessage, renderNameStep, renderWaiting } from './views.js';
@@ -16,6 +16,9 @@ export const MESSAGES = {
   invalid_code: '코드를 다시 확인해 주세요',
   too_many_attempts: '코드를 여러 번 틀렸어요. 잠시 뒤에 다시 입력해 주세요.',
   invalid_name: '이름을 넣어 주세요.',
+  personal_info: '전화번호·주민등록번호·이메일은 쓸 수 없어요. 별명이나 번호를 써 주세요.',
+  real_name: '진짜 이름처럼 보여요. 별명이나 번호를 써 주세요.',
+  banned_word: '쓸 수 없는 낱말이 있어요. 다른 별명을 써 주세요.',
   class_full: '이 수업은 자리가 다 찼어요. 선생님께 알려 주세요.',
   network: '인터넷 연결을 확인하고 다시 눌러 주세요.',
   failed: '들어가지 못했어요. 잠시 뒤 다시 눌러 주세요.',
@@ -98,6 +101,8 @@ class StudentFlow {
       onSubmit: async (value) => {
         const name = normalizeName(value);
         if (!name) return MESSAGES.invalid_name;
+        const problem = nameProblem(name);
+        if (problem) return MESSAGES[problem];
         return this.enter(code, name);
       },
     });
@@ -132,6 +137,9 @@ class StudentFlow {
 
   // Same device again: straight back in with the saved token.
   resume(saved) {
+    // A name kept from before the filter (or a stricter one): ask again; the saved token keeps
+    // the same member.
+    if (nameProblem(saved.name)) return this.askName(saved.code);
     this.openClass(saved);
   }
 
@@ -257,6 +265,8 @@ class StudentFlow {
       onSubmit: async (value) => {
         const name = normalizeName(value);
         if (!name) return MESSAGES.invalid_name;
+        const problem = nameProblem(name);
+        if (problem) return MESSAGES[problem];
         try {
           await join(this.rtUrl, { code, name, token: this.room.token });
         } catch (error) {

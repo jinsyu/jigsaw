@@ -71,8 +71,19 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
     expect(html).not.toContain('data-todo');
   });
 
+  it('student names: nickname or number asked, contact details and banned words refused, still memory only (contest DoD 4)', () => {
+    expect(text).toContain('실명·연락처 대신 별명이나 번호를 쓰도록 안내');
+    expect(text).toContain('전화번호·주민등록번호·이메일 형식, ‘김민준’처럼 흔한 성과 이름으로 된 실명 형식, 금지어가 들어간 이름은 받지 않습니다');
+    expect(text).toContain('받지 않은 이름도 데이터베이스·파일·서버 기록에 쓰지 않습니다');
+  });
+
+  it('names the operator only as 운영자, with no company or personal name', () => {
+    expect(text).toContain('개인정보 보호책임자: 운영자 ( gyosil.app@gmail.com )');
+    expect(text).not.toMatch(/드림드림|장진수|대표/);
+  });
+
   it('gives the contact address the operator chose to publish, and no other e-mail', () => {
-    const CONTACT = 'jinsyu@gyosil.app';
+    const CONTACT = 'gyosil.app@gmail.com';
     expect(html).toContain(`href="mailto:${CONTACT}"`);
     const addresses = [...text.matchAll(/[\w.+-]+@[\w-]+\.[a-z]{2,}/gi)].map((m) => m[0]);
     expect(addresses.length).toBeGreaterThan(0);

@@ -170,6 +170,27 @@ describe('학생 입장 (D3)', () => {
     expect(registry.join(session.code, { name: ' ​ ' }).result).toEqual({ ok: false, error: 'invalid_name' });
   });
 
+  it.each([
+    ['010-1234-5678', 'personal_info'],
+    ['９００１０１１２３４５６７', 'personal_info'],
+    ['kim@naver.com', 'personal_info'],
+    ['바 보', 'banned_word'],
+    ['김민준', 'real_name'],
+  ])('이름 %j 는 %s 로 거절하고 학생을 만들지 않는다', (name, error) => {
+    const { registry } = makeRegistry();
+    const session = openClass(registry);
+    expect(registry.join(session.code, { name })).toEqual({ result: { ok: false, error }, events: [] });
+    expect(session.memberCount).toBe(0);
+  });
+
+  it('같은 토큰으로 이름을 전화번호로 바꾸려 하면 거절하고 이전 이름을 둔다', () => {
+    const { registry } = makeRegistry();
+    const session = openClass(registry);
+    const [first] = joinMany(registry, session, ['별님']);
+    expect(registry.join(session.code, { name: '01012345678', token: first.token }).result).toEqual({ ok: false, error: 'personal_info' });
+    expect(session.member(first.memberId).name).toBe('별님');
+  });
+
   it('같은 토큰으로 다시 들어오면 같은 member 로 돌아오고, 이름을 다시 채운다', () => {
     const { registry } = makeRegistry();
     const session = openClass(registry);

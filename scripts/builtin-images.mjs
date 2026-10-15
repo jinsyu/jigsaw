@@ -23,7 +23,7 @@ const MAX_BYTES = { full: 500_000, thumb: 80_000 };
 const RASTER_MIN_QUALITY = 0.5;
 const EXTERNAL = JSON.parse(readFileSync(join(ROOT, 'scripts/builtin-external.json'), 'utf8'));
 const ORIGINALS = process.env.BUILTIN_ORIGINALS ?? join(tmpdir(), 'jigsaw-builtin-originals');
-const USER_AGENT = 'JigsawClassroomBot/0.1 (educational puzzle; contact jinsyu.com@gmail.com)';
+const USER_AGENT = 'JigsawClassroomBot/0.1 (educational puzzle; contact gyosil.app@gmail.com)';
 
 // index.json image entry:
 //   { key, title, category, topic, level, width, height, src, thumb,

@@ -34,6 +34,12 @@ test('D3·D4·D14: students join by code or QR, get their groups and start', asy
   await expect(a.page.getByRole('heading', { level: 1, name: '이름을 알려 주세요' })).toBeVisible();
   await expect(a.page.locator('.st-topnav .pill')).toHaveText(`수업 ${cls.code.slice(0, 3)} ${cls.code.slice(3)}`);
   await expect(a.page.getByText('이름은 저장하지 않아요.')).toBeVisible();
+  // Contest DoD 4: asked for a nickname, and a phone number is refused on the device.
+  await expect(a.page.getByText('진짜 이름·연락처 말고 별명이나 번호를 써 주세요.')).toBeVisible();
+  await a.page.getByLabel('내 이름').fill('010-1234-5678');
+  await a.page.getByRole('button', { name: '다음' }).click();
+  await expect(a.page.locator('#st-name-error')).toHaveText('전화번호·주민등록번호·이메일은 쓸 수 없어요. 별명이나 번호를 써 주세요.');
+  await expect(a.page.getByRole('heading', { level: 1, name: '이름을 알려 주세요' })).toBeVisible();
   await a.page.getByLabel('내 이름').fill('  다솜이 ');
   await expectNoHorizontalOverflow(a.page);
   await a.page.screenshot({ path: testInfo.outputPath('student-2-name.png') });
@@ -184,6 +190,22 @@ test('a student can fix the name while waiting, and comes back to it from home',
   await s.page.screenshot({ path: testInfo.outputPath('home-resume.png') });
   await resume.click();
   await expect(s.page.getByText('민준, 잘 들어왔어요!')).toBeVisible();
+
+  // A name saved on the device that the filter now refuses (a real name): asked again, not stuck,
+  // and the saved token keeps the same student.
+  await s.page.evaluate(
+    ({ key }) => localStorage.setItem(key, JSON.stringify({ ...JSON.parse(localStorage.getItem(key)), name: '김민준' })),
+    { key: savedKeyOf(cls.code) },
+  );
+  await s.page.goto(`/join?code=${cls.code}`);
+  await expect(s.page.getByRole('heading', { level: 1, name: '이름을 알려 주세요' })).toBeVisible();
+  await s.page.getByLabel('내 이름').fill('김민준');
+  await s.page.getByRole('button', { name: '다음' }).click();
+  await expect(s.page.locator('#st-name-error')).toHaveText('진짜 이름처럼 보여요. 별명이나 번호를 써 주세요.');
+  await s.page.getByLabel('내 이름').fill('민준');
+  await s.page.getByRole('button', { name: '다음' }).click();
+  await expect(s.page.getByText('민준, 잘 들어왔어요!')).toBeVisible();
+  expect(await control.memberId('민준')).toBe(memberId);
   expect(s.errors).toEqual([]);
   await s.context.close();
   control.close();

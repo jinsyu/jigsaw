@@ -12,7 +12,7 @@
 // 'bad-request', too many per second 'rate-limited'. Students act only on their own group's
 // board and teachers only on the class their token owns (checked when connecting).
 import { Server } from 'socket.io';
-import { normalizeName } from '../../public/js/student/names.js';
+import { nameProblem, normalizeName } from '../../public/js/student/names.js';
 import { createBroadcaster, rooms } from './broadcaster.js';
 import { createConnectionCounter, createTokenBucket } from './limits.js';
 import { verifyTeacherToken } from './teacher-token.js';
@@ -25,6 +25,13 @@ export const PING_TIMEOUT_MS = 8000;
 const isInt = (v) => Number.isSafeInteger(v);
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 const isObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+// A name sent when a student socket connects (after a server restart). One the join check would
+// refuse (phone number, banned word…) is dropped, so the member keeps no name.
+export function safeName(value) {
+  const name = normalizeName(value);
+  return nameProblem(name) ? '' : name;
+}
 
 // [engine action, argument check, arguments]
 const STUDENT_MESSAGES = {
@@ -78,7 +85,7 @@ export function attachSockets({ httpServer, config, registry, persistence, now, 
     if (auth.role === 'student') {
       const found = registry.byToken(auth.token);
       if (!found) return { error: 'invalid_token' };
-      return { role: 'student', sessionId: found.session.id, memberId: found.memberId, name: normalizeName(auth.name) };
+      return { role: 'student', sessionId: found.session.id, memberId: found.memberId, name: safeName(auth.name) };
     }
     if (auth.role === 'teacher') {
       const uid = verifyTeacherToken(auth.token, config.sessionSecret, now());

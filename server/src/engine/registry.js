@@ -8,7 +8,7 @@
 import { createHash, randomBytes, randomInt as cryptoRandomInt, randomUUID } from 'node:crypto';
 import { PIECE_COUNTS, gridFor } from '../../../public/js/puzzle/geometry.js';
 import { normalizeHints } from '../../../public/js/store/puzzle-store.js';
-import { normalizeName } from '../../../public/js/student/names.js';
+import { nameProblem, normalizeName } from '../../../public/js/student/names.js';
 import { END_SESSION, createClassSession } from './session.js';
 
 export const MAX_GROUPS = 12;
@@ -115,6 +115,8 @@ export function createRegistry({
     if (!session) return fail('invalid_code');
     const clean = normalizeName(name);
     if (!clean) return fail('invalid_name');
+    const problem = nameProblem(clean);
+    if (problem) return fail(problem);
 
     const known = typeof token === 'string' ? byTokenHash.get(hashToken(token)) : undefined;
     let member;

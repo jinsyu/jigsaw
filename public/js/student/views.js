@@ -85,7 +85,7 @@ export function renderNameStep(main, { code, name = '', mode = 'join', onBack, o
     enterkeyhint: 'done',
     maxlength: String(NAME_MAX),
     required: true,
-    'aria-describedby': 'st-name-note st-name-error',
+    'aria-describedby': 'st-name-hint st-name-note st-name-error',
   });
   input.value = name;
   const message = h('p', { class: 'st-error', role: 'alert', id: 'st-name-error' });
@@ -116,7 +116,7 @@ export function renderNameStep(main, { code, name = '', mode = 'join', onBack, o
     mode === 'rename' ? '이름 고치기' : '이름 넣기',
     h('div', { class: 'st-topnav' }, back, h('span', { class: 'pill' }, `수업 ${formatCode(code)}`)),
     h('h1', { tabindex: '-1' }, mode === 'rename' ? '이름을 고쳐 주세요' : '이름을 알려 주세요'),
-    h('p', { class: 'sub' }, '모둠 친구들 화면에 이 이름이 보여요'),
+    h('p', { class: 'sub', id: 'st-name-hint' }, '모둠 친구들 화면에 이 이름이 보여요.', h('br'), '진짜 이름·연락처 말고 별명이나 번호를 써 주세요.'),
     form,
   );
 
