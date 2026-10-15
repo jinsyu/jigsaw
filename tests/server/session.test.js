@@ -175,7 +175,6 @@ describe('학생 입장 (D3)', () => {
     ['９００１０１１２３４５６７', 'personal_info'],
     ['kim@naver.com', 'personal_info'],
     ['바 보', 'banned_word'],
-    ['김민준', 'real_name'],
   ])('이름 %j 는 %s 로 거절하고 학생을 만들지 않는다', (name, error) => {
     const { registry } = makeRegistry();
     const session = openClass(registry);

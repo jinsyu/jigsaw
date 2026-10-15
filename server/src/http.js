@@ -21,7 +21,7 @@ import { clientAddress } from './sockets.js';
 import { signStartTicket, signTeacherToken, verifyStartTicket, verifyTeacherToken } from './teacher-token.js';
 
 const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
-const JOIN_STATUS = { invalid_code: 404, invalid_name: 400, personal_info: 400, real_name: 400, banned_word: 400, class_full: 409 };
+const JOIN_STATUS = { invalid_code: 404, invalid_name: 400, personal_info: 400, banned_word: 400, class_full: 409 };
 const CREATE_STATUS = { too_many_sessions: 429, no_free_code: 503 };
 const UPLOAD_STATUS = { too_large: 413, too_many_images: 409 };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

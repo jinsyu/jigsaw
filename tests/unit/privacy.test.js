@@ -73,7 +73,9 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
 
   it('student names: nickname or number asked, contact details and banned words refused, still memory only (contest DoD 4)', () => {
     expect(text).toContain('실명·연락처 대신 별명이나 번호를 쓰도록 안내');
-    expect(text).toContain('전화번호·주민등록번호·이메일 형식, ‘김민준’처럼 흔한 성과 이름으로 된 실명 형식, 금지어가 들어간 이름은 받지 않습니다');
+    expect(text).toContain('전화번호·주민등록번호·이메일 형식이나 금지어가 들어간 이름은 받지 않습니다');
+    expect(text).not.toContain('실명 형식');
+    expect(text).not.toContain('실명처럼 보이는');
     expect(text).toContain('받지 않은 이름도 데이터베이스·파일·서버 기록에 쓰지 않습니다');
   });
 

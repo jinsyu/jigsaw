@@ -31,12 +31,8 @@ describe('nameProblem', () => {
     expect(check(name)).toBe('banned_word');
   });
 
-  it.each(['김민준', '김 민준', '이서연', '박지우', '최하은7', '남궁민', '남궁민수', '제갈 현우', '황보 준'])('refuses %j as real_name', (name) => {
-    expect(check(name)).toBe('real_name');
-  });
-
-  it.each(['하하하', '구미호', '오리온', '오소리', '지하철', '우주선', '도라지', '유리수', '원주민', '강아지', '고양이', '김밥', '토끼왕', '다솜이', '한결이', '김민준이에요', 'Kim'])(
-    'allows %j (not a surname + given-name shape)',
+  it.each(['김민준', '김 민준', '이서연', '최하은7', '남궁민수', '제갈 현우', '고양이', '도라지'])(
+    'allows %j (names are not checked for a real-name shape)',
     (name) => {
       expect(check(name)).toBeNull();
     },
@@ -55,6 +51,5 @@ describe('safeName (socket connect after a server restart)', () => {
   it('drops a name the join check would refuse', () => {
     expect(safeName('010-1234-5678')).toBe('');
     expect(safeName('바보')).toBe('');
-    expect(safeName('김민준')).toBe('');
   });
 });

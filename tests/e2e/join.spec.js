@@ -191,17 +191,17 @@ test('a student can fix the name while waiting, and comes back to it from home',
   await resume.click();
   await expect(s.page.getByText('민준, 잘 들어왔어요!')).toBeVisible();
 
-  // A name saved on the device that the filter now refuses (a real name): asked again, not stuck,
+  // A name saved on the device that the filter now refuses (a banned word): asked again, not stuck,
   // and the saved token keeps the same student.
   await s.page.evaluate(
-    ({ key }) => localStorage.setItem(key, JSON.stringify({ ...JSON.parse(localStorage.getItem(key)), name: '김민준' })),
+    ({ key }) => localStorage.setItem(key, JSON.stringify({ ...JSON.parse(localStorage.getItem(key)), name: '바보' })),
     { key: savedKeyOf(cls.code) },
   );
   await s.page.goto(`/join?code=${cls.code}`);
   await expect(s.page.getByRole('heading', { level: 1, name: '이름을 알려 주세요' })).toBeVisible();
-  await s.page.getByLabel('내 이름').fill('김민준');
+  await s.page.getByLabel('내 이름').fill('바보');
   await s.page.getByRole('button', { name: '다음' }).click();
-  await expect(s.page.locator('#st-name-error')).toHaveText('진짜 이름처럼 보여요. 별명이나 번호를 써 주세요.');
+  await expect(s.page.locator('#st-name-error')).toHaveText('쓸 수 없는 낱말이 있어요. 다른 별명을 써 주세요.');
   await s.page.getByLabel('내 이름').fill('민준');
   await s.page.getByRole('button', { name: '다음' }).click();
   await expect(s.page.getByText('민준, 잘 들어왔어요!')).toBeVisible();

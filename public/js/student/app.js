@@ -17,7 +17,6 @@ export const MESSAGES = {
   too_many_attempts: '코드를 여러 번 틀렸어요. 잠시 뒤에 다시 입력해 주세요.',
   invalid_name: '이름을 넣어 주세요.',
   personal_info: '전화번호·주민등록번호·이메일은 쓸 수 없어요. 별명이나 번호를 써 주세요.',
-  real_name: '진짜 이름처럼 보여요. 별명이나 번호를 써 주세요.',
   banned_word: '쓸 수 없는 낱말이 있어요. 다른 별명을 써 주세요.',
   class_full: '이 수업은 자리가 다 찼어요. 선생님께 알려 주세요.',
   network: '인터넷 연결을 확인하고 다시 눌러 주세요.',
