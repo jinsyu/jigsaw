@@ -122,8 +122,9 @@ describe('no ads or outside analytics (public/)', () => {
       ].map((m) => new URL(m[1]).hostname);
       for (const host of found) outside.add(host);
     }
-    // Canonical links of this site, and the SVG namespace name (never fetched).
-    const notLoaded = ['jigsaw.gyosil.app', 'www.w3.org'];
+    // Canonical links of this site, the portal terms link of 시작하기 (start-view.js TERMS_URL, a
+    // link only), and the SVG namespace name (never fetched).
+    const notLoaded = ['jigsaw.gyosil.app', 'gyosil.app', 'www.w3.org'];
     const unexpected = [...outside].filter((h) => !notLoaded.includes(h) && !ALLOWED_HOSTS.some((a) => (a.startsWith('*.') ? h.endsWith(a.slice(1)) : h === a)));
     expect(unexpected).toEqual([]);
   });

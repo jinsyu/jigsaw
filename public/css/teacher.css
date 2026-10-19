@@ -150,7 +150,11 @@ html.is-teacher .t-bar { word-break: keep-all; }
 .t-hint { font-size: 13px; line-height: 1.5; color: var(--sub); margin-top: -4px; }
 .t-agree { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; line-height: 1.45; cursor: pointer; }
 .t-agree-input { flex: none; width: 22px; height: 22px; margin: 0; accent-color: var(--pri); }
-.t-agree a { color: var(--pri); font-weight: 600; }
+.t-read { display: flex; flex-wrap: wrap; gap: 0 16px; margin-top: -6px; }
+.t-read-link {
+  display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 600;
+  color: var(--pri); text-decoration: underline; text-underline-offset: 3px;
+}
 .t-start-form .btn { width: 100%; }
 .t-start-other { box-shadow: none; color: var(--sub); }
 

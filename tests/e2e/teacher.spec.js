@@ -238,10 +238,15 @@ test('Google sign-in of a new teacher: 조각조각 시작하기 with the gyosil
   await expectNoHorizontalOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('teacher-start.png'), fullPage: true });
   await page.getByRole('button', { name: '시작하기' }).click();
-  await expect(page.getByRole('alert')).toHaveText('개인정보 처리방침에 동의해 주세요.');
+  await expect(page.getByRole('alert')).toHaveText('이용약관과 개인정보 처리방침에 동의해 주세요.');
   expect(sent.start).toBeUndefined();
   await name.fill('  김교실쌤 ');
-  await page.getByLabel(/개인정보 처리방침을 읽었고 동의해요/).check();
+  const terms = page.getByRole('link', { name: '이용약관 읽기' });
+  const privacy = page.getByRole('link', { name: '개인정보 처리방침 읽기' });
+  await expect(terms).toHaveAttribute('href', 'https://gyosil.app/terms');
+  await expect(privacy).toHaveAttribute('href', '/privacy');
+  await expectTouchSize(page.locator('.t-read-link'));
+  await page.getByLabel('이용약관과 개인정보 처리방침을 읽었고 동의해요.').check();
   await expectTouchSize(page.locator('.t-agree'));
   await page.getByRole('button', { name: '시작하기' }).click();
   await expect(page.getByRole('heading', { level: 1, name: '내 수업' })).toBeVisible();

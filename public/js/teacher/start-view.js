@@ -6,11 +6,15 @@ import { RtError } from '../rt-client.js';
 import { h, pieceIcon, setTitle } from './dom.js';
 
 export const TEACHER_NAME_MAX = 40; // server/src/http.js
+// The server records core.profiles.terms_agreed_at: the shared gyosil terms, kept on the portal.
+export const TERMS_URL = 'https://gyosil.app/terms';
+export const AGREE_TEXT = '이용약관과 개인정보 처리방침을 읽었고 동의해요.';
+export const TERMS_REQUIRED = '이용약관과 개인정보 처리방침에 동의해 주세요.';
 
 export function startErrorMessage(error) {
   if (error instanceof RtError && error.network) return '서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.';
   if (error instanceof RtError && error.code === 'invalid_name') return '이름을 적어 주세요.';
-  if (error instanceof RtError && error.code === 'terms_required') return '개인정보 처리방침에 동의해 주세요.';
+  if (error instanceof RtError && error.code === 'terms_required') return TERMS_REQUIRED;
   return '시작하지 못했어요. 잠시 뒤 다시 눌러 주세요.';
 }
 
@@ -44,11 +48,14 @@ export function renderStart(main, ctx, { startTicket, displayName }) {
       { class: 't-hint', id: 't-start-name-note' },
       known ? '다른 교실 앱에서 쓰는 이름을 넣어 두었어요. 바꿔도 돼요.' : '선생님 화면 위쪽에 ‘○○ 선생님’으로 보여요.',
     ),
+    h('label', { class: 't-agree', for: 't-start-agree' }, agree, h('span', {}, AGREE_TEXT)),
+    // The documents open from their own buttons below the box, not from links inside its label,
+    // so a tap meant for a link never ticks the box (and each button is a full touch target).
     h(
-      'label',
-      { class: 't-agree', for: 't-start-agree' },
-      agree,
-      h('span', {}, h('a', { href: '/privacy', target: '_blank', rel: 'noopener' }, '개인정보 처리방침'), '을 읽었고 동의해요.'),
+      'p',
+      { class: 't-read' },
+      h('a', { class: 't-read-link', href: TERMS_URL, target: '_blank', rel: 'noopener' }, '이용약관 읽기'),
+      h('a', { class: 't-read-link', href: '/privacy', target: '_blank', rel: 'noopener' }, '개인정보 처리방침 읽기'),
     ),
     error,
     submit,
@@ -74,7 +81,7 @@ export function renderStart(main, ctx, { startTicket, displayName }) {
       return;
     }
     if (!agree.checked) {
-      error.textContent = '개인정보 처리방침에 동의해 주세요.';
+      error.textContent = TERMS_REQUIRED;
       agree.focus();
       return;
     }

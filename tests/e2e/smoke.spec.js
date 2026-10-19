@@ -21,6 +21,7 @@ test('home shows the student code entry first', async ({ page }, testInfo) => {
   await expect(page.getByRole('link', { name: '수업 만들기 →' })).toHaveAttribute('href', '/teacher');
   await expect(page.getByRole('link', { name: '개인정보 처리방침' })).toHaveAttribute('href', '/privacy');
   await expect(page.getByRole('link', { name: '라이선스' })).toHaveAttribute('href', '/licenses');
+  await expect(page.getByRole('link', { name: '이용약관', exact: true })).toHaveAttribute('href', 'https://gyosil.app/terms');
 
   // Student entry is the main action: wider than the teacher link and at least 44px tall.
   const codeBox = await code.boundingBox();

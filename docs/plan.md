@@ -282,7 +282,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
 기준: [`~/dev/gyosil/docs/contest-2026/submission/jigsaw.md`](../../gyosil/docs/contest-2026/submission/jigsaw.md), [`form-guide.md`](../../gyosil/docs/contest-2026/submission/form-guide.md). 서류 작성 중 발견한 부족한 점이다(jigsaw 9db3c17, 포털 gyosil b142e30 기준). 진행은 태스크마다 coder → reviewer → 커밋·푸시. 처리방침이 바뀌면 같은 커밋에서 `public/privacy.html`과 포털 처리방침(`~/dev/gyosil/src/app/(ko)/privacy/page.tsx`)을 고치고 공지 조항 문구는 바꾸지 않는다. P2는 gyosil 저장소 작업이지만 조각조각 항목이라 여기에 둔다.
 
 **필수**
-- [ ] P1 오픈소스·글꼴 라이선스 고지
+- [x] P1 오픈소스·글꼴 라이선스 고지
   - 문제: 앱 안에 라이선스 고지 페이지가 없다(`https://jigsaw.gyosil.app/licenses` 404). 화면용 vendor 고지 `public/js/vendor/LICENSES.md`는 주소로 열리지만 링크가 없고 마크다운 원문이다. Pretendard(OFL 1.1, 저작권 고지·라이선스 전문 표시 조건)는 고지가 없다. 서버 의존성(socket.io·@supabase/supabase-js, MIT)도 고지가 없다. 내장 그림 출처는 `/privacy#pictures`에 있어 문제없다.
   - 근거: `public/index.html:27`·`public/privacy.html:27`(Pretendard jsDelivr), `public/js/vendor/LICENSES.md`, `server/package.json`. 제출 서식1 응모 요건 3·5번, 제안전 규칙 "권리 근거는 앱 안에 표시".
   - 제안: `/licenses` 정적 페이지(글꼴·화면 vendor·서버 의존성의 이름·버전·라이선스·저작권자·전문 링크, "QR Code" 상표 문구, 내장 그림은 `/privacy#pictures`로 안내) + 첫 화면 푸터('개인정보 처리방침 · 그림 출처 · 문의' 옆)에 [라이선스] 링크. CSP·`tests/unit/csp.test.js` 영향 없게 같은 출처 정적 파일로. 다듬 T-license(diary_king 8e8c5d3)와 같은 방식.
@@ -290,7 +290,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
   - 문제: 포털 처리방침이 적용 범위(78행)에 jigsaw.gyosil.app을 넣고 "별도 방침이 있으면 우선"이라 하지만, 7항의 '자체 방침이 있는 서비스' 목록(167-168행)에 조각조각이 없고 '자체 방침이 없는 서비스' 목록에도 없다. 6항 '국내(서울)에서 처리하는 것'의 Supabase 데이터 목록(158행)·AWS Lightsail 서버 목록(159행), 7항 끝 'Vercel 이용 통계도 씁니다' 목록(192행)에서도 빠졌다.
   - 근거: `~/dev/gyosil/src/app/(ko)/privacy/page.tsx:78·158·159·167-168·192`, 실제 사용은 `public/privacy.html` 3항(AWS Lightsail 서울·Supabase 서울·Vercel 통계). spec(gyosil) DoD 3, 제안전 규칙 "처리방침과 설명서의 수집 항목·저장 위치가 같아야".
   - 제안: 167-168행 목록에 `<a href="https://jigsaw.gyosil.app/privacy">조각조각</a>` 추가, 158·159행에 조각조각 추가, 192행 통계 사용 목록에 조각조각 추가. 수집 항목이 늘지 않는 표기 정정이라 시행일 공지. 변경 이력에 한 줄.
-- [ ] P3 교사 '시작하기'의 약관 동의 표시
+- [x] P3 교사 '시작하기'의 약관 동의 표시
   - 문제: '조각조각 시작하기'는 동의 칸에 "개인정보 처리방침을 읽었고 동의해요."만 보여 주는데, 서버는 `core.profiles.terms_agreed_at`(교실앱 공용 약관 동의 시각)을 기록한다. 이용약관 링크가 앱 어디에도 없다.
   - 근거: `public/js/teacher/start-view.js:51`, `server/src/teacher/teachers.js:20-21`, `public/privacy.html:64`('약관 동의 시각(교실 앱 공용)'). 포털 약관 https://gyosil.app/terms (200).
   - 제안: 동의 문구를 "[이용약관]과 [개인정보 처리방침]을 읽었고 동의해요."로 바꾸고 첫 화면 푸터에도 [이용약관] 링크. 문구만 바꾸고 동의 칸 하나는 유지(다른 교실앱 시작하기와 같은 형식인지 확인).
