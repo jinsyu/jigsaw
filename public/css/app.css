@@ -409,6 +409,13 @@
 .doc-list { padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
 .doc h3 { font-size: 16px; font-weight: 700; margin: 14px 0 6px; }
 .doc-credits li { font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.lic-list li { overflow-wrap: anywhere; }
+.lic-text { margin-top: 8px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); background: #fff; }
+.lic-text summary { min-height: 44px; padding: 11px 12px; font-weight: 700; cursor: pointer; }
+.lic-text pre {
+  max-height: 24rem; overflow: auto; margin: 0; padding: 10px 12px; border-top: 1px solid var(--line);
+  font-family: inherit; font-size: 12px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+}
 .doc-table { overflow-x: auto; margin: 4px 0 10px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); background: #fff; }
 .doc-table table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.6; }
 .doc-table caption { text-align: left; padding: 10px 12px 0; font-size: 13px; color: var(--sub); }

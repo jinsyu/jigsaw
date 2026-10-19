@@ -277,3 +277,46 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
   - (c) 개인정보 처리방침 시행일을 운영 공개일 2026년 10월 8일로 채우고 `data-todo` 표시를 없앴다(`privacy.test`).
   - (d) Caddy 전역 로그 필터에 `remote`(tls 로거의 인증서 검증 접속 주소:포트)와 `remote_ip`·`remote_port`·`headers`(admin.api 로거)를 더했다. caddy:2(v2.11.7) 컨테이너에서 validate 와, 필터 전후 로그에서 두 로거의 해당 필드가 지워지는 것을 확인했다(`rt-ops.test`). 서버 반영은 `setup.sh --replace-caddyfile` 재실행.
   - (e) rt 서버를 여러 앱이 함께 쓰는 구조로 바꿨다(사용자 요청 '다른 앱 추가를 염두에 두고 구조 변경', 다른 앱을 실제로 더하지는 않음). `/etc/caddy/Caddyfile` 은 서버 공통(전역 로그 필터와 마지막 줄 `import /etc/caddy/sites/*.caddy` 만, 원본 `scripts/rt/caddy/Caddyfile`)이고 jigsaw 사이트는 `/etc/caddy/sites/jigsaw.caddy`(원본 `scripts/rt/caddy/sites/jigsaw.caddy`)다. journald 설정 이름은 앱 중립인 `zz-retention.conf` 로 바꿨다(T24 (f) 의 `zz-jigsaw.conf` 는 `.bak-<시각>` 으로 옮김). `setup.sh` 는 '서버 공통' → '앱: jigsaw' → 'Caddy 설정' 순서이고, Caddy 설정은 공통 Caddyfile 과 앱 사이트 파일을 함께 바꿔 `caddy validate` 뒤 한 번 reload 한다(실패하면 되돌림). `sites/` 의 다른 파일은 건드리지 않는다. 이전 jigsaw 전용 Caddyfile(커밋 bebaaed·a1e97e9 버전, sha256 으로 확인)은 옵션 없이 `.bak` 보관 후 바꾸고, 그 밖의 다른 내용은 지금처럼 덮지 않고 알린다. 앱 규칙·포트 할당표(jigsaw 3400, 이후 3500·3600…)·DNS·로그 정책·메모리 기준은 `docs/ops.md` 12장, 기존 서버 이전 절차는 13장. Caddy 는 기본으로 reload 때 열린 WebSocket 을 바로 닫으므로, 다른 앱 추가로 jigsaw 수업이 끊기지 않게 `jigsaw.caddy`(와 다른 앱 틀)의 reverse_proxy 에 `stream_close_delay 5m` 를 둔다. reload 전에 열린 연결은 최대 5분 더 이어진 뒤 닫혀 자동 재연결된다(D17). caddy:2 에서 reload 뒤 지연 없음은 바로, 20초는 20초 뒤, 5m 은 5분 동안 끊기지 않음을 WebSocket 으로 확인했다. 사이트 파일 변경은 수업 중에도 되지만 jigsaw 재시작·배포·Caddy 재시작은 여전히 수업 밖에 한다.
+
+## 제안전 제출 전 보완 (2026-10-19)
+기준: [`~/dev/gyosil/docs/contest-2026/submission/jigsaw.md`](../../gyosil/docs/contest-2026/submission/jigsaw.md), [`form-guide.md`](../../gyosil/docs/contest-2026/submission/form-guide.md). 서류 작성 중 발견한 부족한 점이다(jigsaw 9db3c17, 포털 gyosil b142e30 기준). 진행은 태스크마다 coder → reviewer → 커밋·푸시. 처리방침이 바뀌면 같은 커밋에서 `public/privacy.html`과 포털 처리방침(`~/dev/gyosil/src/app/(ko)/privacy/page.tsx`)을 고치고 공지 조항 문구는 바꾸지 않는다. P2는 gyosil 저장소 작업이지만 조각조각 항목이라 여기에 둔다.
+
+**필수**
+- [ ] P1 오픈소스·글꼴 라이선스 고지
+  - 문제: 앱 안에 라이선스 고지 페이지가 없다(`https://jigsaw.gyosil.app/licenses` 404). 화면용 vendor 고지 `public/js/vendor/LICENSES.md`는 주소로 열리지만 링크가 없고 마크다운 원문이다. Pretendard(OFL 1.1, 저작권 고지·라이선스 전문 표시 조건)는 고지가 없다. 서버 의존성(socket.io·@supabase/supabase-js, MIT)도 고지가 없다. 내장 그림 출처는 `/privacy#pictures`에 있어 문제없다.
+  - 근거: `public/index.html:27`·`public/privacy.html:27`(Pretendard jsDelivr), `public/js/vendor/LICENSES.md`, `server/package.json`. 제출 서식1 응모 요건 3·5번, 제안전 규칙 "권리 근거는 앱 안에 표시".
+  - 제안: `/licenses` 정적 페이지(글꼴·화면 vendor·서버 의존성의 이름·버전·라이선스·저작권자·전문 링크, "QR Code" 상표 문구, 내장 그림은 `/privacy#pictures`로 안내) + 첫 화면 푸터('개인정보 처리방침 · 그림 출처 · 문의' 옆)에 [라이선스] 링크. CSP·`tests/unit/csp.test.js` 영향 없게 같은 출처 정적 파일로. 다듬 T-license(diary_king 8e8c5d3)와 같은 방식.
+- [ ] P2 포털 처리방침에 조각조각 반영 (gyosil 저장소)
+  - 문제: 포털 처리방침이 적용 범위(78행)에 jigsaw.gyosil.app을 넣고 "별도 방침이 있으면 우선"이라 하지만, 7항의 '자체 방침이 있는 서비스' 목록(167-168행)에 조각조각이 없고 '자체 방침이 없는 서비스' 목록에도 없다. 6항 '국내(서울)에서 처리하는 것'의 Supabase 데이터 목록(158행)·AWS Lightsail 서버 목록(159행), 7항 끝 'Vercel 이용 통계도 씁니다' 목록(192행)에서도 빠졌다.
+  - 근거: `~/dev/gyosil/src/app/(ko)/privacy/page.tsx:78·158·159·167-168·192`, 실제 사용은 `public/privacy.html` 3항(AWS Lightsail 서울·Supabase 서울·Vercel 통계). spec(gyosil) DoD 3, 제안전 규칙 "처리방침과 설명서의 수집 항목·저장 위치가 같아야".
+  - 제안: 167-168행 목록에 `<a href="https://jigsaw.gyosil.app/privacy">조각조각</a>` 추가, 158·159행에 조각조각 추가, 192행 통계 사용 목록에 조각조각 추가. 수집 항목이 늘지 않는 표기 정정이라 시행일 공지. 변경 이력에 한 줄.
+- [ ] P3 교사 '시작하기'의 약관 동의 표시
+  - 문제: '조각조각 시작하기'는 동의 칸에 "개인정보 처리방침을 읽었고 동의해요."만 보여 주는데, 서버는 `core.profiles.terms_agreed_at`(교실앱 공용 약관 동의 시각)을 기록한다. 이용약관 링크가 앱 어디에도 없다.
+  - 근거: `public/js/teacher/start-view.js:51`, `server/src/teacher/teachers.js:20-21`, `public/privacy.html:64`('약관 동의 시각(교실 앱 공용)'). 포털 약관 https://gyosil.app/terms (200).
+  - 제안: 동의 문구를 "[이용약관]과 [개인정보 처리방침]을 읽었고 동의해요."로 바꾸고 첫 화면 푸터에도 [이용약관] 링크. 문구만 바꾸고 동의 칸 하나는 유지(다른 교실앱 시작하기와 같은 형식인지 확인).
+
+**권장**
+- [ ] R1 교사 올린 사진의 보관 기한과 학생 얼굴 안내
+  - 문제: 교사가 올린 사진은 교사가 지울 때까지 비공개 저장소에 남고 자동 삭제가 없다(2026-10-19 운영 DB 38장). 학생 얼굴이 나온 학급 사진이면 학생 개인정보가 서버에 무기한 남을 수 있다. 올리기 안내는 "학교 방침을 확인한 뒤 올려 주세요"로 약하고, 포털 FAQ("학생 얼굴이나 이름이 드러나지 않는지 확인")와 강도가 다르다. 학운위 판단('필요하지 않음' 잠정)의 근거를 약하게 만든다.
+  - 근거: `public/js/teacher/picture-cards.js:38`, `public/privacy.html:65`(교사가 지울 때까지), `jigsaw.images.last_used_at`(마지막 사용일은 이미 기록), `~/dev/gyosil/src/lib/site.ts` 조각조각 FAQ. 심사 '개인정보 보호'(보유 기간).
+  - 제안: (a) 안내를 "학생 얼굴·이름이 보이는 사진은 올리지 마세요(풍경·작품 사진 권장)."로 바꾸고 올리기 전 확인 체크 하나, (b) 마지막 사용 뒤 1년(또는 학년도 말) 지난 사진 자동 삭제를 서버 주기 정리 작업에 추가. (b)를 하면 처리방침 보관 기간을 같은 커밋에서 고친다.
+- [ ] R2 예시 수업자료·교사 안내서
+  - 문제: 포털 소개(https://gyosil.app/services/jigsaw, 5단계·FAQ)는 있지만 예시 수업 흐름(학급 세우기 40분, 자투리 10분 등)이 없고, 앱 첫 화면·교사 화면에서 그 안내로 가는 링크가 없다. 인쇄용 안내서도 없다.
+  - 근거: 심사 '안내자료(5점)', 서식2 안내자료 칸.
+  - 제안: 교사 '내 수업' 화면에 [사용 안내] 링크(포털 소개), 포털 소개에 예시 수업 흐름 2개 추가, 필요하면 `/guide` 인쇄용 1~2쪽(준비물·전자칠판 띄우기·학생 입장·모둠 편성·도움 설정 고르기·개인정보 안내). 다듬 T-guide 참고.
+- [ ] R3 학생 화면의 방문 통계
+  - 문제: 모든 화면이 `index.html` 하나라 학생 입장·퍼즐 화면에도 Vercel Web Analytics가 실린다. QR 주소 `/join?code=123456`처럼 수업 코드가 주소에 들어간다(코드는 수업 동안만 유효하고 개인정보는 아님). 골든벨은 학생 화면을 통계에서 뺐다.
+  - 근거: `public/index.html:31`, `public/js/teacher/qr.js:7`, `vercel.json` rewrites(`/join`·`/play` → `/`).
+  - 제안: 학생 경로(`/join`·`/play`)에서는 통계 스크립트를 싣지 않거나, `beforeSend`류로 쿼리를 지운 경로만 보내기. 바꾸면 처리방침 '방문 통계' 문구를 같은 커밋에서 맞춘다.
+- [ ] R4 학교망·학교 기기 실측(사용자)
+  - 문제: 실시간 서버 WSS(jigsaw-rt.gyosil.app)를 학교 망·보급 태블릿에서 확인한 기록이 없다(spec '위험 요소'는 "첫 시범 수업에서 확인").
+  - 근거: 심사 '학교 환경 적합성(5점)', 서식2 실행 환경.
+  - 제안: 학교 망에서 교사 PC·학생 태블릿 각 1대로 입장·조각 옮기기·완성까지 확인하고 날짜·기기·브라우저를 서류에 적는다.
+- [ ] R5 내장 사진의 사람·근거 표기 재확인
+  - 문제: CC0는 저작권만 다루므로 사람이 알아볼 만하게 찍힌 사진(예: `trex-skeleton-kids` 박물관 관람 아동)은 초상권 면에서 다시 볼 필요가 있다. `docs/image-candidates.md:199`에 '사람이 찍혔는지 미확인'이 남아 있다. 미국 연방정부 사진(USFWS·NPS·NOAA·USDA 등)은 '퍼블릭 도메인'으로만 적혀 근거(미국 정부 저작물)가 드러나지 않는다.
+  - 근거: `public/images/builtin/index.json`(라이선스 표기), `scripts/builtin-external.json`, 제안전 규칙 "타인 저작물·이미지는 권리 근거와 함께".
+  - 제안: `pnpm images:sheet`로 사람 얼굴이 알아볼 만한 사진을 골라 잘라 내거나 빼고, 미국 정부 사진의 라이선스 이름을 '퍼블릭 도메인(미국 정부 저작물)'처럼 바꿔 그림 출처 목록에 반영.
+- [ ] R6 운영 문서의 서버 사양 갱신
+  - 문제: `docs/ops.md:9·151`이 서버를 1GB(Node 힙 512MB)로 적었지만 2026-10-15에 2GB로 증설했고 여러 앱(골든벨·보드게임·먹이 그물·수학 배틀)과 함께 쓴다. 이전에 적은 후속(`ops.md:385` 포트 표 3800)도 남아 있다.
+  - 근거: `~/dev/gyosil/docs/contest-2026/plan.md:151·154`.
+  - 제안: 서버 표·메모리 기준·포트 표를 실제대로 고친다(문서만).

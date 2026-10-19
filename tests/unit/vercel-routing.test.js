@@ -4,7 +4,7 @@ import { headersFor, resolveRequest, sourceToRegExp } from '../../scripts/lib/ve
 import { matchRoute } from '../../public/js/routes.js';
 
 const config = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url), 'utf8'));
-const files = new Set(['/index.html', '/privacy.html', '/css/base.css', '/robots.txt']);
+const files = new Set(['/index.html', '/privacy.html', '/licenses.html', '/css/base.css', '/robots.txt']);
 const isFile = (p) => files.has(p);
 
 describe('sourceToRegExp', () => {
@@ -24,6 +24,7 @@ describe('resolveRequest with vercel.json', () => {
     ['/css/base.css', { type: 'file', path: '/css/base.css' }],
     ['/privacy', { type: 'file', path: '/privacy.html' }],
     ['/privacy.html', { type: 'redirect', location: '/privacy' }],
+    ['/licenses', { type: 'file', path: '/licenses.html' }],
     ['/index.html', { type: 'redirect', location: '/' }],
     ['/join', { type: 'file', path: '/index.html' }],
     ['/play', { type: 'file', path: '/index.html' }],

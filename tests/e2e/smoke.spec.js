@@ -20,6 +20,7 @@ test('home shows the student code entry first', async ({ page }, testInfo) => {
   await expect(enter).toBeVisible();
   await expect(page.getByRole('link', { name: '수업 만들기 →' })).toHaveAttribute('href', '/teacher');
   await expect(page.getByRole('link', { name: '개인정보 처리방침' })).toHaveAttribute('href', '/privacy');
+  await expect(page.getByRole('link', { name: '라이선스' })).toHaveAttribute('href', '/licenses');
 
   // Student entry is the main action: wider than the teacher link and at least 44px tall.
   const codeBox = await code.boundingBox();
@@ -57,6 +58,15 @@ test('privacy page has no horizontal overflow', async ({ page }, testInfo) => {
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('개인정보 처리방침');
   await expectNoHorizontalOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('privacy.png'), fullPage: true });
+});
+
+test('licenses page has no horizontal overflow and shows the full font license', async ({ page }, testInfo) => {
+  await page.goto('/licenses');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('오픈소스·글꼴 라이선스');
+  await page.getByText('Pretendard 라이선스 전문 보기').click();
+  await expect(page.locator('#ofl-pretendard')).toContainText('SIL OPEN FONT LICENSE Version 1.1');
+  await expectNoHorizontalOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath('licenses.png'), fullPage: true });
 });
 
 test('SEO files, icons and security headers are served', async ({ request }) => {

@@ -6,6 +6,7 @@ const read = (p) => readFileSync(new URL(`../../public/${p}`, import.meta.url), 
 const PAGES = [
   { file: 'index.html', url: `${SITE}/` },
   { file: 'privacy.html', url: `${SITE}/privacy` },
+  { file: 'licenses.html', url: `${SITE}/licenses` },
 ];
 
 describe('public pages metadata', () => {
