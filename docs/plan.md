@@ -286,7 +286,7 @@ T1~T13 은 이전 구조로 만들었다. 화면·퍼즐 모듈은 그대로 쓰
   - 문제: 앱 안에 라이선스 고지 페이지가 없다(`https://jigsaw.gyosil.app/licenses` 404). 화면용 vendor 고지 `public/js/vendor/LICENSES.md`는 주소로 열리지만 링크가 없고 마크다운 원문이다. Pretendard(OFL 1.1, 저작권 고지·라이선스 전문 표시 조건)는 고지가 없다. 서버 의존성(socket.io·@supabase/supabase-js, MIT)도 고지가 없다. 내장 그림 출처는 `/privacy#pictures`에 있어 문제없다.
   - 근거: `public/index.html:27`·`public/privacy.html:27`(Pretendard jsDelivr), `public/js/vendor/LICENSES.md`, `server/package.json`. 제출 서식1 응모 요건 3·5번, 제안전 규칙 "권리 근거는 앱 안에 표시".
   - 제안: `/licenses` 정적 페이지(글꼴·화면 vendor·서버 의존성의 이름·버전·라이선스·저작권자·전문 링크, "QR Code" 상표 문구, 내장 그림은 `/privacy#pictures`로 안내) + 첫 화면 푸터('개인정보 처리방침 · 그림 출처 · 문의' 옆)에 [라이선스] 링크. CSP·`tests/unit/csp.test.js` 영향 없게 같은 출처 정적 파일로. 다듬 T-license(diary_king 8e8c5d3)와 같은 방식.
-- [ ] P2 포털 처리방침에 조각조각 반영 (gyosil 저장소)
+- [x] P2 포털 처리방침에 조각조각 반영 (gyosil 저장소) (2026-10-19 완료: gyosil d6f4fb4)
   - 문제: 포털 처리방침이 적용 범위(78행)에 jigsaw.gyosil.app을 넣고 "별도 방침이 있으면 우선"이라 하지만, 7항의 '자체 방침이 있는 서비스' 목록(167-168행)에 조각조각이 없고 '자체 방침이 없는 서비스' 목록에도 없다. 6항 '국내(서울)에서 처리하는 것'의 Supabase 데이터 목록(158행)·AWS Lightsail 서버 목록(159행), 7항 끝 'Vercel 이용 통계도 씁니다' 목록(192행)에서도 빠졌다.
   - 근거: `~/dev/gyosil/src/app/(ko)/privacy/page.tsx:78·158·159·167-168·192`, 실제 사용은 `public/privacy.html` 3항(AWS Lightsail 서울·Supabase 서울·Vercel 통계). spec(gyosil) DoD 3, 제안전 규칙 "처리방침과 설명서의 수집 항목·저장 위치가 같아야".
   - 제안: 167-168행 목록에 `<a href="https://jigsaw.gyosil.app/privacy">조각조각</a>` 추가, 158·159행에 조각조각 추가, 192행 통계 사용 목록에 조각조각 추가. 수집 항목이 늘지 않는 표기 정정이라 시행일 공지. 변경 이력에 한 줄.
