@@ -45,7 +45,8 @@ describe('scripts/rt/setup.sh env template', () => {
       HOST: '127.0.0.1',
       PORT: '3400',
       RT_TRUST_PROXY: '1',
-      ALLOWED_ORIGINS: 'https://jigsaw.gyosil.app',
+      // jigsaw-gyosil.vercel.app: the same screens for school networks that block *.gyosil.app.
+      ALLOWED_ORIGINS: 'https://jigsaw.gyosil.app,https://jigsaw-gyosil.vercel.app',
       SUPABASE_URL: 'https://ozfzpyumnaaggrlevygz.supabase.co',
     });
   });

@@ -66,6 +66,12 @@ describe('privacy policy (public/privacy.html, spec D14·D15)', () => {
     expect(text).not.toContain('서버 연결 도구');
   });
 
+  it('covers the vercel.app address too, where the browser storage (and so the login) is kept apart', () => {
+    expect(text).toContain('jigsaw.gyosil.app과 같은 서비스를 여는 다른 주소 jigsaw-gyosil.vercel.app');
+    expect(text).toMatch(/브라우저 저장소는 주소마다 따로라.{0,80}따로 로그인/);
+    expect(text).toContain('2026년 10월 24일 바뀐 내용');
+  });
+
   it('applies from the public launch, 8 October 2026, with nothing left for the operator to fill in', () => {
     expect(text).toContain('이 방침은 2026년 10월 8일부터 적용합니다');
     expect(html).not.toContain('data-todo');

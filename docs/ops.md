@@ -76,7 +76,7 @@ curl -s https://rt.gyosil.app/health
 ## 3. 비밀값 (`/etc/jigsaw-rt.env`)
 
 - 파일은 root 소유 600 이다. systemd 가 root 로 읽어 서비스 환경변수로 넘긴다. 저장소·채팅·에이전트에게 값을 주지 않는다.
-- 틀에 미리 채워지는 값(비밀 아님): `NODE_ENV=production`, `HOST=127.0.0.1`, `PORT=3400`, `RT_TRUST_PROXY=1`, `ALLOWED_ORIGINS=https://jigsaw.gyosil.app`, `SUPABASE_URL=https://ozfzpyumnaaggrlevygz.supabase.co`.
+- 틀에 미리 채워지는 값(비밀 아님): `NODE_ENV=production`, `HOST=127.0.0.1`, `PORT=3400`, `RT_TRUST_PROXY=1`, `ALLOWED_ORIGINS=https://jigsaw.gyosil.app,https://jigsaw-gyosil.vercel.app`, `SUPABASE_URL=https://ozfzpyumnaaggrlevygz.supabase.co`.
 - 사용자가 넣는 값:
 
 | 키 | 어디서 |
@@ -315,7 +315,9 @@ group by 1;
 
 - 서버는 `127.0.0.1:3400` 에서만 듣는다. 밖에서는 Caddy(443)로만 들어온다. Lightsail 방화벽은 22·80·443 만 연다.
 - 요청 주소: `RT_TRUST_PROXY=1` 이면 서버는 `X-Forwarded-For` 의 첫 주소를 쓴다. 공통 Caddyfile 과 사이트 파일에 `trusted_proxies` 를 넣지 않았으므로 Caddy 는 클라이언트가 보낸 `X-Forwarded-For` 를 버리고 실제 접속 주소로 다시 쓴다(로컬 Caddy 2.11 로 확인). **`trusted_proxies` 를 넣지 않는다.** 넣으면 위조한 주소로 주소별 제한을 피할 수 있다.
-- 허용 Origin 은 `https://jigsaw.gyosil.app` 하나다. 다른 Origin 의 API·소켓 요청은 403.
+- 허용 Origin 은 `https://jigsaw.gyosil.app` 과 `https://jigsaw-gyosil.vercel.app`(학교망이 *.gyosil.app 을 막을 때 쓰는 주소, gyosil 제안전 plan T24) 둘이다. 다른 Origin 의 API·소켓 요청은 403. 첫 주소는 화면 주소여야 한다(서버가 새 내장 그림 목록을 거기서 읽는다).
+- 교사 로그인은 쿠키가 아니라 rt 서버가 준 토큰(localStorage, `credentials: 'omit'`)이라 vercel.app 화면에서도 그대로 된다. 브라우저 저장소는 주소마다 따로라 두 주소에서 각각 로그인한다.
+- 이미 있는 `/etc/jigsaw-rt.env` 는 `setup.sh` 가 덮어쓰지 않는다. `ALLOWED_ORIGINS` 를 바꾸려면 서버에서 그 줄을 직접 고치고 수업 시간 밖에 `sudo systemctl restart jigsaw-rt` 한다.
 - 서비스는 `jigsaw-rt` 사용자로 돌고 파일 시스템은 읽기만 한다(`ProtectSystem=strict` 등).
 
 ## 10. T25 에서 확인할 것

@@ -18,7 +18,7 @@ describe('pickConfig', () => {
     },
   );
 
-  it.each(['jigsaw.gyosil.app', 'jigsaw-git-main.vercel.app'])('%s uses the hosted rt server and the gyosil Google sign-in', (host) => {
+  it.each(['jigsaw.gyosil.app', 'jigsaw-gyosil.vercel.app', 'jigsaw-git-main.vercel.app'])('%s uses the hosted rt server and the gyosil Google sign-in', (host) => {
     const config = pickConfig(host);
     expect(config).toEqual({
       env: 'remote',

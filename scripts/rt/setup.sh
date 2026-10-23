@@ -269,7 +269,7 @@ if [[ ! -f "$ENV_FILE" ]]; then
   set_default HOST '127.0.0.1'
   set_default PORT '3400'
   set_default RT_TRUST_PROXY '1'
-  set_default ALLOWED_ORIGINS 'https://jigsaw.gyosil.app'
+  set_default ALLOWED_ORIGINS 'https://jigsaw.gyosil.app,https://jigsaw-gyosil.vercel.app'
   set_default SUPABASE_URL 'https://ozfzpyumnaaggrlevygz.supabase.co'
   mv "$ENV_FILE.new" "$ENV_FILE"
   note "틀을 만들었습니다 (root, 600)."
