@@ -11,7 +11,7 @@
 # No `trusted_proxies` anywhere: Caddy ignores an X-Forwarded-For sent by the client and sets it
 # to the real client address, which the apps read (jigsaw: RT_TRUST_PROXY=1).
 {
-	# Browsers send no SNI to an IP address: those connections get the IP certificate (sites/ip-probe.caddy).
+	# Browsers send no SNI to an IP address: those connections get the IP certificate (sites/ip.caddy).
 	default_sni 13.124.90.119
 	log {
 		format filter {
