@@ -20,6 +20,9 @@ export async function asHostedSite(page, baseURL, { csp } = {}) {
     return route.abort('blockedbyclient');
   };
   await page.route(`${HOSTED_RT}/**`, refuse);
+  // The first rt use looks whether the address answers (rt-client.js); here it does, so the
+  // page stays on the direct address.
+  await page.route(`${HOSTED_RT}/health`, (route) => route.fulfill({ status: 200, body: 'ok' }));
   await page.route('https://accounts.google.com/**', refuse);
   await page.routeWebSocket(/^wss?:\/\/rt\.gyosil\.app\//, (ws) => {
     unexpected.push(`WS ${ws.url()}`);

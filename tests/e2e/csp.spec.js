@@ -245,14 +245,14 @@ test('the production CSP without an rt address: the screens say 준비 중 and n
   page.on('request', (request) => hosts.add(new URL(request.url()).host));
   page.on('websocket', (ws) => hosts.add(new URL(ws.url()).host));
   const { unexpected } = await asHostedSite(page, baseURL, { csp: productionCsp });
-  const hostedRtLine = `rtUrl: '${HOSTED_RT}',`;
+  const hostedRtLine = `export const REMOTE_RT_URL = '${HOSTED_RT}';`;
   await page.route(`${SITE}/js/config.js`, async (route) => {
     const response = await route.fetch({ url: `${baseURL}/js/config.js` });
     const text = await response.text();
     expect(text).toContain(hostedRtLine);
     const headers = { ...response.headers() };
     if (headers['content-security-policy']) headers['content-security-policy'] = productionCsp;
-    await route.fulfill({ response, headers, body: text.replace(hostedRtLine, "rtUrl: '',") });
+    await route.fulfill({ response, headers, body: text.replace(hostedRtLine, "export const REMOTE_RT_URL = '';") });
   });
   await watchCsp(page.context());
   const errors = [];
