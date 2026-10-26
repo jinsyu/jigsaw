@@ -12,10 +12,13 @@
 
 const LOCAL_RT_PORT = 3400;
 
+// A push to main deploys this: emptying it puts the hosted screens back to "준비 중". This site's
+// /rt (middleware.js) passes requests on to the same address.
+export const REMOTE_RT_URL = 'https://jigsaw-rt.gyosil.app';
+
 const REMOTE = {
   env: 'remote',
-  // A push to main deploys this: emptying it puts the hosted screens back to "준비 중".
-  rtUrl: 'https://jigsaw-rt.gyosil.app',
+  rtUrl: REMOTE_RT_URL,
   // The public OAuth client ID of the gyosil Google sign-in (the rt server checks the same ID).
   googleClientId: '682345745807-r0ood3p29qp5jvfpfh4mfunpajqvaf7j.apps.googleusercontent.com',
 };
@@ -23,7 +26,7 @@ const REMOTE = {
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
 const PRIVATE_IPV4 = /^(?:10\.\d+|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d+\.\d+$/;
 
-function isLocalHost(hostname) {
+export function isLocalHost(hostname) {
   return LOOPBACK.has(hostname) || PRIVATE_IPV4.test(hostname) || hostname.endsWith('.local');
 }
 

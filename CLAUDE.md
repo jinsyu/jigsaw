@@ -46,7 +46,8 @@ pnpm images:sheet [낱말]   # 내장 그림 썸네일 대조표를 test-results
 
 - 화면은 `jigsaw.gyosil.app`, 실시간 서버는 `jigsaw-rt.gyosil.app`이다. 2026-10-13에 `rt.gyosil.app`에서 바꿨다. 같은 서버를 쓰는 다른 앱(boardgames의 `madang-rt`, ecosystem의 `eco-rt`)과 헷갈리지 않도록 앱 이름을 붙였다.
 - `rt.gyosil.app`은 예전 화면과 캐시된 페이지를 위해 Caddy에 그대로 남겨 둔다. **지우지 않는다.**
-- 실시간 서버 주소를 바꿀 때는 `public/js/config.js`, `vercel.json` CSP `connect-src`, 서버 Caddy 사이트 파일, 관련 테스트를 함께 바꾼다.
+- 실시간 서버 주소를 바꿀 때는 `public/js/config.js`(`REMOTE_RT_URL`), `vercel.json` CSP `connect-src`, 서버 Caddy 사이트 파일, 관련 테스트(`tests/unit/csp.test.js`, `tests/unit/rt-proxy.test.js`)를 함께 바꾼다. CSP 에서 `https://<rt 주소>` 가 빠지면 연결 확인(`/health`)이 늘 실패해 모든 화면이 `/rt` 로 간다.
+- `/rt`(2026-10-26): 학교망이 rt 주소를 막으면 화면이 같은 사이트의 `/rt/*` 를 거쳐 rt 서버에 붙는다(`public/js/rt-client.js` `rtRoute` → `middleware.js` Vercel Routing Middleware, polling 만). `middleware.js` 는 `config.js` 의 `REMOTE_RT_URL` 을 읽으므로 주소를 따로 적지 않는다. 직접 연결의 요청 주소(`/socket.io/?EIO=4…`)는 바꾸지 않는다. 비밀값 `RT_PROXY_SECRET` 은 Vercel 과 `/etc/jigsaw-rt.env` 에 같은 값(`docs/ops.md` '/rt 우회 연결').
 - 같은 화면을 `jigsaw-gyosil.vercel.app`(같은 Vercel 프로젝트 별칭)으로도 연다. 학교망이 `*.gyosil.app` 을 막을 때 쓰는 기본 주소다(2026-10-23). rt 서버 `ALLOWED_ORIGINS` 에 두 주소가 모두 있어야 한다.
 - 학교망이 주소 이름으로 차단하는 경우가 있다(2026-10 rpg·boardgames·news 등). 새 주소에는 game·play 같은 단어를 넣지 않는다.
 

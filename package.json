@@ -26,5 +26,8 @@
     "pg": "^8.23.1",
     "socket.io-client": "4.8.4",
     "vitest": "^5.0.3"
+  },
+  "dependencies": {
+    "@vercel/functions": "3.9.11"
   }
 }

@@ -11,6 +11,7 @@
 // A message from the wrong role is answered { ok: false, reason: 'forbidden' }, a malformed one
 // 'bad-request', too many per second 'rate-limited'. Students act only on their own group's
 // board and teachers only on the class their token owns (checked when connecting).
+import { timingSafeEqual } from 'node:crypto';
 import { Server } from 'socket.io';
 import { nameProblem, normalizeName } from '../../public/js/student/names.js';
 import { createBroadcaster, rooms } from './broadcaster.js';
@@ -48,6 +49,18 @@ export function clientAddress(req, trustProxy) {
     if (typeof forwarded === 'string' && forwarded) return forwarded.split(',')[0].trim();
   }
   return req.socket?.remoteAddress ?? 'unknown';
+}
+
+// Through the screens' /rt (middleware.js) every client comes from Vercel's few addresses, so the
+// address Vercel saw is in x-jigsaw-client. It counts only with the right RT_PROXY_SECRET in
+// x-jigsaw-proxy; otherwise null.
+export function proxiedAddress(req, secret) {
+  const given = req.headers['x-jigsaw-proxy'];
+  const client = req.headers['x-jigsaw-client'];
+  if (!secret || typeof given !== 'string' || typeof client !== 'string' || client === '') return null;
+  const a = Buffer.from(given);
+  const b = Buffer.from(secret);
+  return a.length === b.length && timingSafeEqual(a, b) ? client : null;
 }
 
 export function attachSockets({ httpServer, config, registry, persistence, now, pictureUrl = async () => null, log = console }) {
@@ -98,7 +111,7 @@ export function attachSockets({ httpServer, config, registry, persistence, now, 
   }
 
   io.use((socket, next) => {
-    const address = clientAddress(socket.request, config.trustProxy);
+    const address = proxiedAddress(socket.request, config.proxySecret) ?? clientAddress(socket.request, config.trustProxy);
     if (!connections.tryOpen(address)) return next(new Error('too_many_connections'));
     const who = identify(isObject(socket.handshake.auth) ? socket.handshake.auth : {});
     if (who.error) {

@@ -12,6 +12,7 @@ export function readConfig(env = process.env) {
   const missing = REQUIRED.filter((key) => !env[key]);
   if (missing.length > 0) throw new Error(`환경변수가 비어 있습니다: ${missing.join(', ')}`);
   if (env.SESSION_SECRET.length < 32) throw new Error('SESSION_SECRET 은 32자 이상이어야 합니다.');
+  if (env.RT_PROXY_SECRET && Buffer.byteLength(env.RT_PROXY_SECRET) < 32) throw new Error('RT_PROXY_SECRET 은 32바이트 이상이어야 합니다.');
   const production = env.NODE_ENV === 'production';
   return {
     production,
@@ -28,6 +29,8 @@ export function readConfig(env = process.env) {
     testHooks: !production && env.RT_TEST_HOOKS === '1',
     // Behind Caddy the client address is in X-Forwarded-For.
     trustProxy: env.RT_TRUST_PROXY === '1',
+    // Requests through the screens' /rt (middleware.js) bring it with the client's address.
+    proxySecret: env.RT_PROXY_SECRET || null,
     limits: {
       maxConnections: int(env.RT_MAX_CONNECTIONS, 3000),
       // A whole school can share one public address (NAT), so this is generous.

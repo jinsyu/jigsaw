@@ -7,6 +7,7 @@ import {
   createWindowLimiter,
   createWrongCodeGuard,
 } from '../../server/src/limits.js';
+import { clientAddress, proxiedAddress } from '../../server/src/sockets.js';
 import { signTeacherToken, verifyTeacherToken } from '../../server/src/teacher-token.js';
 
 function clock(start = 1_000_000) {
@@ -138,6 +139,36 @@ describe('config', () => {
     expect(readConfig(base).testHooks).toBe(false);
     expect(readConfig(base).allowedOrigins).toEqual(['https://jigsaw.gyosil.app', 'http://localhost:4173']);
     expect(readConfig(base).limits).toMatchObject({ wrongCodes: 60, wrongCodeBonusPerJoin: 3, wrongCodeBlockMs: 30_000 });
+  });
+});
+
+describe('client address through /rt', () => {
+  const base = { SUPABASE_URL: 'http://127.0.0.1:1', SUPABASE_SERVICE_ROLE_KEY: 'k', SESSION_SECRET: SECRET, ALLOWED_ORIGINS: 'https://jigsaw.gyosil.app' };
+  const secret = 'p'.repeat(48);
+  const req = (headers) => ({ headers, socket: { remoteAddress: '76.76.21.9' } });
+  const proxied = { 'x-jigsaw-proxy': secret, 'x-jigsaw-client': '203.0.113.9', 'x-forwarded-for': '76.76.21.9' };
+
+  it('비밀값이 맞을 때만 /rt 가 넘긴 주소를 믿는다', () => {
+    expect(proxiedAddress(req(proxied), secret)).toBe('203.0.113.9');
+    expect(proxiedAddress(req({ ...proxied, 'x-jigsaw-proxy': 'q'.repeat(48) }), secret)).toBeNull();
+    expect(proxiedAddress(req({ ...proxied, 'x-jigsaw-proxy': 'short' }), secret)).toBeNull();
+    expect(proxiedAddress(req({ 'x-jigsaw-client': '203.0.113.9' }), secret)).toBeNull();
+    expect(proxiedAddress(req({ ...proxied, 'x-jigsaw-client': '' }), secret)).toBeNull();
+    expect(proxiedAddress(req(proxied), null)).toBeNull();
+    // Without it the address is the one it always was.
+    expect(clientAddress(req(proxied), true)).toBe('76.76.21.9');
+  });
+
+  it('RT_PROXY_SECRET 은 없어도 되고, 있으면 32바이트 이상이어야 하며 값은 말하지 않는다', () => {
+    expect(readConfig(base).proxySecret).toBeNull();
+    expect(readConfig({ ...base, RT_PROXY_SECRET: secret }).proxySecret).toBe(secret);
+    const short = 'short-proxy-secret';
+    expect(() => readConfig({ ...base, RT_PROXY_SECRET: short })).toThrow(/RT_PROXY_SECRET.*32바이트/);
+    try {
+      readConfig({ ...base, RT_PROXY_SECRET: short });
+    } catch (error) {
+      expect(error.message).not.toContain(short);
+    }
   });
 });
 

@@ -19,6 +19,7 @@ const SERVER_KEYS = [
   'SUPABASE_ANON_KEY',
   'SESSION_SECRET',
   'GOOGLE_CLIENT_ID',
+  'RT_PROXY_SECRET',
 ];
 
 describe('server/.env.example', () => {

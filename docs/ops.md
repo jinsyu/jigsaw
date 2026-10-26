@@ -8,7 +8,7 @@
 |---|---|
 | 서버 | AWS Lightsail 서울, Ubuntu 24.04, 1GB, 고정 IP `13.124.90.119`, 방화벽 22·80·443 |
 | 주소 | `jigsaw-rt.gyosil.app`, `rt.gyosil.app` A 레코드 → 고정 IP. Caddy 가 HTTPS 인증서를 자동으로 받는다. 화면(`public/js/config.js`, CSP)은 2026-10-13 부터 `jigsaw-rt` 를 쓴다. 앱 이름이 드러나 헷갈리지 않게 하려고 바꿨고, `rt` 는 예전 화면용으로 남긴다(지우지 않는다) |
-| 흐름 | 브라우저 → Caddy(443) → `127.0.0.1:3400` Node 24 (`server/src/index.js`) → Supabase gyosil |
+| 흐름 | 브라우저 → Caddy(443) → `127.0.0.1:3400` Node 24 (`server/src/index.js`) → Supabase gyosil. 학교망이 `jigsaw-rt.gyosil.app` 을 막으면 브라우저 → 화면 주소의 `/rt` (Vercel Routing Middleware `middleware.js`) → Caddy(443) → 같은 서버 (2026-10-26, 아래 '4. 배포'의 '/rt 우회 연결') |
 | 코드 | `/opt/jigsaw` (공개 저장소 `https://github.com/jinsyu/jigsaw.git` 의 main, root 소유). 서버는 `server/` 만 실행하고, 퍼즐 규칙은 `public/js/puzzle/` 를 그대로 읽는다 |
 | 실행 사용자 | `jigsaw-rt` (시스템 사용자, 로그인 셸 없음, 코드는 읽기만) |
 | 서비스 | `jigsaw-rt.service` (`scripts/rt/jigsaw-rt.service`) |
@@ -85,6 +85,7 @@ curl -s https://rt.gyosil.app/health
 | `SUPABASE_ANON_KEY` | 같은 곳의 공개 키 |
 | `SESSION_SECRET` | 서버에서 `openssl rand -hex 32` (비밀, 32자 이상) |
 | `GOOGLE_CLIENT_ID` | Google Cloud OAuth 클라이언트 ID (공개 값) |
+| `RT_PROXY_SECRET` | 선택. `openssl rand -hex 32` (비밀, 32바이트 이상). Vercel 운영 환경 변수 `RT_PROXY_SECRET` 과 **같은 값**. 짧으면 서버가 시작하지 않는다(값은 출력하지 않음) |
 
 - 값에 공백·`$`·`#` 같은 문자가 있으면 작은따옴표로 감싼다(`KEY='값'`).
 - `NODE_ENV` 는 `production` 이어야 한다(아니면 `setup.sh` 가 멈춘다). 유닛도 `NODE_ENV=production` 을 넣고 `RT_TEST_HOOKS` 를 마지막에 지우므로 시험 훅은 운영에서 켜지지 않는다.
@@ -106,6 +107,27 @@ sudo bash /opt/jigsaw/scripts/rt/deploy.sh
 **내장 그림만 더한 커밋은 rt 서버 배포가 필요 없다.** 서버는 시작할 때 `public/images/builtin/index.json` 을 읽고, 모르는 그림 키로 수업을 만들려 하면 화면 쪽 사본(`ALLOWED_ORIGINS` 첫 주소 + `/images/builtin/index.json`)을 받아 목록에 더한다(1분에 한 번까지, 실패하면 `[builtin]` 오류 로그). 그래서 Vercel 배포가 끝나면 새 그림으로 바로 수업을 열 수 있다. 서버 코드·`public/js/puzzle/`·`scripts/rt/` 가 바뀐 커밋은 지금처럼 배포한다.
 
 `scripts/rt/` 의 유닛·Caddy 파일(`scripts/rt/caddy/`)·journald 설정이나 `setup.sh` 가 바뀐 커밋은 `deploy.sh` 뒤에 `sudo bash /opt/jigsaw/scripts/rt/setup.sh` 를 한 번 더 실행해 서버에 반영한다(바뀐 것만 설치하고, 유닛이 바뀌면 서비스를 다시 시작한다).
+
+### /rt 우회 연결 (2026-10-26)
+
+일부 학교망이 `*.gyosil.app` 을 통째로 막는다. 화면(`jigsaw-gyosil.vercel.app`)은 열리는데 rt 서버 주소에 닿지 못하면, 화면이 같은 사이트의 `/rt` 를 거쳐 rt 서버에 붙는다.
+
+- 화면(`public/js/rt-client.js` `rtRoute`): rt 를 처음 쓸 때 페이지마다 한 번 `https://jigsaw-rt.gyosil.app/health` 에 `no-cors` 로 닿아 본다(3초). 닿으면 지금과 똑같이 직접 연결(WebSocket 포함), 안 닿으면 HTTP 는 `<화면 주소>/rt/api/...`, 소켓은 `<화면 주소>/rt/socket.io` 에 **polling 만**으로 붙는다(Vercel 은 WebSocket 을 넘기지 않는다). 로컬 rt 서버(localhost·사설 IP·`.local`)는 확인 없이 직접 연결한다.
+- Vercel(`middleware.js`, `/rt/:path*` 에만): `/rt/socket.io` → `https://jigsaw-rt.gyosil.app/socket.io/`, 그 밖의 `/rt/X` → `.../X` (쿼리 유지). 같은 출처 polling 은 Origin 을 보내지 않으므로 Origin 이 없으면 화면 주소를 채운다(다른 사이트 Origin 은 그대로 넘겨 서버가 403). 쿠키는 넘기지 않는다. `RT_PROXY_SECRET` 이 있으면 `x-jigsaw-proxy`(비밀값)·`x-jigsaw-client`(Vercel 이 본 접속 주소)를 붙이고, 들어온 같은 이름 머리글은 먼저 지운다.
+- rt 서버(`server/src/sockets.js` `proxiedAddress`): `x-jigsaw-proxy` 가 `RT_PROXY_SECRET` 과 같을 때만(`timingSafeEqual`) `x-jigsaw-client` 를 접속 주소로 쓴다(HTTP 요청 수 제한·틀린 코드 제한·주소별 연결 수 모두). 아니면 예전처럼 `X-Forwarded-For`. 비밀값이 없으면 Vercel 을 거친 접속은 Vercel 주소 몇 개로 세어져 한 주소 한도(연결 200, 요청 분당 1200)에 걸릴 수 있다.
+- 교사 사진 올리기는 WebP 최대 3MB(3,145,728바이트)라 Routing Middleware 요청 본문 한도 4MB 안이다(로컬 `vercel dev` 로 3MB 전달 확인).
+- 로컬 확인: `RT_PROXY_TARGET=http://127.0.0.1:<rt 포트> vercel dev` 로 `/rt` 를 로컬 rt 서버로 보낼 수 있다. 운영에는 `RT_PROXY_TARGET` 을 넣지 않는다.
+
+배포 때 할 일(한 번):
+
+1. 비밀값을 만든다: `openssl rand -hex 32`. 채팅·저장소·에이전트에게 주지 않는다.
+2. Vercel 프로젝트 `jigsaw` 의 **Production** 환경 변수에 `RT_PROXY_SECRET` 으로 넣는다. 환경 변수는 그다음 배포부터 적용되므로 main 푸시 전에 넣는다(푸시 뒤에 넣었으면 다시 배포).
+3. rt 서버 `/etc/jigsaw-rt.env` 에 `RT_PROXY_SECRET=<같은 값>` 한 줄을 더한다(`sudo nano /etc/jigsaw-rt.env`).
+4. main 푸시 → Vercel 이 `middleware.js` 와 새 화면을 배포한다.
+5. 수업 시간 밖에 `sudo bash /opt/jigsaw/scripts/rt/deploy.sh` (새 서버 코드 + 3의 값 반영을 위해 **재시작 필요**). Caddy·`setup.sh` 는 바뀌지 않았다.
+6. 확인: `curl -s https://jigsaw-gyosil.vercel.app/rt/health` 가 `{"ok":true,...}`. 막힌 학교망을 흉내 내려면 브라우저 개발자 도구에서 `jigsaw-rt.gyosil.app` 요청을 막고(Request blocking) 새로 고친 뒤 `/rt/socket.io?EIO=4&transport=polling` 요청이 보이는지 본다.
+
+4와 5 사이에는 Vercel 을 거친 접속만 Vercel 주소로 세어진다(예전에는 아예 못 붙던 학교). 직접 연결은 바뀌지 않는다.
 
 ### 되돌리기
 
@@ -316,6 +338,7 @@ group by 1;
 - 서버는 `127.0.0.1:3400` 에서만 듣는다. 밖에서는 Caddy(443)로만 들어온다. Lightsail 방화벽은 22·80·443 만 연다.
 - 요청 주소: `RT_TRUST_PROXY=1` 이면 서버는 `X-Forwarded-For` 의 첫 주소를 쓴다. 공통 Caddyfile 과 사이트 파일에 `trusted_proxies` 를 넣지 않았으므로 Caddy 는 클라이언트가 보낸 `X-Forwarded-For` 를 버리고 실제 접속 주소로 다시 쓴다(로컬 Caddy 2.11 로 확인). **`trusted_proxies` 를 넣지 않는다.** 넣으면 위조한 주소로 주소별 제한을 피할 수 있다.
 - 허용 Origin 은 `https://jigsaw.gyosil.app` 과 `https://jigsaw-gyosil.vercel.app`(학교망이 *.gyosil.app 을 막을 때 쓰는 주소, gyosil 제안전 plan T24) 둘이다. 다른 Origin 의 API·소켓 요청은 403. 첫 주소는 화면 주소여야 한다(서버가 새 내장 그림 목록을 거기서 읽는다).
+- 화면 주소의 `/rt`(Vercel)를 거친 요청은 Caddy 가 `X-Forwarded-For` 를 Vercel 주소로 쓴다. 그래서 진짜 접속 주소는 `x-jigsaw-client` 로 오고, 서버는 `x-jigsaw-proxy` 가 `RT_PROXY_SECRET` 과 같을 때만 믿는다. 비밀값이 새면 누구나 주소를 꾸며 주소별 제한을 피할 수 있으니 바꾼다(Vercel 과 `/etc/jigsaw-rt.env` 둘 다, 재시작). Vercel 을 거친 요청에도 Origin 검사는 그대로다(Origin 이 없을 때만 화면 주소로 채운다).
 - 교사 로그인은 쿠키가 아니라 rt 서버가 준 토큰(localStorage, `credentials: 'omit'`)이라 vercel.app 화면에서도 그대로 된다. 브라우저 저장소는 주소마다 따로라 두 주소에서 각각 로그인한다.
 - 이미 있는 `/etc/jigsaw-rt.env` 는 `setup.sh` 가 덮어쓰지 않는다. `ALLOWED_ORIGINS` 를 바꾸려면 서버에서 그 줄을 직접 고치고 수업 시간 밖에 `sudo systemctl restart jigsaw-rt` 한다.
 - 서비스는 `jigsaw-rt` 사용자로 돌고 파일 시스템은 읽기만 한다(`ProtectSystem=strict` 등).

@@ -1,11 +1,47 @@
 // The screens' way to the rt server (jigsaw-rt.gyosil.app, locally pnpm rt:dev): JSON requests over
 // fetch and socket.io connections. The address comes from config.js (rtUrl); when it is empty
-// the screens show "준비 중" and never get here.
+// the screens show "준비 중" and never get here. When that address does not answer, both go
+// through this site's /rt instead (rtRoute below).
 //
 // socket.io-client is a pinned copy in js/vendor (no CDN, no script from the rt server), loaded
 // only by the screens that keep a connection open.
 
+import { isLocalHost } from './config.js';
+
 const SOCKET_IO_MODULE = new URL('./vendor/socket.io-4.8.4.esm.min.js', import.meta.url).href;
+
+// Some school networks block the rt address but not this site. Then the screens go through this
+// site's /rt (middleware.js), which Vercel passes on without WebSocket, so the socket stays on
+// long polling. The proxied socket path has no trailing slash; middleware.js maps it to /socket.io/.
+export const RT_PROXY_PATH = '/rt';
+export const PROBE_TIMEOUT_MS = 3000;
+
+let probe = null;
+
+// One look per page load whether the rt address answers (any answer, even an opaque one).
+function reachable(rtUrl) {
+  if (probe?.rtUrl !== rtUrl) {
+    const answered = fetch(`${rtUrl}/health`, { mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) }).then(
+      () => true,
+      () => false,
+    );
+    probe = { rtUrl, answered };
+  }
+  return probe.answered;
+}
+
+/**
+ * How this page reaches the rt server: straight to rtUrl, or through this site's /rt when rtUrl
+ * does not answer. A local rt server (and a page outside a browser) is always straight.
+ * @param {string} rtUrl
+ * @returns {Promise<{ http: string, socketUrl: string, socketPath: string, pollingOnly: boolean }>}
+ */
+export async function rtRoute(rtUrl) {
+  const direct = { http: rtUrl, socketUrl: rtUrl, socketPath: '/socket.io/', pollingOnly: false };
+  const origin = globalThis.location?.origin;
+  if (!origin || isLocalHost(new URL(rtUrl).hostname) || (await reachable(rtUrl))) return direct;
+  return { http: `${origin}${RT_PROXY_PATH}`, socketUrl: origin, socketPath: `${RT_PROXY_PATH}/socket.io`, pollingOnly: true };
+}
 
 // A refused or failed request. `code` is the server's error name (invalid_token, image_in_use,
 // …), 'network' when the server could not be reached, 'server_error' for anything else.
@@ -44,9 +80,10 @@ export async function rtRequest(rtUrl, path, { method = 'GET', token, json, body
   } else if (contentType) {
     headers['content-type'] = contentType;
   }
+  const { http } = await rtRoute(rtUrl);
   let res;
   try {
-    res = await fetchImpl(`${rtUrl}${path}`, { method, headers, body: payload, mode: 'cors', credentials: 'omit', cache: 'no-store' });
+    res = await fetchImpl(`${http}${path}`, { method, headers, body: payload, mode: 'cors', credentials: 'omit', cache: 'no-store' });
   } catch (cause) {
     throw new RtError('network', 0, cause);
   }
@@ -77,9 +114,11 @@ function loadSocketIo() {
  * @param {object} auth  { role, token, ... } (server/src/sockets.js)
  */
 export async function openSocket(rtUrl, auth) {
-  const { io } = await loadSocketIo();
-  return io(rtUrl, {
-    path: '/socket.io/',
+  const [{ io }, route] = await Promise.all([loadSocketIo(), rtRoute(rtUrl)]);
+  return io(route.socketUrl, {
+    path: route.socketPath,
+    // socket.io drops a trailing slash from `path` and adds one back only with addTrailingSlash on.
+    ...(route.pollingOnly ? { transports: ['polling'], addTrailingSlash: false } : {}),
     auth,
     withCredentials: false,
     reconnectionDelay: 1000,

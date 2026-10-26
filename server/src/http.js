@@ -17,7 +17,7 @@
 import { readFileSync } from 'node:fs';
 import { imagePath, MAX_BYTES as MAX_IMAGE_BYTES } from './teacher/images.js';
 import { createWindowLimiter, createWrongCodeGuard } from './limits.js';
-import { clientAddress } from './sockets.js';
+import { clientAddress, proxiedAddress } from './sockets.js';
 import { signStartTicket, signTeacherToken, verifyStartTicket, verifyTeacherToken } from './teacher-token.js';
 
 const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
@@ -347,7 +347,7 @@ export function createHttpHandler({
   async function handle(req, res) {
     try {
       if (state.closing) throw new HttpError(503, 'shutting_down');
-      const address = clientAddress(req, config.trustProxy);
+      const address = proxiedAddress(req, config.proxySecret) ?? clientAddress(req, config.trustProxy);
       if (!perAddress.hit(address)) throw new HttpError(429, 'rate_limited');
       const path = new URL(req.url, 'http://rt.local').pathname;
       if (req.method === 'GET' && path === '/health') return health(req, res);
