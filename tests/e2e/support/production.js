@@ -1,11 +1,13 @@
 // The hosted site in a browser test without touching the hosted servers: this checkout is
 // served at https://jigsaw.gyosil.app (so config.js picks the hosted rt server and Google
-// client ID), and every request to jigsaw-rt.gyosil.app or Google stays inside the test. A test
+// client ID), and every request to jigsaw-rt.gyosil.app, the server's IP address or Google stays
+// inside the test. A test
 // answers the requests it expects with page.route (later routes win); anything else is
 // refused and recorded in `unexpected`.
 
 export const SITE = 'https://jigsaw.gyosil.app';
 export const HOSTED_RT = 'https://jigsaw-rt.gyosil.app';
+export const HOSTED_RT_IP = 'https://13.124.90.119';
 export const HOSTED_CLIENT_ID = '682345745807-r0ood3p29qp5jvfpfh4mfunpajqvaf7j.apps.googleusercontent.com';
 
 /**
@@ -20,11 +22,13 @@ export async function asHostedSite(page, baseURL, { csp } = {}) {
     return route.abort('blockedbyclient');
   };
   await page.route(`${HOSTED_RT}/**`, refuse);
-  // The first rt use looks whether the address answers (rt-client.js); here it does, so the
-  // page stays on the direct address.
+  await page.route(`${HOSTED_RT_IP}/**`, refuse);
+  // The first rt use looks whether the rt address and the IP address answer (rt-client.js); here
+  // both do, so the page stays on the direct address and never uses the IP address beyond /health.
   await page.route(`${HOSTED_RT}/health`, (route) => route.fulfill({ status: 200, body: 'ok' }));
+  await page.route(`${HOSTED_RT_IP}/jigsaw/health`, (route) => route.fulfill({ status: 200, body: 'ok' }));
   await page.route('https://accounts.google.com/**', refuse);
-  await page.routeWebSocket(/^wss?:\/\/rt\.gyosil\.app\//, (ws) => {
+  await page.routeWebSocket(/^wss?:\/\/(rt\.gyosil\.app|13\.124\.90\.119)\//, (ws) => {
     unexpected.push(`WS ${ws.url()}`);
     ws.close();
   });

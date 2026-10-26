@@ -102,15 +102,15 @@
       <table>
         <thead><tr><th scope="col">업체</th><th scope="col">맡기는 일</th><th scope="col">다루는 정보</th><th scope="col">처리 장소</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Amazon Web Services(AWS Lightsail)</th><td data-label="맡기는 일">실시간 서버(퍼즐 판정·동기화, 수업 진행)</td><td data-label="다루는 정보">퍼즐 진행, 수업 중 학생 이름과 접속 상태(메모리에서만, 저장하지 않음), 요청 수 제한용 IP 주소(메모리에서만), 운영 기록(14일)</td><td data-label="처리 장소">AWS Lightsail 서울</td></tr>
+          <tr><th scope="row">Amazon Web Services(AWS Lightsail)</th><td data-label="맡기는 일">실시간 서버(퍼즐 판정·동기화, 수업 진행). 학교망이 실시간 서버 주소를 막으면 화면은 서버 IP 주소(13.124.90.119, 같은 실시간 서버)로 바로 연결하며, 이때 다른 업체를 거치지 않습니다</td><td data-label="다루는 정보">퍼즐 진행, 수업 중 학생 이름과 접속 상태(메모리에서만, 저장하지 않음), 요청 수 제한용 IP 주소(메모리에서만), 운영 기록(14일)</td><td data-label="처리 장소">AWS Lightsail 서울</td></tr>
           <tr><th scope="row">Supabase Inc.</th><td data-label="맡기는 일">데이터베이스, 교사 로그인 확인, 그림 저장소</td><td data-label="다루는 정보">교사 계정·이름, 올린 그림, 수업 정보, 학생 번호·모둠 배정(이름 없음)</td><td data-label="처리 장소">Supabase 서울(AWS 서울 지역)</td></tr>
-          <tr><th scope="row">Vercel Inc.</th><td data-label="맡기는 일">웹사이트 파일 전달(호스팅), 방문 통계(Web Analytics), 학교망이 실시간 서버 주소를 막을 때 화면과 실시간 서버 사이의 내용 전달</td><td data-label="다루는 정보">접속 기록(IP 주소 등), 방문 통계(페이지 주소·나라·기기 종류, 이름·IP 주소 저장 없음), 막힌 학교에서 실시간 서버로 오가는 내용(퍼즐 진행, 학생 이름 포함, 전달만 하고 저장하지 않음)</td><td data-label="처리 장소">Vercel(전 세계 전송망)</td></tr>
+          <tr><th scope="row">Vercel Inc.</th><td data-label="맡기는 일">웹사이트 파일 전달(호스팅), 방문 통계(Web Analytics), 실시간 서버 주소와 서버 IP 주소(13.124.90.119, 같은 실시간 서버) 모두에 닿지 않는 학교망에서만 화면과 실시간 서버 사이의 내용 전달</td><td data-label="다루는 정보">접속 기록(IP 주소 등), 방문 통계(페이지 주소·나라·기기 종류, 이름·IP 주소 저장 없음), 막힌 학교에서 실시간 서버로 오가는 내용(퍼즐 진행, 학생 이름 포함, 전달만 하고 저장하지 않음)</td><td data-label="처리 장소">Vercel(전 세계 전송망)</td></tr>
           <tr><th scope="row">jsDelivr</th><td data-label="맡기는 일">글꼴(Pretendard) 파일 전달</td><td data-label="다루는 정보">글꼴을 받을 때의 접속 기록(IP 주소 등)</td><td data-label="처리 장소">전 세계 전송망</td></tr>
           <tr><th scope="row">Google LLC</th><td data-label="맡기는 일">교사 구글 로그인</td><td data-label="다루는 정보">교사가 로그인할 때의 구글 계정 정보</td><td data-label="처리 장소">구글 서버</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="doc-note">실시간 서버와 데이터베이스는 서울에 있습니다. 위 업체는 해외 기업이어서 웹사이트 파일 전달·글꼴·구글 로그인 과정의 접속 기록과 막힌 학교에서 Vercel을 거쳐 실시간 서버로 가는 내용은 국외 서버에서 처리될 수 있습니다. 서비스를 이용하는 동안 인터넷으로 전송되고, 보관 기간은 위 1번과 같습니다.</p>
+    <p class="doc-note">실시간 서버와 데이터베이스는 서울에 있습니다. 위 업체는 해외 기업이어서 웹사이트 파일 전달·글꼴·구글 로그인 과정의 접속 기록과 실시간 서버 주소와 서버 IP 주소가 모두 막힌 학교에서 Vercel을 거쳐 실시간 서버로 가는 내용은 국외 서버에서 처리될 수 있습니다. 서비스를 이용하는 동안 인터넷으로 전송되고, 보관 기간은 위 1번과 같습니다.</p>
   </section>
 
   <section aria-labelledby="safety">
@@ -521,7 +521,7 @@
     <p class="doc-note">2026년 10월 11일 바뀐 내용: 쿠키 없는 방문 통계(Vercel Web Analytics)를 더했습니다.</p>
     <p class="doc-note">2026년 10월 15일 바뀐 내용: 문의 이메일을 바꾸고 개인정보 보호책임자를 적었습니다. 학생 이름 칸의 안내와 전화번호·주민등록번호·이메일·금지어 검사를 더했습니다. 방침을 바꿀 때 공지하는 시기를 정했습니다.</p>
     <p class="doc-note">2026년 10월 24일 바뀐 내용: 같은 서비스를 여는 다른 주소 jigsaw-gyosil.vercel.app을 적용 범위에 더하고, 브라우저 저장소가 주소마다 따로라 두 주소에서 각각 로그인한다는 점을 적었습니다. 수집 항목은 늘지 않았습니다.</p>
-    <p class="doc-note">2026년 10월 26일 바뀐 내용: 학교망이 실시간 서버 주소를 막으면 화면이 Vercel(이 사이트 주소)을 거쳐 실시간 서버에 연결한다는 점을 적었습니다. 수집 항목은 늘지 않았습니다.</p>
+    <p class="doc-note">2026년 10월 26일 바뀐 내용: 학교망이 실시간 서버 주소를 막으면 화면이 먼저 서버 IP 주소(13.124.90.119, 같은 실시간 서버)로 바로 연결하고, 실시간 서버 주소와 서버 IP 주소 모두에 닿지 않을 때만 Vercel(이 사이트 주소)을 거쳐 실시간 서버에 연결한다는 점을 적었습니다. 서버 IP 주소로의 연결은 같은 서버로 바로 가므로 다른 업체에 전달되지 않습니다. 수집 항목은 늘지 않았습니다.</p>
   </section>
 </main>
 </body>

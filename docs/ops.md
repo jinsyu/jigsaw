@@ -8,14 +8,15 @@
 |---|---|
 | 서버 | AWS Lightsail 서울, Ubuntu 24.04, 1GB, 고정 IP `13.124.90.119`, 방화벽 22·80·443 |
 | 주소 | `jigsaw-rt.gyosil.app`, `rt.gyosil.app` A 레코드 → 고정 IP. Caddy 가 HTTPS 인증서를 자동으로 받는다. 화면(`public/js/config.js`, CSP)은 2026-10-13 부터 `jigsaw-rt` 를 쓴다. 앱 이름이 드러나 헷갈리지 않게 하려고 바꿨고, `rt` 는 예전 화면용으로 남긴다(지우지 않는다) |
-| 흐름 | 브라우저 → Caddy(443) → `127.0.0.1:3400` Node 24 (`server/src/index.js`) → Supabase gyosil. 학교망이 `jigsaw-rt.gyosil.app` 을 막으면 브라우저 → 화면 주소의 `/rt` (Vercel Routing Middleware `middleware.js`) → Caddy(443) → 같은 서버 (2026-10-26, 아래 '4. 배포'의 '/rt 우회 연결') |
+| 흐름 | 브라우저 → Caddy(443) → `127.0.0.1:3400` Node 24 (`server/src/index.js`) → Supabase gyosil. 학교망이 `jigsaw-rt.gyosil.app` 을 막으면 브라우저 → `https://13.124.90.119/jigsaw/...`(서버 IP 주소, Caddy IP 사이트) → 같은 서버, 그것도 막히면 브라우저 → 화면 주소의 `/rt` (Vercel Routing Middleware `middleware.js`) → Caddy(443) → 같은 서버 (2026-10-26, 아래 '4. 배포'의 '서버 IP 경로'·'/rt 우회 연결') |
 | 코드 | `/opt/jigsaw` (공개 저장소 `https://github.com/jinsyu/jigsaw.git` 의 main, root 소유). 서버는 `server/` 만 실행하고, 퍼즐 규칙은 `public/js/puzzle/` 를 그대로 읽는다 |
 | 실행 사용자 | `jigsaw-rt` (시스템 사용자, 로그인 셸 없음, 코드는 읽기만) |
 | 서비스 | `jigsaw-rt.service` (`scripts/rt/jigsaw-rt.service`) |
 | 비밀값 | `/etc/jigsaw-rt.env` (root, 600). 키 목록과 설명은 `server/.env.example` |
 | 백업 | `jigsaw-backup.timer` → `scripts/db/backup.sh`, 파일은 `/var/backups/jigsaw` (600), 접속 주소는 `/etc/jigsaw-backup.env` (root, 600) |
 | 로그 | journald, 14일 보관 (`/etc/systemd/journald.conf.d/zz-retention.conf`, 서버 전체) |
-| Caddy (서버 공통) | `/etc/caddy/Caddyfile` (`scripts/rt/caddy/Caddyfile`): 전역 옵션(기본 로그(오류·tls·admin.api)에서 접속자 주소·포트·요청 헤더 제거)과 마지막 줄 `import /etc/caddy/sites/*.caddy` 만 |
+| Caddy (서버 공통) | `/etc/caddy/Caddyfile` (`scripts/rt/caddy/Caddyfile`): 전역 옵션(`default_sni 13.124.90.119`, 기본 로그(오류·tls·admin.api)에서 접속자 주소·포트·요청 헤더 제거)과 마지막 줄 `import /etc/caddy/sites/*.caddy` 만 |
+| Caddy (IP 사이트, 서버 공통) | `/etc/caddy/sites/ip.caddy` (`scripts/rt/caddy/sites/ip.caddy`): `https://13.124.90.119/<접두>/X` → 그 앱의 `127.0.0.1:<포트>/X`. 인증서는 Let's Encrypt IP 인증서(6일, Caddy 가 자동 갱신) |
 | Caddy (jigsaw 사이트) | `/etc/caddy/sites/jigsaw.caddy` (`scripts/rt/caddy/sites/jigsaw.caddy`): `rt.gyosil.app`·`jigsaw-rt.gyosil.app` → `127.0.0.1:3400`. 접근 로그 없음, `trusted_proxies` 없음 |
 
 - 저장소가 공개라 서버는 https 로 clone·pull 한다. **deploy key·GitHub 토큰은 쓰지 않는다.** 저장소를 비공개로 바꾸면 그때 읽기 전용 deploy key 를 만든다.
@@ -63,10 +64,11 @@ curl -s https://rt.gyosil.app/health
 | 앱 | 백업 타이머 | 유닛 설치, `/etc/jigsaw-backup.env` 틀. 접속 주소가 있으면 타이머 켬 | 같으면 건너뜀 |
 | 앱 | 서비스 | 유닛 설치·켜기·시작 후 `/health` 확인(30초) | 유닛이 같고 실행 중이면 다시 시작하지 않음 |
 | Caddy 설정 | 앱 사이트 파일 | `/etc/caddy/sites/jigsaw.caddy` 설치. **`sites/` 의 다른 파일(다른 앱)은 건드리지 않는다** | 같으면 건너뜀 |
-| Caddy 설정 | 공통 Caddyfile | 없으면 넣음. 같으면 그대로. 이전 jigsaw 전용 Caddyfile(사이트 블록이 들어 있던 저장소 버전, sha256 으로 확인)이면 `.bak-<시각>` 으로 보관 후 교체. 그 밖에 다르면 **덮지 않고 알림** (`--replace-caddyfile` 이면 `.bak-<시각>` 으로 보관 후 교체) | 같으면 건너뜀 |
-| Caddy 설정 | 검사·적용 | 바뀐 것이 있으면 `caddy validate` → 통과하면 `systemctl reload caddy`(재시작 아님). 실패하면 이번에 바꾼 두 파일을 되돌리고 멈춤(Caddy 는 이전 설정 그대로) | 바뀐 것이 없으면 reload 하지 않음 |
+| Caddy 설정 | 공통 IP 사이트 파일 | `/etc/caddy/sites/ip.caddy` 설치(모든 앱의 rt 서버를 서버 IP 주소로, 아래 '서버 IP 경로') | 같으면 건너뜀 |
+| Caddy 설정 | 공통 Caddyfile | 없으면 넣음. 같으면 그대로. 저장소의 이전 버전(jigsaw 사이트 블록이 들어 있던 jigsaw 전용 Caddyfile, `default_sni` 가 없던 공통 Caddyfile `c8873a9`. sha256 으로 확인)이면 `.bak-<시각>` 으로 보관 후 교체. 그 밖에 다르면 **덮지 않고 알림** (`--replace-caddyfile` 이면 `.bak-<시각>` 으로 보관 후 교체) | 같으면 건너뜀 |
+| Caddy 설정 | 검사·적용 | 바뀐 것이 있으면 `caddy validate` → 통과하면 `systemctl reload caddy`(재시작 아님). 실패하면 이번에 바꾼 파일(최대 세 개)을 되돌리고 멈춤(Caddy 는 이전 설정 그대로) | 바뀐 것이 없으면 reload 하지 않음 |
 
-- Caddy 설정을 맨 끝에 한 번에 하는 이유: 공통 Caddyfile 과 `sites/jigsaw.caddy` 가 같은 reload 로 함께 바뀌어야 `rt.gyosil.app` 사이트가 빠지는 순간이 없다. 비밀값이 비어 중간에 멈춰도 Caddy 설정은 손대지 않은 상태로 남는다.
+- Caddy 설정을 맨 끝에 한 번에 하는 이유: 공통 Caddyfile 과 `sites/jigsaw.caddy` 가 같은 reload 로 함께 바뀌어야 `rt.gyosil.app` 사이트가 빠지는 순간이 없다. `default_sni`(Caddyfile)와 그 주소의 사이트(`sites/ip.caddy`)도 같은 reload 로 들어간다. 비밀값이 비어 중간에 멈춰도 Caddy 설정은 손대지 않은 상태로 남는다.
 - reload 는 Caddy 를 다시 시작하지 않아 HTTP 연결과 인증서는 그대로다. Caddy 는 기본으로 reload 때 열린 WebSocket 을 바로 닫지만, `jigsaw.caddy` 의 `stream_close_delay 5m` 때문에 reload 전에 열린 jigsaw 연결은 **reload 순간에는 끊기지 않고 최대 5분 더 이어진 뒤** 닫힌다. 닫히면 학생·교사 화면이 자동으로 다시 연결되고 판은 이어진다(D17, 몇 초). reload 뒤에 새로 열린 연결은 영향이 없다.
 - 그래서 사이트 파일 변경(다른 앱 추가·수정, `setup.sh` 의 Caddy 설정 반영)은 수업 중에도 할 수 있다. 대가는 5분 뒤 한 번의 자동 재연결이다. **jigsaw 서비스 재시작·배포(`deploy.sh`)와 Caddy 재시작(`systemctl restart caddy`)은 연결을 바로 끊으므로 여전히 수업 시간 밖에** 한다.
 - 지연은 그 연결이 열릴 때의 설정을 따른다. `stream_close_delay` 가 없던 설정(13장의 이전 전)에서 열린 연결은 그 설정을 바꾸는 첫 reload 때 바로 닫힌다.
@@ -108,11 +110,31 @@ sudo bash /opt/jigsaw/scripts/rt/deploy.sh
 
 `scripts/rt/` 의 유닛·Caddy 파일(`scripts/rt/caddy/`)·journald 설정이나 `setup.sh` 가 바뀐 커밋은 `deploy.sh` 뒤에 `sudo bash /opt/jigsaw/scripts/rt/setup.sh` 를 한 번 더 실행해 서버에 반영한다(바뀐 것만 설치하고, 유닛이 바뀌면 서비스를 다시 시작한다).
 
+### 연결 순서: rt 주소 → 서버 IP 주소 → `/rt` (2026-10-26)
+
+일부 학교망이 `*.gyosil.app` 을 이름으로 통째로 막는다. 화면(`jigsaw-gyosil.vercel.app`)은 열리는데 rt 서버 주소에 닿지 못하면, 화면은 먼저 서버 IP 주소로, 그것도 막히면 같은 사이트의 `/rt`(Vercel, 사용량 요금이 들어 마지막 수단)를 거쳐 rt 서버에 붙는다.
+
+- 화면(`public/js/rt-client.js` `rtRoute`): rt 를 처음 쓸 때 페이지마다 한 번, `https://jigsaw-rt.gyosil.app/health` 와 `https://13.124.90.119/jigsaw/health` 에 **동시에** `no-cors` 로 닿아 본다(각 3초, 결과는 페이지가 끝날 때까지 캐시). 순서대로 하면 막힌 학교에서 최악 6초가 걸리기 때문이다.
+  - rt 주소가 닿으면 IP 결과를 기다리지 않고 지금과 똑같이 직접 연결(요청 주소·소켓 옵션 그대로, WebSocket 포함).
+  - rt 주소만 막히면 **서버 IP 경로**: HTTP 는 `https://13.124.90.119/jigsaw/api/...`, 소켓은 `io("https://13.124.90.119", { path: "/jigsaw/socket.io" })` 로 `/jigsaw/socket.io/?EIO=4…`(WebSocket 허용, polling 전용 아님).
+  - 둘 다 막히면 HTTP 는 `<화면 주소>/rt/api/...`, 소켓은 `<화면 주소>/rt/socket.io` 에 **polling 만**으로 붙는다(Vercel 은 WebSocket 을 넘기지 않는다).
+  - 로컬 rt 서버(localhost·사설 IP·`.local`)는 확인 없이 직접 연결한다.
+- IP 주소와 접두는 `public/js/config.js` 의 `RT_IP_URL`·`RT_IP_PREFIX` 한 곳에만 있다. CSP `connect-src` 에 `https://13.124.90.119 wss://13.124.90.119` 가 있어야 한다(`vercel.json`, `tests/unit/csp.test.js`). 빠지면 IP 확인이 늘 실패해 막힌 학교는 모두 `/rt` 로 간다.
+
+#### 서버 IP 경로 (Caddy, 서버 공통)
+
+- `scripts/rt/caddy/sites/ip.caddy` → `/etc/caddy/sites/ip.caddy`. 사이트 주소 `13.124.90.119` 하나에 앱마다 `handle_path /<접두>/*` → `127.0.0.1:<포트>`(접두는 떼고 넘긴다, `stream_close_delay 5m`). 그 밖의 주소는 404. 접두: jigsaw `/jigsaw`(3400), ecosystem `/eco`(3500), boardgames `/boardgames`(3600), goldenbell `/goldenbell`(3700), math-battle-arena `/mathking`(3800, `/socket.io/*`·`/api/*`·`/health` 만), gojang `/gojang`(3900).
+- 인증서: Let's Encrypt 는 IP 주소 인증서를 6일짜리 `shortlived` 프로필로만 준다. 사이트 파일의 `issuer acme { profile shortlived }` 로 받고 Caddy 가 만료 전에 자동으로 갱신한다(따로 할 일 없음). 확인: `echo | openssl s_client -connect 13.124.90.119:443 2>/dev/null | openssl x509 -noout -dates`.
+- `default_sni 13.124.90.119`(공통 Caddyfile 전역 옵션)가 필요한 이유: 브라우저는 IP 주소로 접속할 때 SNI(서버 이름)를 보내지 않는다. 그러면 Caddy 는 접속한 주소로 인증서를 고르는데, Lightsail 안에서는 접속 주소가 고정 IP 가 아니라 내부 IP 로 보여 맞는 인증서를 찾지 못한다(TLS 실패). `default_sni` 가 SNI 없는 접속에 IP 인증서를 준다.
+- 서버 앱 쪽 변경은 없다. Caddy 가 `X-Forwarded-For` 를 실제 접속 주소로 넣으므로 주소별 제한은 직접 연결과 같고(`RT_PROXY_SECRET` 불필요), Origin 은 화면 주소 그대로라 `ALLOWED_ORIGINS` 도 그대로다. 같은 서버로 바로 가므로 제3자를 거치지 않는다.
+- 확인: `curl -s https://13.124.90.119/jigsaw/health` 가 `{"ok":true,...}`. 막힌 학교망을 흉내 내려면 브라우저 개발자 도구에서 `jigsaw-rt.gyosil.app` 요청을 막고 새로 고친 뒤 `13.124.90.119/jigsaw/socket.io/?EIO=4` 요청(`transport=websocket` 101 포함)이 보이는지 본다.
+- `ip.caddy` 와 공통 Caddyfile 은 이 저장소가 원본이다. 서버에서 직접 고쳤으면 같은 내용을 여기에 옮겨야 다음 `setup.sh` 가 덮거나 '다르다'고 알리지 않는다. 새 앱의 IP 접두는 이 저장소의 `ip.caddy` 에 더하고 `setup.sh` 로 반영한다.
+- 2026-10-26 반영: 서버의 `ip.caddy` 와 Caddyfile 의 `default_sni` 는 손으로 먼저 넣었고 저장소 원본을 같은 바이트로 맞췄다. 그래서 다음 `setup.sh` 는 두 파일 모두 '변경 없음'이다. 화면 쪽은 main 푸시(Vercel)만 하면 된다.
+
 ### /rt 우회 연결 (2026-10-26)
 
-일부 학교망이 `*.gyosil.app` 을 통째로 막는다. 화면(`jigsaw-gyosil.vercel.app`)은 열리는데 rt 서버 주소에 닿지 못하면, 화면이 같은 사이트의 `/rt` 를 거쳐 rt 서버에 붙는다.
+rt 주소와 서버 IP 주소 모두에 닿지 못할 때만 쓰는 마지막 경로다.
 
-- 화면(`public/js/rt-client.js` `rtRoute`): rt 를 처음 쓸 때 페이지마다 한 번 `https://jigsaw-rt.gyosil.app/health` 에 `no-cors` 로 닿아 본다(3초). 닿으면 지금과 똑같이 직접 연결(WebSocket 포함), 안 닿으면 HTTP 는 `<화면 주소>/rt/api/...`, 소켓은 `<화면 주소>/rt/socket.io` 에 **polling 만**으로 붙는다(Vercel 은 WebSocket 을 넘기지 않는다). 로컬 rt 서버(localhost·사설 IP·`.local`)는 확인 없이 직접 연결한다.
 - Vercel(`middleware.js`, `/rt/:path*` 에만): `/rt/socket.io` → `https://jigsaw-rt.gyosil.app/socket.io/`, 그 밖의 `/rt/X` → `.../X` (쿼리 유지). 같은 출처 polling 은 Origin 을 보내지 않으므로 Origin 이 없으면 화면 주소를 채운다(다른 사이트 Origin 은 그대로 넘겨 서버가 403). 쿠키는 넘기지 않는다. `RT_PROXY_SECRET` 이 있으면 `x-jigsaw-proxy`(비밀값)·`x-jigsaw-client`(Vercel 이 본 접속 주소)를 붙이고, 들어온 같은 이름 머리글은 먼저 지운다.
 - rt 서버(`server/src/sockets.js` `proxiedAddress`): `x-jigsaw-proxy` 가 `RT_PROXY_SECRET` 과 같을 때만(`timingSafeEqual`) `x-jigsaw-client` 를 접속 주소로 쓴다(HTTP 요청 수 제한·틀린 코드 제한·주소별 연결 수 모두). 아니면 예전처럼 `X-Forwarded-For`. 비밀값이 없으면 Vercel 을 거친 접속은 Vercel 주소 몇 개로 세어져 한 주소 한도(연결 200, 요청 분당 1200)에 걸릴 수 있다.
 - 교사 사진 올리기는 WebP 최대 3MB(3,145,728바이트)라 Routing Middleware 요청 본문 한도 4MB 안이다(로컬 `vercel dev` 로 3MB 전달 확인).
@@ -125,7 +147,7 @@ sudo bash /opt/jigsaw/scripts/rt/deploy.sh
 3. rt 서버 `/etc/jigsaw-rt.env` 에 `RT_PROXY_SECRET=<같은 값>` 한 줄을 더한다(`sudo nano /etc/jigsaw-rt.env`).
 4. main 푸시 → Vercel 이 `middleware.js` 와 새 화면을 배포한다.
 5. 수업 시간 밖에 `sudo bash /opt/jigsaw/scripts/rt/deploy.sh` (새 서버 코드 + 3의 값 반영을 위해 **재시작 필요**). Caddy·`setup.sh` 는 바뀌지 않았다.
-6. 확인: `curl -s https://jigsaw-gyosil.vercel.app/rt/health` 가 `{"ok":true,...}`. 막힌 학교망을 흉내 내려면 브라우저 개발자 도구에서 `jigsaw-rt.gyosil.app` 요청을 막고(Request blocking) 새로 고친 뒤 `/rt/socket.io?EIO=4&transport=polling` 요청이 보이는지 본다.
+6. 확인: `curl -s https://jigsaw-gyosil.vercel.app/rt/health` 가 `{"ok":true,...}`. 막힌 학교망을 흉내 내려면 브라우저 개발자 도구에서 `jigsaw-rt.gyosil.app` 과 `13.124.90.119` 요청을 막고(Request blocking) 새로 고친 뒤 `/rt/socket.io?EIO=4&transport=polling` 요청이 보이는지 본다.
 
 4와 5 사이에는 Vercel 을 거친 접속만 Vercel 주소로 세어진다(예전에는 아예 못 붙던 학교). 직접 연결은 바뀌지 않는다.
 
@@ -338,6 +360,7 @@ group by 1;
 - 서버는 `127.0.0.1:3400` 에서만 듣는다. 밖에서는 Caddy(443)로만 들어온다. Lightsail 방화벽은 22·80·443 만 연다.
 - 요청 주소: `RT_TRUST_PROXY=1` 이면 서버는 `X-Forwarded-For` 의 첫 주소를 쓴다. 공통 Caddyfile 과 사이트 파일에 `trusted_proxies` 를 넣지 않았으므로 Caddy 는 클라이언트가 보낸 `X-Forwarded-For` 를 버리고 실제 접속 주소로 다시 쓴다(로컬 Caddy 2.11 로 확인). **`trusted_proxies` 를 넣지 않는다.** 넣으면 위조한 주소로 주소별 제한을 피할 수 있다.
 - 허용 Origin 은 `https://jigsaw.gyosil.app` 과 `https://jigsaw-gyosil.vercel.app`(학교망이 *.gyosil.app 을 막을 때 쓰는 주소, gyosil 제안전 plan T24) 둘이다. 다른 Origin 의 API·소켓 요청은 403. 첫 주소는 화면 주소여야 한다(서버가 새 내장 그림 목록을 거기서 읽는다).
+- 서버 IP 경로(`https://13.124.90.119/jigsaw/...`)는 Caddy 가 직접 받으므로 `X-Forwarded-For` 가 실제 접속 주소이고 Origin 검사도 직접 연결과 같다.
 - 화면 주소의 `/rt`(Vercel)를 거친 요청은 Caddy 가 `X-Forwarded-For` 를 Vercel 주소로 쓴다. 그래서 진짜 접속 주소는 `x-jigsaw-client` 로 오고, 서버는 `x-jigsaw-proxy` 가 `RT_PROXY_SECRET` 과 같을 때만 믿는다. 비밀값이 새면 누구나 주소를 꾸며 주소별 제한을 피할 수 있으니 바꾼다(Vercel 과 `/etc/jigsaw-rt.env` 둘 다, 재시작). Vercel 을 거친 요청에도 Origin 검사는 그대로다(Origin 이 없을 때만 화면 주소로 채운다).
 - 교사 로그인은 쿠키가 아니라 rt 서버가 준 토큰(localStorage, `credentials: 'omit'`)이라 vercel.app 화면에서도 그대로 된다. 브라우저 저장소는 주소마다 따로라 두 주소에서 각각 로그인한다.
 - 이미 있는 `/etc/jigsaw-rt.env` 는 `setup.sh` 가 덮어쓰지 않는다. `ALLOWED_ORIGINS` 를 바꾸려면 서버에서 그 줄을 직접 고치고 수업 시간 밖에 `sudo systemctl restart jigsaw-rt` 한다.
@@ -380,8 +403,9 @@ rt 서버(`13.124.90.119`)는 여러 앱이 함께 쓴다. 서버 공통 설정�
 
 | 항목 | 위치 | 누가 바꾸나 |
 |---|---|---|
-| Caddy 전역 설정 | `/etc/caddy/Caddyfile` (원본 `scripts/rt/caddy/Caddyfile`): 로그 필터와 `import /etc/caddy/sites/*.caddy` 만 | 이 저장소에서 고치고 `setup.sh` 로 반영. 다른 앱은 고치지 않는다 |
-| Caddy 사이트 | `/etc/caddy/sites/<앱>.caddy` | 앱마다 자기 파일 하나. `setup.sh` 는 `jigsaw.caddy` 만 쓰고 다른 파일은 읽기만 한다 |
+| Caddy 전역 설정 | `/etc/caddy/Caddyfile` (원본 `scripts/rt/caddy/Caddyfile`): `default_sni 13.124.90.119`, 로그 필터와 `import /etc/caddy/sites/*.caddy` 만 | 이 저장소에서 고치고 `setup.sh` 로 반영. 다른 앱은 고치지 않는다 |
+| Caddy IP 사이트 | `/etc/caddy/sites/ip.caddy` (원본 `scripts/rt/caddy/sites/ip.caddy`): `https://13.124.90.119/<접두>/*` → 앱별 포트, IP 인증서 6일 자동 갱신 (4장 '서버 IP 경로') | 이 저장소에서 고치고 `setup.sh` 로 반영. 새 앱 접두도 여기에 더한다 |
+| Caddy 사이트 | `/etc/caddy/sites/<앱>.caddy` | 앱마다 자기 파일 하나. `setup.sh` 는 `jigsaw.caddy` 와 공통 `ip.caddy` 만 쓰고 다른 파일은 읽기만 한다 |
 | 로그 보관 | journald 14일 `/etc/systemd/journald.conf.d/zz-retention.conf` | 서버 전체(모든 앱)에 적용 |
 | 스왑 | `/swapfile` 1GB | — |
 | 방화벽 | Lightsail 22·80·443 | 앱 포트는 열지 않는다(Caddy 로만 들어옴) |

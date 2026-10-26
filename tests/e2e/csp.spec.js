@@ -185,9 +185,12 @@ test('the production CSP: every page loads without a violation, with the rt serv
 
   await page.screenshot({ path: testInfo.outputPath('production-play.png'), fullPage: true });
   testInfo.annotations.push({ type: 'hosts', description: [...hosts].join(', ') });
-  // The site, the font CDN, the hosted rt server and Google sign-in: no Supabase.
-  expect([...hosts].filter((h) => !['jigsaw.gyosil.app', 'cdn.jsdelivr.net', 'jigsaw-rt.gyosil.app', 'accounts.google.com'].includes(h))).toEqual([]);
+  // The site, the font CDN, the hosted rt server (and the look at its IP address) and Google
+  // sign-in: no Supabase.
+  expect([...hosts].filter((h) => !['jigsaw.gyosil.app', 'cdn.jsdelivr.net', 'jigsaw-rt.gyosil.app', '13.124.90.119', 'accounts.google.com'].includes(h))).toEqual([]);
   expect(hosts).toContain('jigsaw-rt.gyosil.app');
+  // The IP address check runs under the production CSP (no violation above) and is answered.
+  expect(hosts).toContain('13.124.90.119');
   expect(hosts).toContain('accounts.google.com');
   expect(unexpected).toEqual([]);
   expect(errors).toEqual([]);

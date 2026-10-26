@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
@@ -83,10 +84,11 @@ describe('scripts/rt/jigsaw-rt.service', () => {
 describe('Caddy: shared Caddyfile and per-app site files', () => {
   const shared = lines(read('scripts/rt/caddy/Caddyfile')).join('\n');
   const site = lines(read('scripts/rt/caddy/sites/jigsaw.caddy')).join('\n');
+  const ipSite = lines(read('scripts/rt/caddy/sites/ip.caddy')).join('\n');
   const template = lines(read('scripts/rt/caddy/sites/_template.caddy.example')).join('\n');
 
   it('keeps only global options in the shared Caddyfile and imports every app site file last', () => {
-    expect(shared).toMatch(/^\{\n\tlog \{\n\t\tformat filter \{/);
+    expect(shared).toMatch(/^\{\n\tdefault_sni 13\.124\.90\.119\n\tlog \{\n\t\tformat filter \{/);
     expect(shared.split('\n').at(-1)).toBe('import /etc/caddy/sites/*.caddy');
     // No site address at the top level: the only top-level lines are the global block and import.
     const topLevel = shared.split('\n').filter((l) => !/^\s/.test(l));
@@ -116,7 +118,7 @@ describe('Caddy: shared Caddyfile and per-app site files', () => {
 
   it('keeps no access log and trusts no proxy anywhere, so X-Forwarded-For is the real client address', () => {
     expect(shared).not.toMatch(/trusted_proxies/);
-    for (const file of [site, template]) {
+    for (const file of [site, ipSite, template]) {
       expect(file).not.toMatch(/\blog\b/);
       expect(file).not.toMatch(/trusted_proxies/);
     }
@@ -134,12 +136,45 @@ describe('Caddy: shared Caddyfile and per-app site files', () => {
   });
 });
 
+// Every app's rt server on the server's IP address (2026-10-26), for school networks that block
+// *.gyosil.app by name. Browsers send no SNI to an IP address, and inside Lightsail the address
+// the connection came to is the private one, so Caddy picks the IP certificate by default_sni.
+describe('Caddy: the shared IP site', () => {
+  const shared = lines(read('scripts/rt/caddy/Caddyfile')).join('\n');
+  const ipSite = lines(read('scripts/rt/caddy/sites/ip.caddy')).join('\n');
+  const config = read('public/js/config.js');
+
+  it('answers on the address default_sni names, with the 6-day IP certificate Caddy renews', () => {
+    const address = shared.match(/^\tdefault_sni (\S+)$/m)[1];
+    expect(address).toBe('13.124.90.119');
+    expect(ipSite.split('\n')[0]).toBe(`${address} {`);
+    expect(ipSite).toMatch(/^\t\tissuer acme \{\n\t\t\tprofile shortlived\n\t\t\}$/m);
+    expect(config).toContain(`export const RT_IP_URL = 'https://${address}';`);
+  });
+
+  it('takes each app prefix to that app\'s port of the table, WebSockets kept across a reload, anything else 404', () => {
+    const prefixes = [...ipSite.matchAll(/^\thandle_path \/([\w-]+)\/\* \{$/gm)].map((m) => m[1]);
+    expect(prefixes).toEqual(['jigsaw', 'eco', 'boardgames', 'goldenbell', 'mathking', 'gojang']);
+    const ports = [...ipSite.matchAll(/reverse_proxy 127\.0\.0\.1:(\d+) \{\n\t+stream_close_delay 5m$/gm)].map((m) => m[1]);
+    expect(ports).toEqual(['3400', '3500', '3600', '3700', '3800', '3900']);
+    expect(ipSite.match(/reverse_proxy/g)).toHaveLength(ports.length);
+    expect(ipSite.split('\n').slice(-4)).toEqual(['\thandle {', '\t\trespond 404', '\t}', '}']);
+  });
+
+  it('serves jigsaw under the prefix the screens use', () => {
+    expect(config).toContain("export const RT_IP_PREFIX = '/jigsaw';");
+    expect(ipSite).toMatch(/^\thandle_path \/jigsaw\/\* \{\n\t\treverse_proxy 127\.0\.0\.1:3400 \{$/m);
+  });
+});
+
 describe('scripts/rt/setup.sh Caddy steps', () => {
   const setup = read('scripts/rt/setup.sh');
 
-  it('writes only its own site file in /etc/caddy/sites, never other apps\' files', () => {
+  it('writes only its own site file and the shared IP site in /etc/caddy/sites, never other apps\' files', () => {
     expect(setup).toContain('CADDY_SITES_DIR=/etc/caddy/sites');
     expect(setup).toContain('APP_SITE_FILE=$CADDY_SITES_DIR/jigsaw.caddy');
+    expect(setup).toContain('IP_SITE_FILE=$CADDY_SITES_DIR/ip.caddy');
+    expect(setup).toMatch(/install_if_changed "\$APP_DIR\/scripts\/rt\/caddy\/sites\/ip\.caddy" "\$IP_SITE_FILE" 644; then ip_site_changed=1/);
     const sitesWrites = setup
       .split('\n')
       .filter((l) => /CADDY_SITES_DIR/.test(l) && /\b(rm|mv|cp|install|sed|tee)\b|>/.test(l) && !/^\s*#/.test(l));
@@ -154,12 +189,22 @@ describe('scripts/rt/setup.sh Caddy steps', () => {
     expect(code.indexOf('caddy validate --config "$CADDYFILE"')).toBeLessThan(code.indexOf('systemctl reload caddy'));
   });
 
-  it('replaces without asking only the earlier jigsaw-only Caddyfiles, listed by sha256', () => {
-    const block = setup.match(/OLD_JIGSAW_CADDYFILES=\(([^)]*)\)/)[1];
-    expect(block.trim().split(/\s+/)).toEqual([
+  it('replaces without asking only the earlier repository Caddyfiles, listed by sha256', () => {
+    const list = (name) => setup.match(new RegExp(`${name}=\\(([^)]*)\\)`))[1].trim().split(/\s+/);
+    expect(list('OLD_JIGSAW_CADDYFILES')).toEqual([
       '86556c875afbec46b22213a4912978f4e02e687d4ec56885fbe72711d6e2c37d',
       '5be54175dba8b58cfe058b7aac90b5237804452921761d78b3c66edcdbf414ec',
     ]);
+    // c8873a9: the shared Caddyfile before default_sni.
+    expect(list('OLD_SHARED_CADDYFILES')).toEqual(['d3888e54b5b2eec077c450b75ece6e14310ed1b117544bd9fe6b84b46eaec8a3']);
+    const current = createHash('sha256').update(readFileSync(new URL('../../scripts/rt/caddy/Caddyfile', import.meta.url))).digest('hex');
+    expect([...list('OLD_JIGSAW_CADDYFILES'), ...list('OLD_SHARED_CADDYFILES')]).not.toContain(current);
+  });
+
+  it('puts the IP site back with the other Caddy files when caddy validate fails', () => {
+    expect(setup).toMatch(/if \(\(site_changed \|\| ip_site_changed \|\| caddyfile_changed\)\); then/);
+    expect(setup).toContain('cp -p "$caddy_previous/ip-site" "$IP_SITE_FILE"');
+    expect(setup).toContain('rm -f "$IP_SITE_FILE"');
   });
 });
 

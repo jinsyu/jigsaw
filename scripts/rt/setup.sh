@@ -11,14 +11,16 @@
 #   jigsaw-rt, repository in /opt/jigsaw, server dependencies, /etc/jigsaw-rt.env, backup timer,
 #   jigsaw-rt.service.
 # - Caddy configuration, last and in one go: the shared /etc/caddy/Caddyfile (global options and
-#   `import /etc/caddy/sites/*.caddy`) and the app's /etc/caddy/sites/jigsaw.caddy. Checked with
-#   `caddy validate` (on failure both are put back as they were), then `systemctl reload caddy`.
+#   `import /etc/caddy/sites/*.caddy`), the shared IP site /etc/caddy/sites/ip.caddy (every app's rt
+#   server on the server's IP address) and the app's /etc/caddy/sites/jigsaw.caddy. Checked with
+#   `caddy validate` (on failure all three are put back as they were), then `systemctl reload caddy`.
 #   Other files in /etc/caddy/sites belong to other apps and are never touched.
 # - /etc/jigsaw-rt.env missing or with empty secrets: a template (mode 600) is written or the
 #   empty names are listed, and the script stops there. Fill it in and run the script again.
 # - /etc/caddy/Caddyfile different from scripts/rt/caddy/Caddyfile: left as it is and reported,
-#   unless --replace-caddyfile or it is one of the earlier jigsaw-only Caddyfiles (with the
-#   jigsaw site block inside), which are replaced. The old file is kept as Caddyfile.bak-<time>.
+#   unless --replace-caddyfile or it is an earlier version from this repository (the jigsaw-only
+#   Caddyfiles with the jigsaw site block inside, or the shared one without default_sni), which are
+#   replaced. The old file is kept as Caddyfile.bak-<time>.
 # - The earlier journald drop-in zz-jigsaw.conf is renamed to zz-jigsaw.conf.bak-<time>.
 # - The service is restarted only when its unit changed or it is not running; deploys use
 #   scripts/rt/deploy.sh.
@@ -46,11 +48,17 @@ OLD_JOURNALD_FILE=$JOURNALD_DIR/zz-jigsaw.conf
 CADDYFILE=/etc/caddy/Caddyfile
 CADDY_SITES_DIR=/etc/caddy/sites
 APP_SITE_FILE=$CADDY_SITES_DIR/jigsaw.caddy
+IP_SITE_FILE=$CADDY_SITES_DIR/ip.caddy
 # sha256 of the earlier /etc/caddy/Caddyfile versions that held the jigsaw site block themselves
 # (scripts/rt/Caddyfile at commits bebaaed and a1e97e9). Only these are replaced without asking.
 OLD_JIGSAW_CADDYFILES=(
   86556c875afbec46b22213a4912978f4e02e687d4ec56885fbe72711d6e2c37d
   5be54175dba8b58cfe058b7aac90b5237804452921761d78b3c66edcdbf414ec
+)
+# sha256 of the earlier shared /etc/caddy/Caddyfile versions (scripts/rt/caddy/Caddyfile at commit
+# c8873a9, before default_sni). Replaced without asking too.
+OLD_SHARED_CADDYFILES=(
+  d3888e54b5b2eec077c450b75ece6e14310ed1b117544bd9fe6b84b46eaec8a3
 )
 
 skip_systemd=0
@@ -347,19 +355,25 @@ else
 fi
 
 # ---------------------------------------------------------------------------------------------
-# The shared Caddyfile and the app's site file change together and Caddy reads them once, so a
-# server moving from the jigsaw-only Caddyfile never runs without the rt.gyosil.app site.
+# The shared Caddyfile and the site files change together and Caddy reads them once, so a
+# server moving from the jigsaw-only Caddyfile never runs without the rt.gyosil.app site, and
+# default_sni (Caddyfile) never runs without the IP site it names.
 if ((!skip_caddy)); then
-  part "Caddy 설정: 공통 $CADDYFILE + 앱 $APP_SITE_FILE"
+  part "Caddy 설정: 공통 $CADDYFILE + 공통 $IP_SITE_FILE + 앱 $APP_SITE_FILE"
   caddy_previous="$(mktemp -d)"
   trap 'rm -rf "$caddy_previous"' EXIT
   caddyfile_backup=""
   site_changed=0
+  ip_site_changed=0
   caddyfile_changed=0
 
   step "앱 사이트 파일 $APP_SITE_FILE"
   if [[ -f "$APP_SITE_FILE" ]]; then cp -p "$APP_SITE_FILE" "$caddy_previous/site"; fi
   if install_if_changed "$APP_DIR/scripts/rt/caddy/sites/jigsaw.caddy" "$APP_SITE_FILE" 644; then site_changed=1; fi
+
+  step "공통 IP 사이트 파일 $IP_SITE_FILE (모든 앱의 rt 서버를 서버 IP 주소로)"
+  if [[ -f "$IP_SITE_FILE" ]]; then cp -p "$IP_SITE_FILE" "$caddy_previous/ip-site"; fi
+  if install_if_changed "$APP_DIR/scripts/rt/caddy/sites/ip.caddy" "$IP_SITE_FILE" 644; then ip_site_changed=1; fi
 
   step "공통 Caddyfile $CADDYFILE"
   wanted="$APP_DIR/scripts/rt/caddy/Caddyfile"
@@ -369,11 +383,18 @@ if ((!skip_caddy)); then
   for hash in "${OLD_JIGSAW_CADDYFILES[@]}"; do
     if [[ "$current_hash" == "$hash" ]]; then old_jigsaw=1; fi
   done
+  old_shared=0
+  for hash in "${OLD_SHARED_CADDYFILES[@]}"; do
+    if [[ "$current_hash" == "$hash" ]]; then old_shared=1; fi
+  done
   if [[ -f "$CADDYFILE" ]] && cmp -s "$wanted" "$CADDYFILE"; then
     note "변경 없음: $CADDYFILE"
-  elif [[ ! -f "$CADDYFILE" ]] || ((replace_caddyfile || old_jigsaw)); then
+  elif [[ ! -f "$CADDYFILE" ]] || ((replace_caddyfile || old_jigsaw || old_shared)); then
     if ((old_jigsaw)); then
       note "이전 구조(jigsaw 사이트 블록이 들어 있는 Caddyfile)를 공통 Caddyfile 로 바꿉니다."
+    fi
+    if ((old_shared)); then
+      note "이전 공통 Caddyfile(default_sni 없음)을 새 버전으로 바꿉니다."
     fi
     if [[ -f "$CADDYFILE" ]]; then
       caddyfile_backup="$CADDYFILE.bak-$(stamp)"
@@ -392,7 +413,7 @@ if ((!skip_caddy)); then
     fi
   fi
 
-  if ((site_changed || caddyfile_changed)); then
+  if ((site_changed || ip_site_changed || caddyfile_changed)); then
     step "caddy validate, reload"
     if ! validate_output="$(caddy validate --config "$CADDYFILE" --adapter caddyfile 2>&1)"; then
       printf '%s\n' "$validate_output" | tail -n 5 >&2
@@ -400,6 +421,8 @@ if ((!skip_caddy)); then
       if ((caddyfile_changed)) && [[ -z "$caddyfile_backup" ]]; then rm -f "$CADDYFILE"; fi
       if ((site_changed)) && [[ -f "$caddy_previous/site" ]]; then cp -p "$caddy_previous/site" "$APP_SITE_FILE"; fi
       if ((site_changed)) && [[ ! -f "$caddy_previous/site" ]]; then rm -f "$APP_SITE_FILE"; fi
+      if ((ip_site_changed)) && [[ -f "$caddy_previous/ip-site" ]]; then cp -p "$caddy_previous/ip-site" "$IP_SITE_FILE"; fi
+      if ((ip_site_changed)) && [[ ! -f "$caddy_previous/ip-site" ]]; then rm -f "$IP_SITE_FILE"; fi
       fail "caddy validate 실패: 바꾼 Caddy 파일을 되돌렸습니다 (Caddy 는 이전 설정 그대로). 확인: caddy validate --config $CADDYFILE --adapter caddyfile"
     fi
     note "검사 통과 (사이트 파일 $(find "$CADDY_SITES_DIR" -maxdepth 1 -type f -name '*.caddy' | wc -l | tr -d ' ')개)"

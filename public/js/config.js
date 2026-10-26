@@ -15,6 +15,10 @@ const LOCAL_RT_PORT = 3400;
 // A push to main deploys this: emptying it puts the hosted screens back to "준비 중". This site's
 // /rt (middleware.js) passes requests on to the same address.
 export const REMOTE_RT_URL = 'https://jigsaw-rt.gyosil.app';
+// The same rt server on the server's IP address, for school networks that block the rt address by
+// name: Caddy's IP site (scripts/rt/caddy/sites/ip.caddy) takes /jigsaw/X to this app's server as /X.
+export const RT_IP_URL = 'https://13.124.90.119';
+export const RT_IP_PREFIX = '/jigsaw';
 
 const REMOTE = {
   env: 'remote',

@@ -1,0 +1,51 @@
+# Every app's rt server on the server's IP address, for school networks that block gyosil.app
+# by name (2026-10-26). /<app>/X -> that app's 127.0.0.1:<port>/X. Browsers send no SNI to an IP
+# address; the shared Caddyfile's default_sni gives those connections this certificate.
+# Let's Encrypt issues IP certificates only with the 6-day shortlived profile; Caddy renews them.
+13.124.90.119 {
+	tls {
+		issuer acme {
+			profile shortlived
+		}
+	}
+	header X-Robots-Tag noindex
+	handle_path /jigsaw/* {
+		reverse_proxy 127.0.0.1:3400 {
+			stream_close_delay 5m
+		}
+	}
+	handle_path /eco/* {
+		reverse_proxy 127.0.0.1:3500 {
+			stream_close_delay 5m
+		}
+	}
+	handle_path /boardgames/* {
+		reverse_proxy 127.0.0.1:3600 {
+			stream_close_delay 5m
+		}
+	}
+	handle_path /goldenbell/* {
+		reverse_proxy 127.0.0.1:3700 {
+			stream_close_delay 5m
+		}
+	}
+	handle_path /mathking/* {
+		@rt path /socket.io/* /api/* /health
+		handle @rt {
+			reverse_proxy 127.0.0.1:3800 {
+				stream_close_delay 5m
+			}
+		}
+		handle {
+			respond 404
+		}
+	}
+	handle_path /gojang/* {
+		reverse_proxy 127.0.0.1:3900 {
+			stream_close_delay 5m
+		}
+	}
+	handle {
+		respond 404
+	}
+}
